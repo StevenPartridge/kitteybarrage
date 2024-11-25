@@ -5,8 +5,8 @@ class_name State
 
 var entity  # Reference to the Kitty node
 
-func get_state_name():
-	return get_class()
+func name():
+	return "StateName"
 
 func _init():
 	pass

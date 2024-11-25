@@ -1,23 +1,29 @@
-extends State
 class_name StandUpState
+extends State
+
+var start_at_end := false  # Start the Sit animation at the end frame
+var start_paused := false # Starts paused, as if sitting
+var state_finished := false
+func name():
+	return "StandUpState"
+
+func _init(_start_at_end := false, _start_paused := false):
+	#super()._init()
+	start_at_end = _start_at_end
+	start_paused = _start_paused
 
 func _enter_state():
 	if entity:
-		# Play the 'Sit' animation in reverse to simulate standing up
-		entity.play_animation("Sit", entity.facing_direction)
-		var animated_sprite = entity.get_node("AnimatedSprite2D")
-		animated_sprite.playback_speed = -1  # Play in reverse
-		animated_sprite.frame = animated_sprite.frames.get_frame_count(animated_sprite.animation) - 1
-		animated_sprite.connect("animation_finished", self, "_on_animation_finished")
+		entity.velocity = Vector2.ZERO
+		entity.play_animation_once("Sit", entity.facing_direction, ! start_at_end)
+		if start_paused:
+			entity.pause()
 	else:
-		push_error("Entity reference is null.")
+		push_error("Entity reference is null in StandUpState")
+
+func _physics_process(delta):
+	pass
 
 func _exit_state():
-	var animated_sprite = entity.get_node("AnimatedSprite2D")
-	animated_sprite.disconnect("animation_finished", self, "_on_animation_finished")
-
-func _on_animation_finished():
-	emit_signal("state_finished", WalkState.new())
-
-func _physics_process(_delta):
-	pass  # No additional physics processing needed
+	# Any cleanup if necessary
+	pass
