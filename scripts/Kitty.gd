@@ -1,14 +1,15 @@
 extends CharacterBody2D
 
 @export var state_machine: FiniteStateMachine
-@export var play_once_finished := true
+@export var wait_for_animation := true
 @export var animation_player: AnimatedSprite2D
 @export var speed := 150
 
 var facing_direction = Global.Direction.SOUTH  # Default facing direction
 var grid_size := 32  # Size of each grid cell in pixels
 var input_handler: InputHandler
-
+var sit_delay: float = 1.0  # Delay duration in seconds
+var sit_delay_timer: float = 0.0  # Timer to track elapsed time
 
 func _ready():
 	#### Input handling
@@ -21,9 +22,10 @@ func _ready():
 	state_machine = FiniteStateMachine.new()
 	add_child(state_machine)
 	facing_direction = Global.Direction.SOUTH
+	sit_delay_timer = 0.0
 
 	# Start in SitState with start_at_end = true
-	state_machine.change_state(SitState.new(true, true))  # Passing start_at_end = true, start_paused = true
+	state_machine.change_state(SitState.new(false))  # Passing start_at_end = true, start_paused = true
 
 func _on_direction_changed(new_direction: Vector2):
 	if new_direction != Vector2.ZERO:
@@ -34,12 +36,24 @@ func _on_direction_changed(new_direction: Vector2):
 		pass
 
 func _physics_process(delta):
-	if !play_once_finished:
+	# Allow the animation to finish before changing states
+	if !wait_for_animation:
 		return
+
 	if input_handler.is_moving():
-		state_machine.change_state(WalkState.new())
+		# Only reset the timer when transitioning to movement
+		if sit_delay_timer > 0.0:  # Timer was active
+			sit_delay_timer = 0.0  # Reset
+		if state_machine.current_state != "WalkState":
+			state_machine.change_state(WalkState.new())
 	else:
-		state_machine.change_state(SitState.new(false, false))
+		# Increment sit delay timer if not moving
+		if state_machine.current_state != "SitState":
+			sit_delay_timer += delta
+			if sit_delay_timer >= sit_delay:
+				print("Sitting!")
+				state_machine.change_state(SitState.new(false))
+				sit_delay_timer = 0.0
 
 func pause():
 	animation_player.pause()
@@ -56,7 +70,7 @@ func play_animation(state_name: String, direction: Global.Direction, start_at_en
 		push_error("Animation not found: " + animation_name)
 
 func play_animation_once(state_name: String, direction: Global.Direction, start_at_end := false):
-	play_once_finished = false
+	wait_for_animation = false
 	var animation_name = get_full_animation_name(state_name, direction)
 	
 	# Check if the animation exists
@@ -68,19 +82,24 @@ func play_animation_once(state_name: String, direction: Global.Direction, start_
 		# Play the animation
 		if start_at_end:
 			animation_player.play_backwards(animation_name)
-			play_once_finished = true
+			wait_for_animation = true
 		else:
 			animation_player.play(animation_name)
 		
 		# Connect the animation_finished signal to pause the animation
-		animation_player.disconnect("animation_finished", _on_animation_finished)  # Ensure no duplicate connections
+		if animation_player.is_connected("animation_finished", _on_animation_finished):
+			animation_player.disconnect("animation_finished", _on_animation_finished)
 		animation_player.connect("animation_finished", _on_animation_finished)
+		if animation_player.is_connected("animation_changed", _on_animation_finished):
+			animation_player.disconnect("animation_changed", _on_animation_finished)
+		animation_player.connect("animation_changed", _on_animation_finished)
 	else:
 		push_error("Animation not found: " + animation_name)
 
 # Handle pausing when the animation finishes
 func _on_animation_finished():
-	play_once_finished = true
+	print("Animation Changed!!!")
+	wait_for_animation = true
 	animation_player.pause()
 
 func get_full_animation_name(state_name: String, direction: Global.Direction):

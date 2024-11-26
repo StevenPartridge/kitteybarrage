@@ -29,8 +29,10 @@ func change_state(new_state: State):
 		if not state.get_parent():
 			add_child(state)
 	else:
-		push_error("Failed to change state: new_state is null.")
+		pass
+		#push_error("Failed to change state: new_state is null.")
 	
 func _physics_process(delta):
 	if state is State:
+		print("Currently in state: " + state.name())
 		state._physics_process(delta)
