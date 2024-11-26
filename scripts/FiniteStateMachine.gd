@@ -3,15 +3,14 @@ extends Node
 
 @export var state: State
 
-var current_state: String
+@export var current_state: String
+@export var previous_state: String
 
 func _ready():
 	change_state(state)
 
 func change_state(new_state: State):
 	# Safely exit and free the current state if it exists
-
-	
 	if new_state:
 		if current_state and (current_state == new_state.name()):
 			return
@@ -22,10 +21,13 @@ func change_state(new_state: State):
 		state = new_state
 	if state:
 		print("State ", state.name(), " and new_state ",  new_state.name())
+		previous_state = current_state
 		current_state = new_state.name()
 		state.entity = get_parent()
-		add_child(state)
 		state._enter_state()
+		# Only add the state to the scene tree if it's not already a child
+		if not state.get_parent():
+			add_child(state)
 	else:
 		push_error("Failed to change state: new_state is null.")
 	
