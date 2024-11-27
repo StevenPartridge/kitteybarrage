@@ -21,7 +21,6 @@ func change_state(new_state: State):
 		state = null  # Clear the reference to the old state
 		state = new_state
 	if state:
-		print("State ", state.name(), " and new_state ",  new_state.name())
 		previous_state = current_state
 		current_state = new_state.name()
 		state.entity = get_parent()
@@ -35,5 +34,4 @@ func change_state(new_state: State):
 	
 func _physics_process(delta):
 	if state is State:
-		print("Currently in state: " + state.name())
 		state._physics_process(delta)

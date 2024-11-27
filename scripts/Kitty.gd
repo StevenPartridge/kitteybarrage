@@ -52,7 +52,6 @@ func _physics_process(delta):
 		if state_machine.current_state != "SitState":
 			sit_delay_timer += delta
 			if sit_delay_timer >= sit_delay:
-				print("Sitting!")
 				state_machine.change_state(SitState.new(false))
 				sit_delay_timer = 0.0
 		else:
@@ -100,7 +99,6 @@ func play_animation_once(state_name: String, direction: Global.Direction, start_
 
 # Handle pausing when the animation finishes
 func _on_animation_finished():
-	print("Animation Changed!!!")
 	state_machine.wait_for_animation = false
 	animation_player.pause()
 

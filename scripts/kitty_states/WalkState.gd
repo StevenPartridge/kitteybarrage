@@ -13,7 +13,6 @@ func _on_standup_finished():
 
 func _enter_state():
 	if entity:
-		print(entity.state_machine.previous_state)
 		if entity.state_machine.previous_state == "SitState":
 			in_standup_animation = true
 		if in_standup_animation:
@@ -34,7 +33,8 @@ func _physics_process(_delta):
 				entity.play_animation("Walk", entity.facing_direction)
 		else:
 			entity.velocity = Vector2.ZERO
-			if entity.state_machine.current_state == "WalkState":
+			# string includes "Walk"
+			if entity.animation_player.animation.find("Walk") != -1:
 				entity.pause()
 	else:
 		push_error("Entity reference is null in WalkState")
