@@ -41,4 +41,5 @@ func _physics_process(_delta):
 
 func _exit_state():
 	# Any cleanup if necessary
+	disconnect_from_animation_end(_on_standup_finished)
 	pass

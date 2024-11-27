@@ -2,7 +2,7 @@ class_name InputHandler
 extends Node
 
 # Signal emitted when there's a change in input direction
-signal direction_changed(new_direction: Vector2)
+# signal direction_changed(new_direction: Vector2)
 
 # The current input vector
 var input_vector: Vector2 = Vector2.ZERO

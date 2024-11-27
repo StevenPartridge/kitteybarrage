@@ -24,7 +24,7 @@ func _enter_state():
 	else:
 		push_error("Entity reference is null in SitState")
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	pass
 
 func _exit_state():
@@ -37,4 +37,5 @@ func _exit_state():
 func _on_animation_finished():
 	if entity:
 		#entity.state_machine.change_state(WalkState.new())
+		disconnect_from_animation_end(_on_animation_finished)
 		pass

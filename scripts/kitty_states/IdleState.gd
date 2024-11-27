@@ -5,7 +5,7 @@ func _enter_state():
 	owner.velocity = Vector2.ZERO
 	owner.play_animation("Idle", owner.facing_direction)
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	var input_vector = owner.get_input_vector()
 	if input_vector != Vector2.ZERO:
 		# Transition to WalkState
