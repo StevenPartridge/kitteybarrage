@@ -23,6 +23,8 @@ func _ready():
 	facing_direction = Global.Direction.SOUTH
 	sit_delay_timer = 0.0
 
+	state_machine.wait_for_animation = false
+
 	# Start in SitState with start_at_end = true
 	state_machine.change_state(SitState.new(true, true))  # Passing start_at_end = true, start_paused = true
 
@@ -36,7 +38,7 @@ func _on_direction_changed(new_direction: Vector2):
 
 func _physics_process(delta):
 	# Allow the animation to finish before changing states
-	if !state_machine.wait_for_animation:
+	if state_machine.wait_for_animation:
 		return
 
 	if input_handler.is_moving():
@@ -70,7 +72,7 @@ func play_animation(state_name: String, direction: Global.Direction, start_at_en
 		push_error("Animation not found: " + animation_name)
 
 func play_animation_once(state_name: String, direction: Global.Direction, start_at_end := false):
-	state_machine.wait_for_animation = false
+	state_machine.wait_for_animation = true
 	var animation_name = get_full_animation_name(state_name, direction)
 	
 	# Check if the animation exists
@@ -82,7 +84,7 @@ func play_animation_once(state_name: String, direction: Global.Direction, start_
 		# Play the animation
 		if start_at_end:
 			animation_player.play_backwards(animation_name)
-			state_machine.wait_for_animation = true
+			state_machine.wait_for_animation = false
 		else:
 			animation_player.play(animation_name)
 		
@@ -99,7 +101,7 @@ func play_animation_once(state_name: String, direction: Global.Direction, start_
 # Handle pausing when the animation finishes
 func _on_animation_finished():
 	print("Animation Changed!!!")
-	state_machine.wait_for_animation = true
+	state_machine.wait_for_animation = false
 	animation_player.pause()
 
 func get_full_animation_name(state_name: String, direction: Global.Direction):
