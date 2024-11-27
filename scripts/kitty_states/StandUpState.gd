@@ -14,9 +14,7 @@ func _enter_state():
 		entity.velocity = Vector2.ZERO
 		entity.play_animation_once("Sit", entity.facing_direction, !start_at_end)
 		# Connect the animation_finished signal to transition to WalkState
-		if entity.animation_player.is_connected("animation_finished", _on_animation_finished):
-			entity.animation_player.disconnect("animation_finished", _on_animation_finished)  # Avoid duplicates
-		entity.animation_player.connect("animation_finished", _on_animation_finished)
+		listen_for_animation_end(_on_animation_finished)
 	else:
 		push_error("Entity reference is null in StandUpState")
 

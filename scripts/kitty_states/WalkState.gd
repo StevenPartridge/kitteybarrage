@@ -19,9 +19,7 @@ func _enter_state():
 		if in_standup_animation:
 			entity.play_animation_once("Sit", entity.facing_direction, true) # start_from_end = true
 			# Connect the animation_finished signal to transition to WalkState
-			if entity.animation_player.is_connected("animation_finished", _on_standup_finished):
-				entity.animation_player.disconnect("animation_finished", _on_standup_finished)  # Avoid duplicates
-			entity.animation_player.connect("animation_finished", _on_standup_finished)
+			listen_for_animation_end(_on_standup_finished)
 	else:
 		push_error("Entity reference is null in WalkState")
 
@@ -36,7 +34,7 @@ func _physics_process(_delta):
 				entity.play_animation("Walk", entity.facing_direction)
 		else:
 			entity.velocity = Vector2.ZERO
-			if !entity.wait_for_animation and entity.current_state == "SitState":
+			if entity.state_machine.current_state == "WalkState":
 				entity.pause()
 	else:
 		push_error("Entity reference is null in WalkState")

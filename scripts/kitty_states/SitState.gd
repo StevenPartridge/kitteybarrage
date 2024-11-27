@@ -2,21 +2,25 @@ class_name SitState
 extends State
 
 var start_at_end := false  # Start the Sit animation at the end frame
+var start_paused := false  # Start the Sit animation paused
 
 func name():
 	return "SitState"
 
-func _init(_start_at_end := false):
+func _init(_start_at_end := false, _start_paused := false):
 	start_at_end = _start_at_end
+	start_paused = _start_paused
 
 func _enter_state():
 	if entity:
 		entity.velocity = Vector2.ZERO
 		entity.play_animation_once("Sit", entity.facing_direction, start_at_end)
 		# Connect the animation_finished signal to transition to WalkState
-		if entity.animation_player.is_connected("animation_finished", _on_animation_finished):
-			entity.animation_player.disconnect("animation_finished", _on_animation_finished)  # Avoid duplicates
-		entity.animation_player.connect("animation_finished", _on_animation_finished)
+		
+		listen_for_animation_end(_on_animation_finished)
+
+		if start_paused:
+			entity.pause()
 	else:
 		push_error("Entity reference is null in SitState")
 

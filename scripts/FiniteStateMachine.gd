@@ -5,6 +5,7 @@ extends Node
 
 @export var current_state: String
 @export var previous_state: String
+@export var wait_for_animation: bool = true
 
 func _ready():
 	change_state(state)
