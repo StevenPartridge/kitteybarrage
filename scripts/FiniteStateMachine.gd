@@ -3,8 +3,8 @@ extends Node
 
 @export var state: State
 
-@export var current_state: String
-@export var previous_state: String
+@export var current_state: Global.StateName = Global.StateName.SIT
+@export var previous_state: Global.StateName = Global.StateName.SIT
 @export var wait_for_animation: bool = true
 
 func _ready():
@@ -20,7 +20,7 @@ func change_state(new_state: State):
 			state.queue_free()
 		state = null  # Clear the reference to the old state
 		state = new_state
-	if state:
+	if state and new_state:
 		previous_state = current_state
 		current_state = new_state.name()
 		state.entity = get_parent()
@@ -29,8 +29,7 @@ func change_state(new_state: State):
 		if not state.get_parent():
 			add_child(state)
 	else:
-		pass
-		#push_error("Failed to change state: new_state is null.")
+		push_error("Failed to change state: new_state is null.")
 	
 func _physics_process(delta):
 	if state is State:

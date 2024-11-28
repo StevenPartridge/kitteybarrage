@@ -5,7 +5,7 @@ extends State
 var in_standup_animation: bool = false
 
 func name():
-	return "WalkState"
+	return Global.StateName.WALK
 
 func _on_standup_finished():
 	in_standup_animation = false
@@ -13,11 +13,10 @@ func _on_standup_finished():
 
 func _enter_state():
 	if entity:
-		if entity.state_machine.previous_state == "SitState":
+		if entity.state_machine.previous_state == Global.StateName.SIT:
 			in_standup_animation = true
 		if in_standup_animation:
-			entity.play_animation_once("Sit", entity.facing_direction, true) # start_from_end = true
-			# Connect the animation_finished signal to transition to WalkState
+			entity.play_animation_once("Sit", entity.facing_direction, true)
 			listen_for_animation_end(_on_standup_finished)
 	else:
 		push_error("Entity reference is null in WalkState")
@@ -27,7 +26,7 @@ func _physics_process(_delta):
 		if entity.input_handler.is_moving():
 			entity.velocity = entity.input_handler.input_vector * entity.speed
 			entity.facing_direction = entity.input_handler.get_facing_direction()
-			if !in_standup_animation:
+			if not in_standup_animation:
 				entity.move_and_slide()
 				# Update animation if direction changed
 				entity.play_animation("Walk", entity.facing_direction)

@@ -4,7 +4,7 @@ extends State
 var start_at_end := false  # Start the Sit animation at the end frame
 
 func name():
-	return "StandUpState"
+	return Global.StateName.STANDUP
 
 func _init(_start_at_end := false):
 	start_at_end = _start_at_end

@@ -5,7 +5,7 @@ var start_at_end := false  # Start the Sit animation at the end frame
 var start_paused := false  # Start the Sit animation paused
 
 func name():
-	return "SitState"
+	return Global.StateName.SIT
 
 func _init(_start_at_end := false, _start_paused := false):
 	start_at_end = _start_at_end

@@ -10,6 +10,13 @@ var input_handler: InputHandler
 var sit_delay: float = 1.0  # Delay duration in seconds
 var sit_delay_timer: float = 0.0  # Timer to track elapsed time
 
+# New properties for KittyDirector
+var activity_preference: Dictionary
+var activity_duration: Dictionary
+var activity_timer: float = 0.0
+var rest_timer: float = 0.0
+var current_activity: Global.StateName
+
 func _ready():
 	#### Input handling
 	input_handler = InputHandler.new()
@@ -43,13 +50,13 @@ func _physics_process(delta):
 
 	if input_handler.is_moving():
 		# Only reset the timer when transitioning to movement
-		if sit_delay_timer > 0.0 and state_machine.current_state == "WalkState":  # Timer was active
+		if sit_delay_timer > 0.0 and state_machine.current_state == Global.StateName.WALK:  # Timer was active
 			sit_delay_timer = 0.0  # Reset
-		if state_machine.current_state != "WalkState":
+		if state_machine.current_state != Global.StateName.WALK:
 			state_machine.change_state(WalkState.new())
 	else:
 		# Increment sit delay timer if not moving
-		if state_machine.current_state != "SitState":
+		if state_machine.current_state != Global.StateName.SIT:
 			sit_delay_timer += delta
 			if sit_delay_timer >= sit_delay:
 				state_machine.change_state(SitState.new(false))
@@ -61,7 +68,7 @@ func pause():
 	animation_player.pause()
 
 func play_animation(state_name: String, direction: Global.Direction, start_at_end := false):
-	var animation_name = get_full_animation_name(state_name, direction)
+	var animation_name = Global.get_full_animation_name(state_name, direction)
 	if animation_player.sprite_frames.has_animation(animation_name):
 		if start_at_end:
 			animation_player.play_backwards(animation_name)
@@ -72,7 +79,7 @@ func play_animation(state_name: String, direction: Global.Direction, start_at_en
 
 func play_animation_once(state_name: String, direction: Global.Direction, start_at_end := false):
 	state_machine.wait_for_animation = true
-	var animation_name = get_full_animation_name(state_name, direction)
+	var animation_name = Global.get_full_animation_name(state_name, direction)
 	
 	# Check if the animation exists
 	if animation_player.sprite_frames.has_animation(animation_name):
@@ -102,23 +109,3 @@ func _on_animation_finished():
 	state_machine.wait_for_animation = false
 	animation_player.pause()
 
-func get_full_animation_name(state_name: String, direction: Global.Direction):
-	var direction_suffix = ""
-	match direction:
-		Global.Direction.NORTH:
-			direction_suffix = "_North"
-		Global.Direction.NORTHEAST:
-			direction_suffix = "_Northeast"
-		Global.Direction.EAST:
-			direction_suffix = "_East"
-		Global.Direction.SOUTHEAST:
-			direction_suffix = "_Southeast"
-		Global.Direction.SOUTH:
-			direction_suffix = "_South"
-		Global.Direction.SOUTHWEST:
-			direction_suffix = "_Southwest"
-		Global.Direction.WEST:
-			direction_suffix = "_West"
-		Global.Direction.NORTHWEST:
-			direction_suffix = "_Northwest"
-	return state_name + direction_suffix

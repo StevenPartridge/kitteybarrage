@@ -1634,7 +1634,7 @@ script = ExtResource("1_bocli")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 texture_filter = 1
-position = Vector2(303, 303)
-scale = Vector2(19.9375, 19.9375)
+position = Vector2(-3, 0)
+scale = Vector2(3.1775, 3.1775)
 sprite_frames = SubResource("SpriteFrames_0yyhe")
 animation = &"Walk_East"
