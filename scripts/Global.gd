@@ -87,3 +87,19 @@ func get_full_animation_name(state_name: String, direction: Global.Direction):
 		Global.Direction.NORTHWEST:
 			direction_suffix = "_Northwest"
 	return state_name + direction_suffix
+
+
+func direction_from_vector(input_vector: Vector2) -> Global.Direction:
+	var angle = input_vector.angle()
+	var eight_directions = [
+		Global.Direction.EAST,
+		Global.Direction.SOUTHEAST,
+		Global.Direction.SOUTH,
+		Global.Direction.SOUTHWEST,
+		Global.Direction.WEST,
+		Global.Direction.NORTHWEST,
+		Global.Direction.NORTH,
+		Global.Direction.NORTHEAST
+	]
+	var index = int(round(angle / (PI / 4))) % 8
+	return eight_directions[index]

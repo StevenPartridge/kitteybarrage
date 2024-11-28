@@ -58,6 +58,11 @@ func decide_next_activity(kitty):
 			if random_value <= cumulative_weight:
 				kitty.current_activity = activity
 				break
+
+	# 10% chance to change kitty target location
+	if randf() < 0.4:
+		var target_position = Vector2(randf_range(0, get_viewport().get_visible_rect().size.x), randf_range(0, get_viewport().get_visible_rect().size.y))
+		WalkToLocation(kitty, target_position)
 		
 	# Update the kitty's state
 	kitty.state_machine.change_state(Global.state_name_to_state(kitty.current_activity))
@@ -73,16 +78,13 @@ func _physics_process(delta):
 func WalkToLocation(kitty, target_position: Vector2):
 	# Set the kitty's target position and change state to WALK
 	kitty.target_position = target_position
-	kitty.state_machine.change_state(Global.StateName.WALK)
 
 func SpawnKittyAtLocation(position: Vector2):
 	if kitty_scene == null:
 		push_error("Kitty scene is not assigned.")
 		return
 
-	# Use load() instead of preload() if the path isn&#39;t known at compile-time.
 	var new_kitty = kitty_scene.instantiate()
-
 	if new_kitty == null:
 		push_error("Failed to instance kitty scene.")
 		return

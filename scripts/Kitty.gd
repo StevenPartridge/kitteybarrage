@@ -16,6 +16,7 @@ var activity_duration: Dictionary
 var activity_timer: float = 0.0
 var rest_timer: float = 0.0
 var current_activity: Global.StateName
+@export var target_position: Vector2 = Vector2.ZERO
 
 func _ready():
 	#### Input handling

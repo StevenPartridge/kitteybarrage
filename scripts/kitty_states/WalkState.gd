@@ -23,16 +23,18 @@ func _enter_state():
 
 func _physics_process(_delta):
 	if entity:
-		if entity.input_handler.is_moving():
-			entity.velocity = entity.input_handler.input_vector * entity.speed
-			entity.facing_direction = entity.input_handler.get_facing_direction()
+		if entity.target_position != Vector2.ZERO:
+			var direction = (entity.target_position - entity.position).normalized()
+			entity.velocity = direction * entity.speed
+			entity.facing_direction = Global.direction_from_vector(direction)
 			if not in_standup_animation:
 				entity.move_and_slide()
-				# Update animation if direction changed
 				entity.play_animation("Walk", entity.facing_direction)
+			if entity.position.distance_to(entity.target_position) < 5.0:
+				entity.target_position = Vector2.ZERO
+				entity.state_machine.change_state(SitState.new(false))
 		else:
 			entity.velocity = Vector2.ZERO
-			# string includes "Walk"
 			if entity.animation_player.animation.find("Walk") != -1:
 				entity.pause()
 	else:
