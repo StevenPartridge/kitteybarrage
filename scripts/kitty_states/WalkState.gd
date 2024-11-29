@@ -32,6 +32,7 @@ func _physics_process(_delta):
 				entity.play_animation("Walk", entity.facing_direction)
 			if entity.position.distance_to(entity.target_position) < 5.0:
 				entity.target_position = Vector2.ZERO
+				entity.velocity = Vector2.ZERO
 				entity.state_machine.change_state(SitState.new(false))
 		else:
 			entity.velocity = Vector2.ZERO
@@ -43,4 +44,5 @@ func _physics_process(_delta):
 func _exit_state():
 	# Any cleanup if necessary
 	disconnect_from_animation_end(_on_standup_finished)
-	pass
+	entity.velocity = Vector2.ZERO
+	entity.pause()

@@ -12,7 +12,4 @@ position = Vector2(537, 203)
 
 [node name="KittyDirector" type="Node" parent="."]
 script = ExtResource("3_ypklt")
-kitties = null
-activity_change_interval = null
-rest_threshold = null
 kitty_scene = ExtResource("2_xxgtx")

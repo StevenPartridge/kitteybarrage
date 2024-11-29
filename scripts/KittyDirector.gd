@@ -26,9 +26,9 @@ func _process(delta):
 func initialize_kitty(kitty):
 	kitty.activity_preference = {
 		Global.StateName.WALK: 0.5,
-		Global.StateName.RUN: 0.2,
-		Global.StateName.SIT: 0.1,
-		Global.StateName.LAY: 0.2
+		Global.StateName.RUN: 0.0,
+		Global.StateName.SIT: 0.5,
+		Global.StateName.LAY: 0.0
 	}
 	kitty.activity_duration = {
 		Global.StateName.WALK: 5.0,
@@ -65,7 +65,19 @@ func decide_next_activity(kitty):
 		WalkToLocation(kitty, target_position)
 		
 	# Update the kitty's state
-	kitty.state_machine.change_state(Global.state_name_to_state(kitty.current_activity))
+	match kitty.current_activity:
+		Global.StateName.WALK:
+			kitty.state_machine.change_state(Global.state_name_to_state(Global.StateName.WALK))
+			# case Global.StateName.RUN:
+				# TODO: Implement RUN state
+			# 	kitty.state_machine.change_state(Global.state_name_to_state(Global.StateName.RUN))
+		Global.StateName.SIT:
+			kitty.state_machine.change_state(Global.state_name_to_state(Global.StateName.SIT))
+		# Global.StateName.LAY:
+			# TODO: Implement LAY state
+		# 	kitty.state_machine.change_state(Global.state_name_to_state(kitty.current_activity))
+		_:
+			push_error("Invalid activity: " + str(kitty.current_activity))
 	kitty.activity_timer = kitty.activity_duration[kitty.current_activity]
 	kitty.rest_timer += kitty.activity_duration[kitty.current_activity]
 

@@ -44,26 +44,26 @@ func _on_direction_changed(new_direction: Vector2):
 		# Handle stopping movement or idle state
 		pass
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	# Allow the animation to finish before changing states
 	if state_machine.wait_for_animation:
 		return
 
-	if input_handler.is_moving():
-		# Only reset the timer when transitioning to movement
-		if sit_delay_timer > 0.0 and state_machine.current_state == Global.StateName.WALK:  # Timer was active
-			sit_delay_timer = 0.0  # Reset
-		if state_machine.current_state != Global.StateName.WALK:
-			state_machine.change_state(WalkState.new())
-	else:
-		# Increment sit delay timer if not moving
-		if state_machine.current_state != Global.StateName.SIT:
-			sit_delay_timer += delta
-			if sit_delay_timer >= sit_delay:
-				state_machine.change_state(SitState.new(false))
-				sit_delay_timer = 0.0
-		else:
-			sit_delay_timer = 0.0
+	# if input_handler.is_moving():
+	# 	# Only reset the timer when transitioning to movement
+	# 	if sit_delay_timer > 0.0 and state_machine.current_state == Global.StateName.WALK:  # Timer was active
+	# 		sit_delay_timer = 0.0  # Reset
+	# 	if state_machine.current_state != Global.StateName.WALK:
+	# 		state_machine.change_state(WalkState.new())
+	# else:
+	# 	# Increment sit delay timer if not moving
+	# 	if state_machine.current_state != Global.StateName.SIT:
+	# 		sit_delay_timer += delta
+	# 		if sit_delay_timer >= sit_delay:
+	# 			state_machine.change_state(SitState.new(false))
+	# 			sit_delay_timer = 0.0
+	# 	else:
+	# 		sit_delay_timer = 0.0
 
 func pause():
 	animation_player.pause()

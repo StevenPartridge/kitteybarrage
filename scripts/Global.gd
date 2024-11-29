@@ -11,10 +11,10 @@ enum StateName {
     RUN
 }
 
-func state_name_to_state(state_name: StateName) -> State:
+func state_name_to_state(state_name: StateName, extra: bool = false, extra2 = false) -> State:
 	match state_name:
 		StateName.SIT:
-			return SitState.new()
+			return SitState.new(extra, extra2)
 		StateName.WALK:
 			return WalkState.new()
 		StateName.STANDUP:
