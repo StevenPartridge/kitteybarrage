@@ -7,12 +7,18 @@ class_name KittyDirector
 @export var kitty_scene: PackedScene  # Scene to instantiate new kitties
 
 var activity_timer: float = 0.0
+var input_handler: InputHandler
 
 func _ready():
 
 	# Initialize kitties with unique variables
 	for kitty in kitties:
 		initialize_kitty(kitty)
+	
+	# Initialize InputHandler
+	input_handler = InputHandler.new()
+	add_child(input_handler)
+	input_handler.connect("direction_changed", _on_direction_changed)
 
 func _process(delta):
 	activity_timer += delta
@@ -114,6 +120,8 @@ func _input(event):
 	elif event is InputEventMouseMotion:
 		# print("Mouse Motion at: ", event.position)
 		pass
+	elif event.is_action_pressed("change_focus"):
+		FocusManager.cycle_focus()
 
 func highlight_controlled_kitty():
 	for kitty in kitties:
@@ -121,5 +129,11 @@ func highlight_controlled_kitty():
 			kitty.set_highlight(true)
 		else:
 			kitty.set_highlight(false)
+
+func _on_direction_changed(new_direction: Vector2):
+	for kitty in kitties:
+		if kitty.is_currently_controlled:
+			kitty.handle_direction_change(new_direction)
+			break
 
 

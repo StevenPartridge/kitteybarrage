@@ -6,7 +6,6 @@ extends CharacterBody2D
 
 var facing_direction = Global.Direction.SOUTH
 var grid_size := 32
-var input_handler: InputHandler
 var sit_delay: float = 1.0
 var sit_delay_timer: float = 0.0
 
@@ -22,17 +21,12 @@ var current_activity: Global.StateName
 var is_currently_controlled: bool = false
 
 func _ready():
-	# 1) InputHandler Setup
-	input_handler = InputHandler.new()
-	add_child(input_handler)
-	input_handler.connect("direction_changed", _on_direction_changed)
-
-	# 2) Register with FocusManager
+	# 1) Register with FocusManager
 	#    Ensure "FocusManager" is either autoloaded or in the scene.
 	#    'FocusManager' is the script we created to cycle input focus (FocusInputManager).
 	FocusManager.register_input_handler(self)
 	
-	# 3) State Machine Setup
+	# 2) State Machine Setup
 	animation_player = $AnimatedSprite2D
 	state_machine = FiniteStateMachine.new()
 	add_child(state_machine)
@@ -45,13 +39,32 @@ func _ready():
 	# Start in SitState with start_at_end = true, paused, for example
 	state_machine.change_state(SitState.new(true, true))
 
-func _on_direction_changed(new_direction: Vector2):
+func handle_direction_change(new_direction: Vector2):
 	if new_direction != Vector2.ZERO:
-		facing_direction = input_handler.get_facing_direction()
-		# Possibly trigger a movement state
+		facing_direction = get_facing_direction(new_direction)
+		if state_machine.current_state != Global.StateName.WALK:
+			state_machine.change_state(WalkState.new())
 	else:
-		# Possibly transition to an idle/sit state
-		pass
+		if state_machine.current_state != Global.StateName.SIT:
+			state_machine.change_state(SitState.new())
+		sit_delay_timer = sit_delay
+
+func get_facing_direction(input_vector: Vector2) -> Global.Direction:
+	if input_vector == Vector2.ZERO:
+		return facing_direction  # No movement input
+	var angle = input_vector.angle()
+	var eight_directions = [
+		Global.Direction.EAST,
+		Global.Direction.SOUTHEAST,
+		Global.Direction.SOUTH,
+		Global.Direction.SOUTHWEST,
+		Global.Direction.WEST,
+		Global.Direction.NORTHWEST,
+		Global.Direction.NORTH,
+		Global.Direction.NORTHEAST
+	]
+	var index = int(round(angle / (PI / 4))) % 8
+	return eight_directions[index]
 
 # ----------------------------------------------------------------
 # FocusManager Hooks
@@ -62,7 +75,14 @@ func set_input_active(active: bool):
 	Called by FocusManager when this kitty is (or isn't) the actively controlled entity.
 	"""
 	is_currently_controlled = active
-	print("Kitty now active")
+	if active:
+		print("Kitty now active")
+		if state_machine and state_machine.current_state != Global.StateName.SIT:
+			state_machine.change_state(SitState.new())
+	else:
+		print("Kitty now inactive")
+		if state_machine.current_state != Global.StateName.SIT:
+			state_machine.change_state(SitState.new())
 	# If we want to reset input or states when losing focus, do it here as well.
 
 func set_highlight(enable: bool):
@@ -87,12 +107,8 @@ func _physics_process(delta):
 	# 2) Only process movement/input if this kitty is currently focused/controlled.
 	if not is_currently_controlled:
 		return
-	if input_handler.is_moving():
-		if state_machine.current_state != Global.StateName.WALK:
-			state_machine.change_state(WalkState.new())
-		else:
-			pass
-			# handleIdleLogic()
+
+	# Handle movement logic here if needed
 
 # ----------------------------------------------------------------
 # Animation Helpers
