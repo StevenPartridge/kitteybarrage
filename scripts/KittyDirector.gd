@@ -6,7 +6,7 @@ class_name KittyDirector
 @export var rest_threshold: float = 10.0  # Threshold for resting after activities
 @export var kitty_scene: PackedScene  # Scene to instantiate new kitties
 
-var activity_timer: float = 0.0
+
 var input_handler: InputHandler
 var idle_timer: float = 0.0
 var idle_threshold: float = 5.0  # Time in seconds before sitting
@@ -19,35 +19,34 @@ func _ready():
 	# Initialize InputHandler
 	input_handler = InputHandler.new()
 	add_child(input_handler)
-	input_handler.connect("direction_changed", _on_direction_changed)
+	# input_handler.connect("direction_changed", _on_direction_changed)
 
 func _physics_process(delta):
-	activity_timer += delta
-	idle_timer += delta
 
-	if activity_timer >= activity_change_interval:
-		activity_timer = 0.0
-		for kitty in kitties:
-			decide_next_activity(kitty)
-	highlight_controlled_kitty()
-
-	if input_handler.is_moving():
-		idle_timer = 0.0  # Reset idle timer on movement
-		for kitty in kitties:
-			if kitty.is_currently_controlled:
-				kitty.handle_direction_change(input_handler.input_vector)
-				break
-	else:
-		if idle_timer >= idle_threshold:
-			for kitty in kitties:
-				if kitty.is_currently_controlled:
-					kitty.state_machine.change_state(Global.state_name_to_state(Global.StateName.SIT))
-					break
-
+	## For each kitty, we update the current state
 	for kitty in kitties:
-		kitty.activity_timer -= delta
-		if kitty.activity_timer <= 0 and not kitty.is_currently_controlled:
-			decide_next_activity(kitty)
+
+		## Only one kitty is controlled at a time
+		if kitty.is_currently_controlled:
+			if kitty.is_currently_controlled and input_handler.is_moving():
+				kitty.update_direction(input_handler.input_vector)
+				## move kitty in the direction
+				kitty.state_machine.change_state(Global.state_name_to_state(Global.StateName.WALK))
+				kitty.target_position = kitty.position + (input_handler.input_vector * kitty.speed * delta)
+			else:
+				print("Idle for: ", idle_timer)
+				print("Idle threshold: ", idle_threshold)
+				if idle_timer >= idle_threshold and kitty.current_activity != Global.StateName.SIT:
+					kitty.state_machine.change_state(Global.state_name_to_state(Global.StateName.SIT))
+
+		## Update the kitty's state machine
+		else:
+			if kitty.activity_timer >= kitty.activity_duration[kitty.current_activity]:
+				kitty.activity_timer = 0.0
+				decide_next_activity(kitty)
+			else:
+				kitty.activity_timer += delta
+
 
 func initialize_kitty(kitty):
 	kitty.activity_preference = {
@@ -145,8 +144,8 @@ func highlight_controlled_kitty():
 		else:
 			kitty.set_highlight(false)
 
-func _on_direction_changed(new_direction: Vector2):
-	for kitty in kitties:
-		if kitty.is_currently_controlled:
-			kitty.handle_direction_change(new_direction)
-			break
+# func _on_direction_changed(new_direction: Vector2):
+# 	for kitty in kitties:
+# 		if kitty.is_currently_controlled:
+# 			kitty.update_direction(new_direction)
+# 			break

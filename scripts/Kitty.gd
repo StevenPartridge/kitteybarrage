@@ -10,9 +10,9 @@ var sit_delay: float = 1.0
 var sit_delay_timer: float = 0.0
 
 # Director-related
-var activity_preference: Dictionary
-var activity_duration: Dictionary
-var activity_timer: float = 0.0
+@export var activity_preference: Dictionary
+@export var activity_duration: Dictionary
+@export var activity_timer: float = 0.0
 var rest_timer: float = 0.0
 var current_activity: Global.StateName
 @export var target_position: Vector2 = Vector2.ZERO
@@ -39,15 +39,10 @@ func _ready():
 	# Start in SitState with start_at_end = true, paused, for example
 	state_machine.change_state(SitState.new(true, true))
 
-func handle_direction_change(new_direction: Vector2):
+func update_direction(new_direction: Vector2):
 	if new_direction != Vector2.ZERO:
 		facing_direction = get_facing_direction(new_direction)
-		if state_machine.current_state != Global.StateName.WALK:
-			state_machine.change_state(WalkState.new())
-	else:
-		if state_machine.current_state != Global.StateName.SIT:
-			state_machine.change_state(SitState.new())
-		sit_delay_timer = sit_delay
+
 
 func get_facing_direction(input_vector: Vector2) -> Global.Direction:
 	if input_vector == Vector2.ZERO:
