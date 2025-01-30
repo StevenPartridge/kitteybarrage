@@ -8,9 +8,10 @@ class_name KittyDirector
 
 var activity_timer: float = 0.0
 var input_handler: InputHandler
+var idle_timer: float = 0.0
+var idle_threshold: float = 5.0  # Time in seconds before sitting
 
 func _ready():
-
 	# Initialize kitties with unique variables
 	for kitty in kitties:
 		initialize_kitty(kitty)
@@ -20,13 +21,33 @@ func _ready():
 	add_child(input_handler)
 	input_handler.connect("direction_changed", _on_direction_changed)
 
-func _process(delta):
+func _physics_process(delta):
 	activity_timer += delta
+	idle_timer += delta
+
 	if activity_timer >= activity_change_interval:
 		activity_timer = 0.0
 		for kitty in kitties:
 			decide_next_activity(kitty)
 	highlight_controlled_kitty()
+
+	if input_handler.is_moving():
+		idle_timer = 0.0  # Reset idle timer on movement
+		for kitty in kitties:
+			if kitty.is_currently_controlled:
+				kitty.handle_direction_change(input_handler.input_vector)
+				break
+	else:
+		if idle_timer >= idle_threshold:
+			for kitty in kitties:
+				if kitty.is_currently_controlled:
+					kitty.state_machine.change_state(Global.state_name_to_state(Global.StateName.SIT))
+					break
+
+	for kitty in kitties:
+		kitty.activity_timer -= delta
+		if kitty.activity_timer <= 0 and not kitty.is_currently_controlled:
+			decide_next_activity(kitty)
 
 func initialize_kitty(kitty):
 	kitty.activity_preference = {
@@ -86,12 +107,6 @@ func decide_next_activity(kitty):
 	kitty.activity_timer = kitty.activity_duration[kitty.current_activity]
 	kitty.rest_timer += kitty.activity_duration[kitty.current_activity]
 
-func _physics_process(delta):
-	for kitty in kitties:
-		kitty.activity_timer -= delta
-		if kitty.activity_timer <= 0 and not kitty.is_currently_controlled:
-			decide_next_activity(kitty)
-
 func WalkToLocation(kitty, target_position: Vector2):
 	# Set the kitty's target position and change state to WALK
 	kitty.target_position = target_position
@@ -135,5 +150,3 @@ func _on_direction_changed(new_direction: Vector2):
 		if kitty.is_currently_controlled:
 			kitty.handle_direction_change(new_direction)
 			break
-
-

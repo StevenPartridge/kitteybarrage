@@ -75,14 +75,14 @@ func set_input_active(active: bool):
 	Called by FocusManager when this kitty is (or isn't) the actively controlled entity.
 	"""
 	is_currently_controlled = active
-	if active:
-		print("Kitty now active")
-		if state_machine and state_machine.current_state != Global.StateName.SIT:
-			state_machine.change_state(SitState.new())
-	else:
-		print("Kitty now inactive")
-		if state_machine.current_state != Global.StateName.SIT:
-			state_machine.change_state(SitState.new())
+	# if active:
+	# 	print("Kitty now active")
+	# 	if state_machine and state_machine.current_state != Global.StateName.SIT:
+	# 		state_machine.change_state(SitState.new())
+	# else:
+	# 	print("Kitty now inactive")
+	# 	if state_machine.current_state != Global.StateName.SIT:
+	# 		state_machine.change_state(SitState.new())
 	# If we want to reset input or states when losing focus, do it here as well.
 
 func set_highlight(enable: bool):
@@ -91,7 +91,7 @@ func set_highlight(enable: bool):
 	For example, you can tweak modulate or use a special material.
 	"""
 	if enable:
-		$AnimatedSprite2D.modulate = Color(1.2, 1.2, 1.0, 1.0)  # Slight highlight
+		$AnimatedSprite2D.modulate = Color(1.4, 1.4, 1.0, 1.0)  # Slight highlight
 	else:
 		$AnimatedSprite2D.modulate = Color(1, 1, 1, 1)         # Normal
 
@@ -99,16 +99,8 @@ func set_highlight(enable: bool):
 # Main Loop
 # ----------------------------------------------------------------
 
-func _physics_process(delta):
-	# 1) If the state machine is waiting for an animation, don't do anything else.
-	if state_machine.wait_for_animation:
-		return
-
-	# 2) Only process movement/input if this kitty is currently focused/controlled.
-	if not is_currently_controlled:
-		return
-
-	# Handle movement logic here if needed
+func _physics_process(_delta):
+	pass
 
 # ----------------------------------------------------------------
 # Animation Helpers
