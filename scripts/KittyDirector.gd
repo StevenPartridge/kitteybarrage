@@ -14,14 +14,13 @@ func _ready():
 	for kitty in kitties:
 		initialize_kitty(kitty)
 
-
-
 func _process(delta):
 	activity_timer += delta
 	if activity_timer >= activity_change_interval:
 		activity_timer = 0.0
 		for kitty in kitties:
 			decide_next_activity(kitty)
+	highlight_controlled_kitty()
 
 func initialize_kitty(kitty):
 	kitty.activity_preference = {
@@ -84,7 +83,7 @@ func decide_next_activity(kitty):
 func _physics_process(delta):
 	for kitty in kitties:
 		kitty.activity_timer -= delta
-		if kitty.activity_timer <= 0:
+		if kitty.activity_timer <= 0 and not kitty.is_currently_controlled:
 			decide_next_activity(kitty)
 
 func WalkToLocation(kitty, target_position: Vector2):
@@ -113,8 +112,14 @@ func _input(event):
 		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			SpawnKittyAtLocation(event.position)
 	elif event is InputEventMouseMotion:
-		print("Mouse Motion at: ", event.position)
+		# print("Mouse Motion at: ", event.position)
+		pass
 
-	# Print the size of the viewport.
-	print("Viewport Resolution is: ", get_viewport().get_visible_rect().size)
+func highlight_controlled_kitty():
+	for kitty in kitties:
+		if kitty.is_currently_controlled:
+			kitty.set_highlight(true)
+		else:
+			kitty.set_highlight(false)
+
 
