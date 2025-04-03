@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://b0jjxn31htdrc"]
 
-[ext_resource type="Script" path="res://scripts/Main.gd" id="1_oua6f"]
+[ext_resource type="Script" uid="uid://bnpvwe5kf01tt" path="res://scripts/Main.gd" id="1_oua6f"]
 [ext_resource type="PackedScene" uid="uid://cjlsh354ftqnu" path="res://scenes/Kitty.tscn" id="2_xxgtx"]
-[ext_resource type="Script" path="res://scripts/KittyDirector.gd" id="3_ypklt"]
+[ext_resource type="Script" uid="uid://btajq3ylrymu4" path="res://scripts/KittyDirector.gd" id="3_ypklt"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_oua6f")
