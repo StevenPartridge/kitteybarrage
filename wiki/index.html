@@ -114,9 +114,9 @@
       <div class="card-desc">Character base class extracted from Kitty. WorldDirector replaces KittyDirector. States, FSM, and ActivityBrain all target Character. Decisions recorded. Next steps documented.</div>
       <div class="card-meta">14 files · May 2026</div>
     </a>
-    <a href="task-plan-separation.html" class="card gold">
-      <div class="card-title">Character Separation &amp; Avoidance</div>
-      <div class="card-desc">Characters steer around each other while walking; don't stack at rest. Separation force blended into MovementState velocity. 3 files, no scene changes.</div>
+    <a href="task-plan-separation.html" class="card green">
+      <div class="card-title">Character Separation &amp; Avoidance <span class="pill pill-green" style="font-size:0.62rem;">Done</span></div>
+      <div class="card-desc">Characters steer around each other while walking; don't stack at rest. SeparationSystem wired into WorldDirector, separation force blended into MovementState velocity.</div>
       <div class="card-meta">3 files · May 2026</div>
     </a>
     <a href="task-plan-y-sort.html" class="card green">
@@ -126,10 +126,15 @@
     </a>
   </div>
 
-    <a href="task-plan-state-topology.html" class="card blue">
-      <div class="card-title">State Topology Refactor</div>
-      <div class="card-desc">Move transition topology out of Character._plan_transition into per-character data tables. PostureGroup enum in Global; Kitty extends with SITTING and LYING rows.</div>
+    <a href="task-plan-state-topology.html" class="card green">
+      <div class="card-title">State Topology Refactor <span class="pill pill-green" style="font-size:0.62rem;">Done</span></div>
+      <div class="card-desc">PostureGroup enum in Character.gd; Kitty overrides with SITTING and LYING rows. Transition tables live in _build_posture_groups() and _build_transition_table() per-character.</div>
       <div class="card-meta">3 files · May 2026</div>
+    </a>
+    <a href="task-plan-kitty-variants.html" class="card green">
+      <div class="card-title">Kitty Color Variants &amp; Markings <span class="pill pill-green" style="font-size:0.62rem;">Done</span></div>
+      <div class="card-desc">Atlas swap at spawn gives each kitty a random coat from 24 color families. ColorVariantPool resource manages the enabled set. Debug overlay palette UI lets player configure which colors can spawn.</div>
+      <div class="card-meta">4 files · May 2026</div>
     </a>
   </div>
 
@@ -149,6 +154,21 @@
       <span class="log-date">2026-05-14</span>
       <span class="log-tag">new</span>
       <span class="log-text">Wiki created — Beta Kickoff. Added architecture overview and all planning documents.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-16</span>
+      <span class="log-tag">fix</span>
+      <span class="log-text">MovementState freeze bug fixed — kitties hanging mid-run/sprint when navigation_target became invalid now transition to SitState instead of returning null.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-16</span>
+      <span class="log-tag">feature</span>
+      <span class="log-text">Kitty color variants complete — ColorVariantPool (new), Character.apply_color_variant + _swap_atlas (new), WorldDirector wired (color_pool + _rng), DebugOverlay SPAWN PALETTE section. Each spawned kitty gets a random coat from 24 families; palette is player-configurable via debug overlay.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-16</span>
+      <span class="log-tag">plan</span>
+      <span class="log-text">Kitty color variants plan created — 52 sprite sheet variants + 14 marking overlays from asset pack; 5 design questions open. State topology and separation plans marked complete.</span>
     </div>
     <div class="log-entry">
       <span class="log-date">2026-05-16</span>

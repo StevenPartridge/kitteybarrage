@@ -41,6 +41,7 @@ func tick(_delta: float) -> State:
 	else:
 		entity.velocity = Vector2.ZERO
 		entity.anim.pause()
+		return SitState.new()
 	return null
 
 func _exit_state() -> void:

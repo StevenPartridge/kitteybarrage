@@ -8,6 +8,7 @@ var _posture_groups: Dictionary
 var _transition_table: Dictionary
 
 @export var initial_activity: Global.StateName = Global.StateName.SIT
+@export var color_variant: Texture2D
 
 func _ready() -> void:
 	state_machine = FiniteStateMachine.new()
@@ -18,6 +19,8 @@ func _ready() -> void:
 	add_child(anim)
 	_posture_groups = _build_posture_groups()
 	_transition_table = _build_transition_table()
+	if color_variant != null:
+		_swap_atlas(color_variant)
 	state_machine.change_state(_state_for_activity(initial_activity))
 
 func _build_posture_groups() -> Dictionary:
@@ -72,6 +75,23 @@ func begin_sprint() -> void:
 
 func set_highlight(enable: bool) -> void:
 	anim.set_modulate(Color(1.4, 1.4, 1.0, 1.0) if enable else Color.WHITE)
+
+func apply_color_variant(atlas: Texture2D) -> void:
+	if atlas == null:
+		return
+	color_variant = atlas
+	_swap_atlas(atlas)
+
+func _swap_atlas(atlas: Texture2D) -> void:
+	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if sprite == null:
+		return
+	sprite.sprite_frames = sprite.sprite_frames.duplicate(true) as SpriteFrames
+	for anim_name: String in sprite.sprite_frames.get_animation_names():
+		for i: int in sprite.sprite_frames.get_frame_count(anim_name):
+			var tex := sprite.sprite_frames.get_frame_texture(anim_name, i)
+			if tex is AtlasTexture:
+				(tex as AtlasTexture).atlas = atlas
 
 # ----------------------------------------------------------------
 # AI decision dispatch

@@ -42,6 +42,7 @@ var _kitty_panel_header: Label
 var _kitty_controls: Array = []
 var _last_kitty: Character = null
 var _sep_draw: SeparationDebugDraw
+var _palette_checks: Dictionary = {}  # family: String → CheckBox
 
 func _ready() -> void:
 	layer = 100
@@ -473,6 +474,8 @@ func _build_buttons() -> ScrollContainer:
 	reps_row.add_child(reps_spin)
 
 	vbox.add_child(HSeparator.new())
+	_build_palette_section(vbox)
+	vbox.add_child(HSeparator.new())
 
 	var sep_check := CheckBox.new()
 	sep_check.text = "Separation radius"
@@ -483,9 +486,10 @@ func _build_buttons() -> ScrollContainer:
 	vbox.add_child(_label("Separation Tuning", 8, Color(0.4, 0.4, 0.55)))
 
 	var sep_sliders: Array = [
-		["Radius",   16.0, 256.0, 4.0,  64.0,  func(v: float) -> void: if _director: _director.separation_radius   = v],
-		["Strength", 0.0,  400.0, 10.0, 120.0, func(v: float) -> void: if _director: _director.separation_strength = v],
-		["Rest Push", 0.0, 100.0, 5.0,  20.0,  func(v: float) -> void: if _director: _director.rest_push_strength  = v],
+		["Radius",    16.0, 256.0, 4.0,  32.0,  "%.0f",  func(v: float) -> void: if _director: _director.separation_system.separation_radius          = v],
+		["Strength",  0.0,  400.0, 10.0, 120.0, "%.0f",  func(v: float) -> void: if _director: _director.separation_system.separation_strength        = v],
+		["Rest Push", 0.0,  100.0, 5.0,  20.0,  "%.0f",  func(v: float) -> void: if _director: _director.separation_system.rest_push_strength         = v],
+		["Nudge %",   0.0,  0.5,   0.01, 0.1,   "%.2f",  func(v: float) -> void: if _director: _director.separation_system.max_speed_nudge_fraction   = v],
 	]
 	for ss: Array in sep_sliders:
 		var row := HBoxContainer.new()
@@ -498,20 +502,67 @@ func _build_buttons() -> ScrollContainer:
 		sl.min_value = ss[1]; sl.max_value = ss[2]; sl.step = ss[3]; sl.value = ss[4]
 		sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		sl.custom_minimum_size = Vector2(0, 16)
+		var fmt: String = ss[5]
 		var val_lbl := Label.new()
-		val_lbl.text = "%.0f" % ss[4]
+		val_lbl.text = fmt % ss[4]
 		val_lbl.add_theme_font_size_override("font_size", 9)
 		val_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.5))
 		val_lbl.custom_minimum_size = Vector2(28, 0)
-		var cb: Callable = ss[5]
+		var cb: Callable = ss[6]
 		sl.value_changed.connect(func(v: float) -> void:
-			val_lbl.text = "%.0f" % v
+			val_lbl.text = fmt % v
 			cb.call(v)
 		)
 		row.add_child(sl)
 		row.add_child(val_lbl)
 
 	return scroll
+
+func _build_palette_section(parent: VBoxContainer) -> void:
+	parent.add_child(_label("SPAWN PALETTE", 8, Color(0.4, 0.55, 0.4)))
+
+	var all_none_row := HBoxContainer.new()
+	all_none_row.add_theme_constant_override("separation", 4)
+	parent.add_child(all_none_row)
+
+	var all_btn := _small_button("All", func() -> void:
+		if _director and _director.color_pool:
+			_director.color_pool.set_all_enabled(true)
+			for cb: CheckBox in _palette_checks.values():
+				cb.button_pressed = true
+	)
+	all_none_row.add_child(all_btn)
+
+	var none_btn := _small_button("None", func() -> void:
+		if _director and _director.color_pool:
+			_director.color_pool.set_all_enabled(false)
+			for cb: CheckBox in _palette_checks.values():
+				cb.button_pressed = false
+	)
+	all_none_row.add_child(none_btn)
+
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 2)
+	grid.add_theme_constant_override("v_separation", 1)
+	parent.add_child(grid)
+
+	var families: Array = []
+	if _director != null and _director.color_pool != null:
+		families = _director.color_pool.get_families()
+
+	for family: String in families:
+		var family_captured: String = family
+		var cb := CheckBox.new()
+		cb.text = family.replace("_", " ")
+		cb.button_pressed = true
+		cb.add_theme_font_size_override("font_size", 9)
+		cb.toggled.connect(func(on: bool) -> void:
+			if _director and _director.color_pool:
+				_director.color_pool.set_enabled(family_captured, on)
+		)
+		grid.add_child(cb)
+		_palette_checks[family] = cb
 
 func _build_status_and_log() -> VBoxContainer:
 	var vbox := VBoxContainer.new()

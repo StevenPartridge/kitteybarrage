@@ -1,9 +1,10 @@
 extends Node
 class_name SeparationSystem
 
-@export var separation_radius: float = 64.0
+@export var separation_radius: float = 32.0
 @export var separation_strength: float = 120.0
 @export var rest_push_strength: float = 20.0
+@export var max_speed_nudge_fraction: float = 0.1
 
 var _characters: Array[Character] = []
 
@@ -35,6 +36,8 @@ func _compute_forces() -> Dictionary:
 			var ma := _mobility(a)
 			var mb := _mobility(b)
 			var total := ma + mb
+			if total == 0.0:
+				continue
 			forces[a] += push * ma / total
 			forces[b] -= push * mb / total
 	return forces
@@ -45,7 +48,7 @@ func _apply_forces(forces: Dictionary, delta: float) -> void:
 		match character.state_machine.current_state_name():
 			Global.StateName.WALK, Global.StateName.RUN, Global.StateName.SPRINT, \
 			Global.StateName.STANDUP, Global.StateName.SITUP:
-				character.velocity += force
+				character.velocity += force.limit_length(character.speed * max_speed_nudge_fraction)
 				character.move_and_slide()
 			_:
 				if force == Vector2.ZERO:
@@ -61,8 +64,8 @@ func _mobility(character: Character) -> float:
 		Global.StateName.STANDUP, Global.StateName.SITUP:
 			return 0.8
 		Global.StateName.SIT, Global.StateName.LOOK_AROUND:
-			return 0.4
+			return 0.0
 		Global.StateName.LAY, Global.StateName.LAY_DOWN:
-			return 0.1
+			return 0.0
 		_:
 			return 0.4

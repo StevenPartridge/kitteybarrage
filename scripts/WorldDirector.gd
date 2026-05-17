@@ -5,15 +5,22 @@ class_name WorldDirector
 @export var default_personality: CharacterPersonality
 @export var kitty_scene: PackedScene
 @export var world_layer: Node2D
+@export var color_pool: ColorVariantPool
 
 var input_handler: InputHandler
 var controlled_character: Character = null
 var brains: Dictionary = {}
 var _focus_index: int = 0
 var separation_system: SeparationSystem
+var _rng: RandomNumberGenerator
 
 func _ready() -> void:
 	assert(world_layer != null, "WorldDirector: world_layer must be assigned in the editor")
+	_rng = RandomNumberGenerator.new()
+	_rng.randomize()
+	if color_pool == null:
+		color_pool = ColorVariantPool.build_kitty_pool()
+
 	if characters.is_empty() and get_parent():
 		for sibling in get_parent().get_children():
 			if sibling is Character and sibling != self:
@@ -59,6 +66,8 @@ func initialize_character(character: Character) -> void:
 		p = default_personality.duplicate() as CharacterPersonality
 	character.personality = p
 	brains[character] = ActivityBrain.new(rng, p)
+	if character.color_variant == null and color_pool != null:
+		character.apply_color_variant(color_pool.pick_random(rng))
 
 func WalkToLocation(character: Character, target_position: Vector2) -> void:
 	character.set_target(PositionTarget.new(target_position))
@@ -76,6 +85,8 @@ func SpawnKittyAtLocation(position: Vector2, initial_activity: Global.StateName 
 
 	new_kitty.position = position
 	new_kitty.initial_activity = initial_activity
+	if color_pool != null:
+		new_kitty.color_variant = color_pool.pick_random(_rng)
 	world_layer.add_child(new_kitty)
 	characters.append(new_kitty)
 	initialize_character(new_kitty)
