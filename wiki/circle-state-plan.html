@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CircleState — Implementation Plan</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f0f13;
+      --bg1:       #1a1a22;
+      --bg2:       #12101a;
+      --border:    #2a2a38;
+      --border2:   #22222e;
+      --text:      #d4d0c8;
+      --text-dim:  #7a7570;
+      --text-code: #a0c0e0;
+      --purple:    #c9b8f0;
+      --purple-dim:#7a4a9a;
+      --green:     #7ee37e;
+      --green-dim: #285a28;
+      --orange:    #e3b07e;
+      --orange-dim:#5a3a18;
+      --red:       #e37e7e;
+      --red-dim:   #5a2828;
+      --blue:      #7ec8e3;
+      --blue-dim:  #2a5070;
+      --gold:      #e0c878;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      line-height: 1.6;
+      max-width: 960px;
+    }
+
+    h1 { font-size: 1.6rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
+    h2 {
+      font-size: 0.9rem; font-weight: 700; color: var(--purple);
+      margin: 2.2rem 0 0.8rem; text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    h3 { font-size: 0.95rem; font-weight: 600; color: #f0ece0; margin-bottom: 0.35rem; }
+    h4 { font-size: 0.82rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.4rem; }
+
+    p { font-size: 0.88rem; color: #b0a898; }
+    .subtitle { color: var(--text-dim); font-size: 0.88rem; margin-bottom: 0.5rem; }
+
+    a { color: var(--blue); text-decoration: none; }
+    code {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.82em;
+      background: #1a1a28;
+      border: 1px solid #2a2a40;
+      border-radius: 3px;
+      padding: 0.05em 0.35em;
+      color: var(--text-code);
+    }
+
+    .divider { border: none; border-top: 1px solid var(--border2); margin: 2rem 0; }
+
+    /* ── Layout ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+    }
+    .card p, .card li { font-size: 0.86rem; color: #b0a898; }
+    .card ul { padding-left: 1.1rem; margin-top: 0.4rem; }
+    .card li { margin-bottom: 0.3rem; }
+
+    /* ── Tags ── */
+    .tag {
+      display: inline-block; font-size: 0.7rem; font-weight: 700;
+      padding: 0.12rem 0.45rem; border-radius: 3px;
+      margin-right: 0.3rem; margin-bottom: 0.35rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .tag-code    { background: #1a2f3a; color: var(--blue);   border: 1px solid var(--blue-dim); }
+    .tag-art     { background: #2f2010; color: var(--orange); border: 1px solid var(--orange-dim); }
+    .tag-design  { background: #2a1f4a; color: var(--purple); border: 1px solid var(--purple-dim); }
+    .tag-idea    { background: #1a2f1a; color: var(--green);  border: 1px solid var(--green-dim); }
+    .tag-done    { background: #1a2a1a; color: #60b060;       border: 1px solid #2a4a2a; }
+    .tag-blocked { background: #2a1a1a; color: var(--red);    border: 1px solid var(--red-dim); }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+
+    /* ── Decision blocks ── */
+    .decision {
+      background: #161220;
+      border: 1px solid #3a2a55;
+      border-left: 3px solid var(--purple-dim);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.87rem;
+    }
+    .decision .d-label { color: #a080d0; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.3rem; }
+    .decision .d-answer { color: #d0b0f0; font-weight: 600; margin-bottom: 0.3rem; font-size: 0.9rem; }
+    .decision .d-note { color: #8a70a8; font-size: 0.83rem; }
+    .decision .d-implication { margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #2a2040; color: #7060a0; font-size: 0.81rem; }
+    .decision .d-implication strong { color: #9070c0; }
+
+    /* ── Warning / info blocks ── */
+    .warn {
+      background: #201510;
+      border: 1px solid #5a3010;
+      border-left: 3px solid #b06020;
+      border-radius: 6px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.86rem;
+      color: #c09060;
+    }
+    .warn strong { color: #e0a860; }
+
+    .info {
+      background: #101820;
+      border: 1px solid #1a3a50;
+      border-left: 3px solid #2a6080;
+      border-radius: 6px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.86rem;
+      color: #6090b0;
+    }
+    .info strong { color: #80b0d0; }
+
+    /* ── Idea blocks ── */
+    .idea {
+      background: #121a12;
+      border: 1px solid var(--green-dim);
+      border-left: 3px solid #3a7a3a;
+      border-radius: 6px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.87rem;
+    }
+    .idea p { color: #80b880; }
+    .idea .detail { margin-top: 0.3rem; color: #5a8a5a; font-size: 0.82rem; }
+
+    /* ── Code blocks ── */
+    pre {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.8rem;
+      background: var(--bg2);
+      border: 1px solid #2a2040;
+      border-radius: 5px;
+      padding: 0.75rem 1rem;
+      margin: 0.6rem 0;
+      color: var(--text-code);
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.55;
+    }
+    pre .add    { color: #70c870; }
+    pre .remove { color: #c07070; text-decoration: line-through; opacity: 0.6; }
+    pre .dim    { color: #4a4a6a; }
+    pre .hi     { color: #e0c878; }
+    pre .comment { color: #4a5a6a; }
+
+    /* ── File change blocks ── */
+    .file-change {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+    }
+    .file-change .fc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1rem;
+      background: #151520;
+      border-bottom: 1px solid var(--border);
+    }
+    .file-change .fc-path {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.8rem;
+      color: #8090b0;
+    }
+    .file-change .fc-body { padding: 0.8rem 1rem; }
+    .file-change .fc-body p { font-size: 0.85rem; color: #8a8a9a; margin-bottom: 0.5rem; }
+
+    /* ── State flow ── */
+    .state-flow {
+      display: flex; align-items: center; flex-wrap: wrap;
+      gap: 0.4rem; margin: 0.5rem 0; font-size: 0.81rem;
+    }
+    .state-box {
+      background: #1f1f2e; border: 1px solid #3a3a55;
+      border-radius: 4px; padding: 0.2rem 0.55rem;
+      color: #8888c8; font-family: monospace; font-size: 0.8rem;
+    }
+    .state-box.new-state { border-color: #5a3a8a; color: #b088e8; background: #1e162e; }
+    .arrow { color: #3a3a50; font-size: 0.8rem; }
+    .arrow-label { font-size: 0.72rem; color: #4a4a60; font-style: italic; }
+
+    /* ── Task list ── */
+    .task-list { list-style: none; padding: 0; }
+    .task-list > li {
+      display: flex; align-items: flex-start; gap: 0.7rem;
+      padding: 0.7rem 0; border-bottom: 1px solid var(--border2);
+      font-size: 0.87rem;
+    }
+    .task-list > li:last-child { border-bottom: none; }
+    .task-num {
+      flex-shrink: 0; width: 1.5rem; height: 1.5rem;
+      background: #2a2a38; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; color: #6a6580; margin-top: 0.05rem;
+    }
+    .task-body { flex: 1; }
+    .task-title { color: #e0d8cc; font-weight: 500; }
+    .task-detail { color: var(--text-dim); font-size: 0.81rem; margin-top: 0.18rem; }
+    .task-files  { font-family: monospace; font-size: 0.75rem; color: #50506a; margin-top: 0.15rem; }
+
+    .phase-label {
+      font-size: 0.73rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.09em; color: #4a4560;
+      margin: 1.4rem 0 0.45rem;
+    }
+
+    /* ── Animation spec ── */
+    .anim-spec {
+      background: #141018;
+      border: 1px solid #3a2a50;
+      border-radius: 8px;
+      padding: 1.1rem 1.2rem;
+    }
+    .anim-spec table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin-top: 0.5rem; }
+    .anim-spec th { text-align: left; color: #7060a0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.4rem 0.6rem; border-bottom: 1px solid #2a2040; }
+    .anim-spec td { padding: 0.4rem 0.6rem; color: #a898c8; border-bottom: 1px solid #1e1a2a; vertical-align: top; }
+    .anim-spec tr:last-child td { border-bottom: none; }
+    .anim-spec td:first-child { font-family: monospace; color: var(--text-code); white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+  <h1>CircleState — Implementation Plan</h1>
+  <p class="subtitle">Kitty Barrage · Updated May 2026 · Verified against current codebase</p>
+
+  <hr class="divider" />
+
+  <!-- DECISIONS -->
+  <h2>Decisions locked in</h2>
+
+  <div class="decision">
+    <div class="d-label">Q1 · Animation approach</div>
+    <div class="d-answer">B — Dedicated Circle animation per direction</div>
+    <div class="d-note">One full 360° clockwise animation called <code>"Circle"</code>. No directional suffix — direction changes mid-animation. Flip horizontally for counterclockwise. Sub-frame playback (start_progress) handles partial arcs like a 90° pivot.</div>
+    <div class="d-implication"><strong>Code impact:</strong> <code>AnimationController</code> needs two additions: <code>set_flip_h(enabled: bool)</code> and <code>play_once_raw(anim_name, start_progress)</code> that bypass the <code>Global.get_full_animation_name</code> suffix convention. <code>CircleState</code> calls these directly rather than using <code>play_loop</code> / <code>play_once</code>.</div>
+  </div>
+
+  <div class="decision">
+    <div class="d-label">Q2 · Direction of rotation</div>
+    <div class="d-answer">B — Match shortest arc to new facing direction</div>
+    <div class="d-note">For the pre-lay circle, some cats will only go one direction — this is personality data. For pivots (Phase 2), shortest arc wins. These have different enough logic that they warrant two states: <code>PreLayCircleState</code> and <code>TurnCircleState</code> (Phase 2), both using the same "Circle" animation asset.</div>
+    <div class="d-implication"><strong>Code impact:</strong> <code>PreLayCircleState</code> reads <code>entity.personality.circle_clockwise_only: bool</code> to decide direction. <code>TurnCircleState</code> (Phase 2) computes shortest arc from <code>entity.facing_direction</code> to new target heading.</div>
+  </div>
+
+  <div class="decision">
+    <div class="d-label">Q3 · Direction-change pivot trigger</div>
+    <div class="d-answer">C — Phase 2, skip for now</div>
+    <div class="d-note">Build <code>PreLayCircleState</code> and stand-to-walk circling first. <code>TurnCircleState</code> and <code>WalkState</code> angle-threshold detection come after the core is working and tuned.</div>
+  </div>
+
+  <div class="decision">
+    <div class="d-label">Q4 · Circle parameters</div>
+    <div class="d-answer">A — Inspector-editable via KittyPersonality</div>
+    <div class="d-note">Adds a new <code>"Circling"</code> export group to <code>KittyPersonality</code> with radius, rotations, speed multiplier, and per-direction preference flags.</div>
+    <div class="d-implication"><strong>Code impact:</strong> <code>KittyPersonality.gd</code> gets new fields. <code>PreLayCircleState._enter_state</code> reads them from <code>entity.personality</code>.</div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ARCHITECTURE OVERVIEW -->
+  <h2>How CircleState fits the state machine</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Phase 1 flows</h3>
+      <div class="state-flow">
+        <span class="state-box">WALK</span><span class="arrow">→ LAY decision →</span>
+        <span class="state-box new-state">PRE_LAY_CIRCLE</span><span class="arrow">→</span>
+        <span class="state-box new-state">LAY</span>
+      </div>
+      <div class="state-flow">
+        <span class="state-box">SIT</span><span class="arrow">→</span>
+        <span class="state-box">STANDUP</span><span class="arrow">→</span>
+        <span class="state-box new-state">PRE_LAY_CIRCLE</span><span class="arrow">→</span>
+        <span class="state-box">WALK</span>
+      </div>
+      <p style="margin-top:0.6rem; font-size:0.82rem; color:#5a5570">Stand-to-walk circling is optional — gated by <code>personality.circle_before_walk: bool</code>. Off by default, on for extra-fussy kitties.</p>
+    </div>
+    <div class="card">
+      <h3>Phase 2 flows (later)</h3>
+      <div class="state-flow">
+        <span class="state-box">WALK</span>
+        <span class="arrow-label">sharp turn</span>
+        <span class="arrow">→</span>
+        <span class="state-box new-state">TURN_CIRCLE</span>
+        <span class="arrow">→</span>
+        <span class="state-box">WALK</span>
+      </div>
+      <p style="margin-top:0.6rem; font-size:0.82rem; color:#5a5570"><code>TurnCircleState</code> carries the pending <code>NavigationTarget</code> through the turn — exits into a new <code>WalkState</code> already aimed at the right target.</p>
+    </div>
+  </div>
+
+  <div class="info" style="margin-top:1rem">
+    <strong>Both states follow the StandUpState pattern</strong> — constructor takes <code>next_state: State</code>, sets <code>_done = true</code> when the arc completes, returns <code>_next_state</code> from <code>tick()</code>. The stretch goal of a <code>TransitionalState</code> base class would consolidate this pattern across StandUpState, PreLayCircleState, and TurnCircleState.
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ANIMATION SPEC -->
+  <h2>Animation asset specification</h2>
+
+  <div class="anim-spec">
+    <table>
+      <thead>
+        <tr><th>Property</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Name in SpriteFrames</td><td><code>"Circle"</code> exactly — no directional suffix. AnimationController uses <code>play_once_raw("Circle", ...)</code> which skips <code>Global.get_full_animation_name</code>.</td></tr>
+        <tr><td>Direction of travel</td><td>Clockwise. Counterclockwise is a free <code>flip_h</code> of the same frames.</td></tr>
+        <tr><td>Starting facing</td><td>South — matches <code>Global.Direction.SOUTH</code> and Kitty's spawn default.</td></tr>
+        <tr><td>Full rotation</td><td>360° of arc = one full loop of the animation. Sub-arcs (90°, 180°) are played using <code>start_progress</code> and <code>end_progress</code> in code — no separate assets needed.</td></tr>
+        <tr><td>Recommended frames</td><td>Minimum 8 frames per 90° of arc (32 frames for a full 360°) for smooth animation at typical game speeds.</td></tr>
+        <tr><td>Radius baked in?</td><td>No — the sprite shows the cat walking in its typical stride. The radius of the on-screen circle is controlled by <code>personality.circle_radius</code> in code. The art just needs to look like a cat walking forward with slight curve.</td></tr>
+        <tr><td>What changes per frame</td><td>The cat's facing direction rotates clockwise. At frame 0: facing South. At ~25% through: facing West. At ~50%: facing North. At ~75%: facing East. At 100%: back to South.</td></tr>
+        <tr><td>Flip behaviour</td><td>When <code>set_flip_h(true)</code>, the sprite mirrors horizontally. This reverses the rotation — the cat appears to walk counterclockwise. Facing directions mirror correctly for free.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="warn" style="margin-top:0.75rem">
+    <strong>Don't use the standard Walk_Direction naming convention for this animation.</strong> The existing <code>play_loop("Walk", direction)</code> and <code>play_once("Walk", direction)</code> on <code>AnimationController</code> append a directional suffix and look for e.g. <code>"Walk_South"</code>. The Circle animation has no suffix — CircleState uses the new <code>play_once_raw</code> and <code>play_loop_raw</code> methods added in Phase 1.
+  </div>
+
+  <hr class="divider" />
+
+  <!-- CODE CHANGES -->
+  <h2>Code changes — Phase 1</h2>
+
+  <!-- Global.gd -->
+  <div class="file-change">
+    <div class="fc-header">
+      <span class="fc-path">scripts/Global.gd</span>
+      <div class="chip-row" style="margin:0"><span class="tag tag-code">Code</span></div>
+    </div>
+    <div class="fc-body">
+      <p>Add <code>CIRCLE</code> and <code>LAY_CIRCLE</code> (for the pre-lay variant) to the <code>StateName</code> enum. <code>SITUP</code> is already in the enum but currently unused.</p>
+      <pre><span class="dim">enum StateName {</span>
+<span class="dim">    SIT,</span>
+<span class="dim">    WALK,</span>
+<span class="dim">    STANDUP,</span>
+<span class="dim">    SITUP,</span>
+<span class="dim">    LAY,</span>
+<span class="dim">    RUN,</span>
+<span class="add">    CIRCLE,</span>
+<span class="dim">}</span></pre>
+    </div>
+  </div>
+
+  <!-- KittyPersonality.gd -->
+  <div class="file-change">
+    <div class="fc-header">
+      <span class="fc-path">scripts/KittyPersonality.gd</span>
+      <div class="chip-row" style="margin:0"><span class="tag tag-code">Code</span></div>
+    </div>
+    <div class="fc-body">
+      <p>Add a new <code>"Circling"</code> export group. Current groups verified: <em>Activity Weights</em>, <em>Activity Durations (seconds)</em>, <em>Fatigue</em>.</p>
+      <pre><span class="dim">@export_group("Fatigue")
+@export var rest_threshold: float = 10.0
+@export var walk_target_chance: float = 0.4</span>
+
+<span class="add">@export_group("Circling")
+@export var circle_radius: float = 20.0
+@export var circle_rotations: float = 1.5
+@export var circle_speed_multiplier: float = 0.6
+@export var circle_clockwise_only: bool = false  # overrides shortest-arc for pre-lay
+@export var circle_before_walk: bool = false      # insert circle between standup and walk</span></pre>
+    </div>
+  </div>
+
+  <!-- AnimationController.gd -->
+  <div class="file-change">
+    <div class="fc-header">
+      <span class="fc-path">scripts/AnimationController.gd</span>
+      <div class="chip-row" style="margin:0"><span class="tag tag-code">Code</span></div>
+    </div>
+    <div class="fc-body">
+      <p>Add three new methods. Existing interface (<code>play_loop</code>, <code>play_once</code>, <code>cancel</code>, <code>pause</code>, <code>get_playback_progress</code>, <code>animation_finished</code>) is unchanged.</p>
+      <pre><span class="comment"># Flip the sprite horizontally (counterclockwise circle from one clockwise asset).</span>
+<span class="add">func set_flip_h(enabled: bool) -> void:
+    _player.flip_h = enabled</span>
+
+<span class="comment"># Play a looping animation by its exact name — no directional suffix appended.</span>
+<span class="comment"># Idempotent: no-op if already playing the same name.</span>
+<span class="add">func play_loop_raw(anim_name: String) -> void:
+    if _is_loop and _current_state_name == anim_name:
+        return
+    _cancel_silent()
+    if not _player.sprite_frames.has_animation(anim_name):
+        push_error("Animation not found: " + anim_name)
+        return
+    _current_state_name = anim_name
+    _is_loop = true
+    _is_reverse = false
+    _player.play(anim_name)</span>
+
+<span class="comment"># Play a one-shot animation by its exact name, optionally starting mid-way.</span>
+<span class="comment"># start_progress 0.0 = beginning, 1.0 = end. Emits animation_finished on completion.</span>
+<span class="add">func play_once_raw(anim_name: String, start_progress: float = 0.0) -> void:
+    _cancel_silent()
+    if not _player.sprite_frames.has_animation(anim_name):
+        push_error("Animation not found: " + anim_name)
+        return
+    _current_state_name = anim_name
+    _is_loop = false
+    _is_reverse = false
+    _player.animation_finished.connect(_on_animation_finished)
+    _player.play(anim_name)
+    if start_progress > 0.0:
+        var total: int = _player.sprite_frames.get_frame_count(anim_name)
+        _player.frame = clamp(int(start_progress * float(total)), 0, total - 1)</span></pre>
+      <p style="margin-top:0.6rem">Note: <code>_current_direction</code> is not set by the raw methods — <code>get_playback_progress()</code> uses <code>_player.animation</code> directly and will still work correctly.</p>
+    </div>
+  </div>
+
+  <!-- LayState.gd (stub) -->
+  <div class="file-change">
+    <div class="fc-header">
+      <span class="fc-path">scripts/kitty_states/LayState.gd  <em style="color:#4a5a6a">(new — stub)</em></span>
+      <div class="chip-row" style="margin:0"><span class="tag tag-code">Code</span></div>
+    </div>
+    <div class="fc-body">
+      <p>Minimal stub — plays Sit animation (reuses existing art), stays until told to transition. Upgrades to real Lay animation when art exists (Phase 3).</p>
+      <pre><span class="add">extends State
+class_name LayState
+
+func name() -> Global.StateName:
+    return Global.StateName.LAY
+
+func _enter_state(_from: Global.StateName) -> void:
+    assert(entity != null, "LayState requires a Kitty entity — FSM must be a child of Kitty")
+    entity.velocity = Vector2.ZERO
+    entity.anim.play_once("Sit", entity.facing_direction, false, true)  # pause at end frame
+
+func tick(_delta: float) -> State:
+    return null
+
+func _exit_state() -> void:
+    entity.anim.cancel()</span></pre>
+    </div>
+  </div>
+
+  <!-- PreLayCircleState.gd -->
+  <div class="file-change">
+    <div class="fc-header">
+      <span class="fc-path">scripts/kitty_states/PreLayCircleState.gd  <em style="color:#4a5a6a">(new)</em></span>
+      <div class="chip-row" style="margin:0"><span class="tag tag-code">Code</span></div>
+    </div>
+    <div class="fc-body">
+      <p>Follows the StandUpState pattern: constructor takes <code>next_state</code>, <code>tick()</code> returns it when done. Reads circle parameters from <code>entity.personality</code>. Uses <code>play_loop_raw("Circle")</code> and <code>set_flip_h</code>.</p>
+      <pre><span class="add">extends State
+class_name PreLayCircleState
+
+var _next_state: State
+var _angle_covered: float = 0.0
+var _clockwise: bool = true
+var _target_angle: float = 0.0
+
+func _init(next_state: State) -> void:
+    _next_state = next_state
+
+func name() -> Global.StateName:
+    return Global.StateName.CIRCLE
+
+func _enter_state(_from: Global.StateName) -> void:
+    assert(entity != null, "PreLayCircleState requires a Kitty entity — FSM must be a child of Kitty")
+    _angle_covered = 0.0
+    _target_angle = TAU * entity.personality.circle_rotations  # full rotations in radians
+
+    if entity.personality.circle_clockwise_only:
+        _clockwise = true
+    else:
+        _clockwise = entity.facing_direction in [
+            Global.Direction.NORTH, Global.Direction.NORTHEAST,
+            Global.Direction.EAST,  Global.Direction.SOUTHEAST
+        ]  # rough heuristic — shortest arc for common facing directions
+
+    entity.anim.set_flip_h(not _clockwise)
+    entity.anim.play_loop_raw("Circle")
+
+func tick(delta: float) -> State:
+    var angular_speed: float = (entity.speed * entity.personality.circle_speed_multiplier) \
+                               / entity.personality.circle_radius
+    _angle_covered += angular_speed * delta
+
+    var orbit_angle: float = _angle_covered * (1.0 if _clockwise else -1.0)
+    var offset := Vector2(
+        cos(orbit_angle) * entity.personality.circle_radius,
+        sin(orbit_angle) * entity.personality.circle_radius
+    )
+    entity.velocity = offset.normalized() * entity.speed * entity.personality.circle_speed_multiplier
+    entity.move_and_slide()
+
+    if _angle_covered >= _target_angle:
+        return _next_state
+    return null
+
+func _exit_state() -> void:
+    entity.anim.set_flip_h(false)
+    entity.anim.cancel()
+    entity.velocity = Vector2.ZERO</span></pre>
+    </div>
+  </div>
+
+  <!-- Kitty.gd -->
+  <div class="file-change">
+    <div class="fc-header">
+      <span class="fc-path">scripts/Kitty.gd</span>
+      <div class="chip-row" style="margin:0"><span class="tag tag-code">Code</span></div>
+    </div>
+    <div class="fc-body">
+      <p>Two changes. <strong>(1)</strong> <code>apply_decision</code> — split the LAY branch to go through <code>PreLayCircleState</code>. <strong>(2)</strong> <code>begin_walk</code> — optionally insert a circle between StandUp and Walk based on personality.</p>
+      <pre><span class="dim">func apply_decision(decision: ActivityDecision) -> void:
+    match decision.activity:
+        Global.StateName.WALK:
+            if decision.walk_target != null:
+                set_target(PositionTarget.new(decision.walk_target))
+            begin_walk()</span>
+<span class="remove">        Global.StateName.SIT, Global.StateName.LAY:</span>
+<span class="remove">            change_state(SitState.new())</span>
+<span class="add">        Global.StateName.SIT:</span>
+<span class="add">            change_state(SitState.new())</span>
+<span class="add">        Global.StateName.LAY:</span>
+<span class="add">            change_state(PreLayCircleState.new(LayState.new()))</span>
+<span class="dim">        _:
+            push_error("Kitty.apply_decision: unhandled activity: " + str(decision.activity))</span></pre>
+      <pre><span class="dim">func begin_walk() -> void:
+    var current := state_machine.current_state_name()
+    if current == Global.StateName.WALK or current == Global.StateName.STANDUP:
+        return
+    if current == Global.StateName.SIT:</span>
+<span class="remove">        state_machine.change_state(StandUpState.new(WalkState.new()))</span>
+<span class="add">        var walk_next: State = WalkState.new()
+        if personality and personality.circle_before_walk:
+            walk_next = PreLayCircleState.new(walk_next)
+        state_machine.change_state(StandUpState.new(walk_next))</span>
+<span class="dim">    else:
+        state_machine.change_state(WalkState.new())</span></pre>
+    </div>
+  </div>
+
+  <!-- ActivityBrain / KittyPersonality — preference -->
+  <div class="file-change">
+    <div class="fc-header">
+      <span class="fc-path">scripts/ActivityBrain.gd  <em style="color:#4a5a6a">(minor)</em></span>
+      <div class="chip-row" style="margin:0"><span class="tag tag-code">Code</span></div>
+    </div>
+    <div class="fc-body">
+      <p>The <code>_init</code> method in <code>ActivityBrain</code> builds the preference and duration dictionaries from flat <code>KittyPersonality</code> fields. LAY decisions already work — no changes needed for the brain to trigger pre-lay circling. The circle happens inside <code>Kitty.apply_decision</code> transparently.</p>
+      <p style="color:#4a5a6a; margin-top:0.4rem">No changes required in this file for Phase 1.</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- PHASE 2 PREVIEW -->
+  <h2>Phase 2 preview — TurnCircleState</h2>
+
+  <div class="card">
+    <p style="margin-bottom:0.6rem">When implemented, <code>TurnCircleState</code> will:</p>
+    <ul>
+      <li>Be created by <code>WalkState.tick()</code> when the angle delta between <code>entity.facing_direction</code> and new target heading exceeds <code>personality.pivot_angle_threshold</code> (suggested default: 120°)</li>
+      <li>Accept the pending <code>NavigationTarget</code> in its constructor so the kitty exits already aimed at the right target</li>
+      <li>Use shortest-arc rotation — always. No personality override.</li>
+      <li>Play a partial circle arc, not a full rotation — <code>start_progress</code> on <code>play_once_raw</code> will handle this</li>
+      <li>Transition back to <code>WalkState.new()</code> with the carried target</li>
+    </ul>
+    <p style="margin-top:0.6rem; color:#4a5a6a; font-size:0.82rem">New <code>KittyPersonality</code> field needed: <code>@export var pivot_angle_threshold: float = 120.0</code></p>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- STRETCH IDEAS -->
+  <h2>Stretch ideas</h2>
+
+  <div class="idea">
+    <p><strong>Emit <code>circle_completed</code> on Kitty</strong> — fired when <code>PreLayCircleState._exit_state</code> runs. Future toys and interactive objects subscribe without touching the state machine. One signal, non-breaking.</p>
+  </div>
+  <div class="idea">
+    <p><strong>TransitionalState base class</strong> — <code>StandUpState</code>, <code>PreLayCircleState</code>, and (Phase 2) <code>TurnCircleState</code> all share <code>_next_state: State</code>, <code>_done: bool</code>, and the tick-returns-next pattern. A shared base makes the pattern explicit and halves the boilerplate for future transitional states.</p>
+  </div>
+  <div class="idea">
+    <p><strong>Trajectory abstraction</strong> — CircleState is the first state with a continuous spatial path rather than "move toward a point." A <code>Trajectory</code> seam sampled each tick opens the door to FigureEightState, WanderState, etc. Not needed now, but the shape of the seam is visible in <code>PreLayCircleState.tick()</code>.</p>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- TASK LIST -->
+  <h2>Task list</h2>
+
+  <p class="phase-label">Phase 1 · Foundation</p>
+  <ul class="task-list">
+    <li>
+      <span class="task-num">1</span>
+      <div class="task-body">
+        <div class="task-title">Add <code>CIRCLE</code> to <code>Global.StateName</code></div>
+        <div class="task-detail">One line addition after <code>RUN</code>.</div>
+        <div class="task-files">scripts/Global.gd:5</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="task-num">2</span>
+      <div class="task-body">
+        <div class="task-title">Add Circling group to <code>KittyPersonality</code></div>
+        <div class="task-detail"><code>circle_radius</code>, <code>circle_rotations</code>, <code>circle_speed_multiplier</code>, <code>circle_clockwise_only</code>, <code>circle_before_walk</code></div>
+        <div class="task-files">scripts/KittyPersonality.gd — after line 18</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="task-num">3</span>
+      <div class="task-body">
+        <div class="task-title">Add <code>set_flip_h</code>, <code>play_loop_raw</code>, <code>play_once_raw</code> to <code>AnimationController</code></div>
+        <div class="task-detail">New methods only — existing interface unchanged.</div>
+        <div class="task-files">scripts/AnimationController.gd</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="task-num">4</span>
+      <div class="task-body">
+        <div class="task-title">Create <code>LayState.gd</code> (stub)</div>
+        <div class="task-detail">Plays Sit animation paused at end frame. Upgrades to real Lay art in Phase 3.</div>
+        <div class="task-files">scripts/kitty_states/LayState.gd (new)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="task-num">5</span>
+      <div class="task-body">
+        <div class="task-title">Create <code>PreLayCircleState.gd</code></div>
+        <div class="task-detail">Full implementation as specced above. Reads circle params from <code>entity.personality</code>.</div>
+        <div class="task-files">scripts/kitty_states/PreLayCircleState.gd (new)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="task-num">6</span>
+      <div class="task-body">
+        <div class="task-title">Update <code>Kitty.apply_decision</code> and <code>Kitty.begin_walk</code></div>
+        <div class="task-detail">LAY → <code>PreLayCircleState.new(LayState.new())</code>. SIT→WALK optionally inserts circle via <code>personality.circle_before_walk</code>.</div>
+        <div class="task-files">scripts/Kitty.gd:55 (apply_decision), :36 (begin_walk)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="phase-label">Phase 2 · TurnCircleState (after Phase 1 is tuned)</p>
+  <ul class="task-list">
+    <li>
+      <span class="task-num">7</span>
+      <div class="task-body">
+        <div class="task-title">Add <code>pivot_angle_threshold</code> to <code>KittyPersonality</code></div>
+        <div class="task-files">scripts/KittyPersonality.gd</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="task-num">8</span>
+      <div class="task-body">
+        <div class="task-title">Create <code>TurnCircleState.gd</code></div>
+        <div class="task-detail">Carries a <code>NavigationTarget</code> through the arc. Computes shortest-arc direction. Uses <code>play_once_raw("Circle", start_progress)</code> for partial arcs.</div>
+        <div class="task-files">scripts/kitty_states/TurnCircleState.gd (new)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="task-num">9</span>
+      <div class="task-body">
+        <div class="task-title">Angle-change detection in <code>WalkState.tick</code></div>
+        <div class="task-detail">Detect heading delta &gt; threshold, transition to <code>TurnCircleState.new(WalkState.new(), entity.navigation_target)</code>.</div>
+        <div class="task-files">scripts/kitty_states/WalkState.gd:11</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="phase-label">Phase 3 · Art pass</p>
+  <ul class="task-list">
+    <li>
+      <span class="task-num">10</span>
+      <div class="task-body">
+        <div class="task-title">Create <code>"Circle"</code> animation in SpriteFrames</div>
+        <div class="task-detail">32+ frames, full 360° clockwise, starting facing South. Name exactly <code>Circle</code> — no suffix.</div>
+        <div class="chip-row"><span class="tag tag-art">Art</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="task-num">11</span>
+      <div class="task-body">
+        <div class="task-title">Create <code>"Lay"</code> animation variants and upgrade <code>LayState</code></div>
+        <div class="task-detail">8-directional: <code>Lay_South</code>, <code>Lay_North</code>, etc. Same convention as Walk/Sit. <code>LayState</code> swaps <code>play_once("Sit", ...)</code> stub for <code>play_once("Lay", entity.facing_direction)</code>.</div>
+        <div class="chip-row"><span class="tag tag-art">Art</span><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="phase-label">Stretch</p>
+  <ul class="task-list">
+    <li>
+      <span class="task-num">12</span>
+      <div class="task-body">
+        <div class="task-title">Emit <code>circle_completed</code> signal on Kitty</div>
+        <div class="task-detail">From <code>PreLayCircleState._exit_state</code>. Future interactive objects subscribe.</div>
+        <div class="chip-row"><span class="tag tag-idea">Idea</span><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="task-num">13</span>
+      <div class="task-body">
+        <div class="task-title">Extract <code>TransitionalState</code> base class</div>
+        <div class="task-detail">Consolidates the <code>_next_state / _done / tick-returns-next</code> pattern shared by StandUpState, PreLayCircleState, TurnCircleState.</div>
+        <div class="chip-row"><span class="tag tag-idea">Idea</span><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <hr class="divider" />
+  <p style="font-size:0.78rem; color:#3a3a4a;">Generated by Claude Code · Kitty Barrage · May 2026 · Verified against codebase at this commit</p>
+
+</body>
+</html>

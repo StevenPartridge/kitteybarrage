@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wiki Grooming Prompts — Kitty Barrage</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
+      --b:     #2a2a38; --b2:  #1e1e2a;
+      --text:  #d4d0c8; --dim: #6a6570;
+      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
+      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
+      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
+      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
+      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
+      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); padding: 2.5rem 2rem; line-height: 1.6; max-width: 900px; margin: 0 auto; }
+    h1   { font-size: 1.5rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
+    h2   { font-size: 0.8rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.85rem; text-transform: uppercase; letter-spacing: 0.12em; }
+    h3   { font-size: 0.88rem; font-weight: 700; color: #c8c0e0; margin-bottom: 0.3rem; }
+    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.6rem; }
+    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
+    .sub  { color: var(--dim); font-size: 0.85rem; margin-bottom: 0.25rem; }
+    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; margin-left:0.4rem; }
+    .pill-purple { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-b); }
+    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
+    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
+    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
+    hr { border:none; border-top:1px solid var(--b2); margin: 2rem 0; }
+    .breadcrumb { font-size:0.78rem; color:var(--dim); margin-bottom:1.5rem; }
+    .breadcrumb a { color:var(--dim); text-decoration:none; }
+    .breadcrumb a:hover { color:var(--text); }
+
+    /* Prompt cards */
+    .prompt-card {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
+      margin-bottom: 1rem; overflow: hidden;
+    }
+    .prompt-card summary {
+      cursor: pointer; padding: 0.85rem 1.1rem; list-style: none;
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+      user-select: none;
+    }
+    .prompt-card summary::-webkit-details-marker { display: none; }
+    .prompt-card[open] summary { border-bottom: 1px solid var(--b2); }
+    .prompt-card summary:hover { background: #1e1e2a; }
+    .prompt-card .pc-title { font-size: 0.9rem; font-weight: 700; color: #d0c8f0; flex: 1; }
+    .prompt-card .pc-meta  { font-size: 0.75rem; color: var(--dim); white-space: nowrap; }
+    .prompt-card .pc-body  { padding: 0.9rem 1.1rem; }
+    .prompt-card .pc-when  { font-size: 0.78rem; color: var(--dim); margin-bottom: 0.6rem; font-style: italic; }
+
+    /* The actual prompt text */
+    .prompt-box {
+      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
+      padding: 0.85rem 1rem; font-size: 0.82rem; color: #b8b0a8; line-height: 1.55;
+      white-space: pre-wrap; font-family: "SF Mono","Fira Code",monospace;
+      position: relative;
+    }
+    .copy-btn {
+      position: absolute; top: 0.5rem; right: 0.5rem;
+      background: #2a2a3a; border: 1px solid var(--b); border-radius: 4px;
+      color: var(--dim); font-size: 0.72rem; padding: 0.2rem 0.55rem;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .copy-btn:hover { background: #3a3a4a; color: var(--text); }
+    .copy-btn.copied { color: var(--green); border-color: var(--green-b); }
+
+    /* Tips */
+    .tip {
+      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
+      padding: 0.7rem 1rem; font-size: 0.82rem; color: #7ab8d0; margin-top: 0.75rem;
+    }
+    .tip strong { color: var(--blue); }
+
+    .section-intro { font-size: 0.84rem; color: #807880; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+  <div class="breadcrumb"><a href="index.html">Wiki</a> → Wiki Grooming Prompts</div>
+
+  <h1>Wiki Grooming Prompts <span class="pill pill-purple">Living</span></h1>
+  <p class="sub">Prompts to run with Claude to keep the wiki accurate, current, and useful.</p>
+  <p style="font-size:0.8rem; color:var(--dim); margin-bottom:0; margin-top:0.25rem;">Open a new Claude Code session in the project root, then paste whichever prompt fits.</p>
+
+  <hr />
+
+  <h2>After a Feature or Refactor</h2>
+  <p class="section-intro">Run these after a coding session that changed how the system works.</p>
+
+  <details class="prompt-card" open>
+    <summary>
+      <span class="pc-title">Sync architecture.html to current code</span>
+      <span class="pill pill-gold">High value</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: after adding a new state, changing transition logic, or modifying the debug console.</p>
+      <div class="prompt-box" id="p-sync-arch">Read wiki/architecture.html and compare it against the current codebase. Identify any sections that are now stale or incorrect — new states, changed transitions, updated ALLOWED table in DebugOverlay.gd, or removed features. List each discrepancy, then update the relevant sections in architecture.html to match the current code. Do not rewrite sections that are still accurate.<button class="copy-btn" onclick="copyPrompt('p-sync-arch', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <details class="prompt-card">
+    <summary>
+      <span class="pc-title">Add a new state to architecture.html</span>
+      <span class="pill pill-blue">Targeted</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: after implementing a new State subclass.</p>
+      <div class="prompt-box" id="p-new-state">I've added a new state: [STATE_NAME]. Read its implementation in scripts/kitty_states/[FileName].gd, then add it to the State Reference section in wiki/architecture.html. Include: state type (rest/transition/movement), constructor params, animation played, what it transitions to, and the enum value. Also update the Transition Graph table with any new paths this state enables, and update the ALLOWED table in the Debug Console section if the debug overlay was updated.<button class="copy-btn" onclick="copyPrompt('p-new-state', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <details class="prompt-card">
+    <summary>
+      <span class="pc-title">Write a task plan for a new feature</span>
+      <span class="pill pill-gold">High value</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: before starting a significant new feature or refactor.</p>
+      <div class="prompt-box" id="p-task-plan">Write a task plan for: [FEATURE DESCRIPTION]. Save it to wiki/ as an HTML file following the existing wiki design system. The plan should include: goal, affected files, implementation steps, edge cases to handle, and a testing checklist. Link it from wiki/index.html under "Task Plans".<button class="copy-btn" onclick="copyPrompt('p-task-plan', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <h2>Bug Documentation</h2>
+  <p class="section-intro">Run these when tracking a reproducible issue.</p>
+
+  <details class="prompt-card">
+    <summary>
+      <span class="pc-title">Document a bug</span>
+      <span class="pill pill-gold">High value</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: found a reproducible issue worth tracking.</p>
+      <div class="prompt-box" id="p-bug">Document this bug in the wiki. Create wiki/issue-[short-name].html following the wiki design system. Include: description of the observed behavior, steps to reproduce (using debug console if applicable), which states and modules are involved (reference architecture.html terminology), root cause if known, and status (open/investigating/fixed). Link it from wiki/index.html under "Issue Notes".<button class="copy-btn" onclick="copyPrompt('p-bug', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <details class="prompt-card">
+    <summary>
+      <span class="pc-title">Close a bug and record the fix</span>
+      <span class="pill pill-green">Housekeeping</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: a tracked issue has been resolved.</p>
+      <div class="prompt-box" id="p-close-bug">Update wiki/issue-[name].html: mark the status as Fixed, add a "Resolution" section describing what the root cause was and what changed to fix it (file and line references). Also update the Recent Changes log in wiki/index.html with a one-line fix entry dated today.<button class="copy-btn" onclick="copyPrompt('p-close-bug', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <h2>Periodic Audits</h2>
+  <p class="section-intro">Run occasionally — monthly or after a cluster of changes.</p>
+
+  <details class="prompt-card">
+    <summary>
+      <span class="pc-title">Full wiki staleness audit</span>
+      <span class="pill pill-purple">Periodic</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: after a sprint of work, or when the wiki hasn't been touched in a while.</p>
+      <div class="prompt-box" id="p-audit">Audit the entire wiki for staleness. Read every HTML file in wiki/ and cross-reference it against the current codebase. For each page, report: (a) whether it's accurate, (b) specific claims that are now wrong or outdated, (c) things missing that should be documented. Produce a prioritized list of updates needed. Do not make any changes yet — just report.<button class="copy-btn" onclick="copyPrompt('p-audit', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <details class="prompt-card">
+    <summary>
+      <span class="pc-title">Update the Recent Changes log</span>
+      <span class="pill pill-green">Housekeeping</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: after a cluster of fixes or features to record what changed.</p>
+      <div class="prompt-box" id="p-changelog">Look at the git log since the last entry in wiki/index.html's "Recent Changes" section. Summarize the meaningful changes in 3–5 log entries: what changed, what type it was (fix/feature/refactor), and the date. Update the log in wiki/index.html. Keep entries to one line each.<button class="copy-btn" onclick="copyPrompt('p-changelog', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <details class="prompt-card">
+    <summary>
+      <span class="pc-title">Debrief after a bug-fixing session</span>
+      <span class="pill pill-purple">Periodic</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: after a session focused on fixing bugs — capture the root causes while they're fresh.</p>
+      <div class="prompt-box" id="p-debrief">We just fixed these bugs in this session: [LIST BUGS]. For each one, read the relevant code changes and write a short debrief: what the root cause was, which modules were involved, and what the fix was. Add each to wiki/index.html's Recent Changes log. If any of the bugs revealed a pattern worth documenting in architecture.html (a gotcha, an invariant, a constraint), add a note there too.<button class="copy-btn" onclick="copyPrompt('p-debrief', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <h2>Wiki Structure</h2>
+  <p class="section-intro">Run these when adding new sections or reorganizing.</p>
+
+  <details class="prompt-card">
+    <summary>
+      <span class="pc-title">Add a new planning document to the index</span>
+      <span class="pill pill-blue">Targeted</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: a new HTML plan was created and needs to be linked from the index.</p>
+      <div class="prompt-box" id="p-index">Add wiki/[filename].html to wiki/index.html. Place it in the appropriate section ([Planning Documents / Task Plans / Issue Notes / Core Reference]). The card should have a title, a one-sentence description, and a date. Use the color class that matches its type (blue for planning, green for reference, gold for task plans, red for issues).<button class="copy-btn" onclick="copyPrompt('p-index', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <details class="prompt-card">
+    <summary>
+      <span class="pc-title">Improve the "How to Describe a Bug" section</span>
+      <span class="pill pill-purple">Periodic</span>
+    </summary>
+    <div class="pc-body">
+      <p class="pc-when">When: a confusing bug report happened and the guide needs a better example.</p>
+      <div class="prompt-box" id="p-bug-guide">In wiki/architecture.html, find the "How to Describe a Bug" section. Add a new example based on this real bug we just encountered: [DESCRIBE THE BUG AND THE CONFUSION]. The example should show a bad report (vague), then a good report (precise — state names, trigger type, expected vs actual). Match the existing example format.<button class="copy-btn" onclick="copyPrompt('p-bug-guide', this)">Copy</button></div>
+    </div>
+  </details>
+
+  <hr />
+
+  <div class="tip">
+    <strong>Tip:</strong> These prompts work best at the start of a fresh Claude Code session when the full codebase context is available. Paste directly into the prompt — no need to add "please" or framing.
+  </div>
+
+  <hr />
+  <p style="font-size:0.75rem; color:var(--dim);">Kitty Barrage Wiki · <code>wiki/wiki-grooming-prompts.html</code> · Updated May 2026</p>
+
+  <script>
+    function copyPrompt(id, btn) {
+      const el = document.getElementById(id);
+      // Get text content, stripping the button text
+      const clone = el.cloneNode(true);
+      clone.querySelector('button')?.remove();
+      const text = clone.textContent.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+      });
+    }
+  </script>
+
+</body>
+</html>

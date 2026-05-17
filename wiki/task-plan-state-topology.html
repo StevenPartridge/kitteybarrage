@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Plan — State Topology Refactor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
+      --b:     #2a2a38; --b2:  #1e1e2a;
+      --text:  #d4d0c8; --dim: #6a6570;
+      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
+      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
+      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
+      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
+      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
+      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 210px; min-width: 210px; background: var(--bg2); border-right: 1px solid var(--b2);
+      padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; font-size: 0.8rem;
+    }
+    .sidebar a { display: block; color: var(--dim); text-decoration: none; padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
+    .sidebar a:hover { color: var(--text); background: #1e1e2a; }
+    .sidebar .s-head { font-size: 0.68rem; font-weight: 700; color: #404055; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.3rem; }
+
+    .main { flex: 1; padding: 2rem 2.5rem; max-width: 840px; }
+
+    h1   { font-size: 1.45rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
+    h2   { font-size: 0.78rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
+    h3   { font-size: 0.92rem; font-weight: 700; color: #c8c0e0; margin: 1.2rem 0 0.4rem; }
+    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.65rem; }
+    li   { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.3rem; }
+    ul, ol { padding-left: 1.3rem; margin-bottom: 0.75rem; }
+    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
+    .sub  { color: var(--dim); font-size: 0.84rem; margin-bottom: 0.25rem; }
+    hr    { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
+    .breadcrumb { font-size: 0.78rem; color: var(--dim); margin-bottom: 1.5rem; }
+    .breadcrumb a { color: var(--dim); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--text); }
+
+    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
+    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
+    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
+    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
+    .pill-purple { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-b); }
+    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
+
+    .aside {
+      background: var(--purple-bg); border: 1px solid var(--purple-b); border-left: 3px solid var(--purple);
+      border-radius: 0 6px 6px 0; padding: 1rem 1.2rem; margin: 1.25rem 0;
+    }
+    .aside-head { font-size: 0.72rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+    .aside p { color: #9888c8; margin-bottom: 0.5rem; }
+    .aside p:last-child { margin-bottom: 0; }
+    .aside strong { color: #c0a8e8; }
+    .aside ul { padding-left: 1.2rem; }
+    .aside li { color: #9888c8; font-size: 0.84rem; margin-bottom: 0.3rem; }
+
+    .note {
+      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
+      padding: 0.75rem 1rem; font-size: 0.83rem; color: #7ab8d0; margin: 1rem 0;
+    }
+    .note strong { color: var(--blue); }
+    .warn {
+      background: var(--gold-bg); border: 1px solid var(--gold-b); border-radius: 6px;
+      padding: 0.75rem 1rem; font-size: 0.83rem; color: #c09828; margin: 1rem 0;
+    }
+    .warn strong { color: var(--gold); }
+
+    pre {
+      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
+      padding: 0.9rem 1rem; font-family: "SF Mono","Fira Code",monospace; font-size: 0.79rem;
+      color: #b0c8a0; overflow-x: auto; margin: 0.75rem 0; line-height: 1.55;
+    }
+    pre .cm  { color: #505868; }
+    pre .kw  { color: #b890e0; }
+    pre .fn  { color: #80c8e8; }
+    pre .st  { color: #90c890; }
+    pre .nm  { color: #d4a840; }
+    pre .tp  { color: #d09060; }
+
+    .steps { counter-reset: step; margin-top: 0.5rem; }
+    .step {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
+      padding: 1rem 1.1rem 1rem 3.5rem; margin-bottom: 0.75rem; position: relative;
+    }
+    .step::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 1rem; top: 1rem;
+      width: 1.8rem; height: 1.8rem; border-radius: 50%;
+      background: var(--bg2); border: 1px solid var(--b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700; color: var(--dim); font-family: monospace;
+    }
+    .step-title { font-size: 0.9rem; font-weight: 700; color: #d0c8f0; margin-bottom: 0.35rem; }
+    .step p { margin-bottom: 0.4rem; }
+
+    .ct { width:100%; border-collapse:collapse; font-size:0.82rem; margin: 0.5rem 0; }
+    .ct th { text-align:left; padding:0.4rem 0.9rem; color:var(--dim); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--b); background:#131318; }
+    .ct td { padding:0.45rem 0.9rem; border-bottom:1px solid var(--b2); vertical-align:top; color: #a0988a; }
+    .ct tr:last-child td { border-bottom:none; }
+    .ct .label { font-family:monospace; color:#8888c8; }
+    .ct .good  { color: var(--green); }
+    .ct .meh   { color: var(--gold); }
+    .ct .bad   { color: var(--red); }
+
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li { padding: 0.3rem 0; border-bottom: 1px solid var(--b2); font-size: 0.84rem; color: #a0988a; display: flex; align-items: baseline; gap: 0.6rem; }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before { content: "☐"; color: var(--dim); font-size: 0.9em; flex-shrink: 0; }
+
+    .file { display:inline-block; font-family:monospace; font-size:0.75rem; background:#131320; border:1px solid #2a2a40; border-radius:3px; padding:0.05rem 0.4rem; color:#7888c8; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.75rem 0; }
+    .mini-card { background: var(--bg1); border: 1px solid var(--b); border-radius: 6px; padding: 0.85rem 1rem; }
+    .mini-card h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .mini-card.green h4 { color: var(--green); }
+    .mini-card.gold h4 { color: var(--gold); }
+    .mini-card.red h4 { color: var(--red); }
+    .mini-card p { font-size: 0.79rem; color: #807880; margin-bottom: 0; }
+
+    .diagram {
+      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
+      padding: 1.2rem; font-family: monospace; font-size: 0.8rem; color: #808898;
+      margin: 0.75rem 0; line-height: 1.8;
+    }
+    .diagram .hi  { color: #80c8e8; }
+    .diagram .hi2 { color: #60c060; }
+    .diagram .hi3 { color: #b890e0; }
+    .diagram .arrow { color: #d4a840; }
+    .diagram .dim   { color: #404858; }
+
+    .decision-row {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 6px;
+      padding: 0.85rem 1rem; margin-bottom: 0.6rem;
+    }
+    .decision-q { font-size: 0.78rem; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.35rem; }
+    .decision-a { font-size: 0.85rem; color: #c0b8d8; margin-bottom: 0.3rem; }
+    .decision-why { font-size: 0.8rem; color: #807880; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div style="font-size:0.85rem; font-weight:700; color:#a090c8; margin-bottom:1rem;">State Topology</div>
+    <div class="s-head">Sections</div>
+    <a href="#problem">Problem</a>
+    <a href="#design">Design</a>
+    <a href="#decisions">Design Decisions</a>
+    <a href="#interface">Interface</a>
+    <a href="#implementation">Implementation</a>
+    <a href="#files">Files</a>
+    <div class="s-head">Wiki</div>
+    <a href="index.html">← Home</a>
+    <a href="architecture.html">Architecture</a>
+  </nav>
+
+  <div class="main">
+
+    <div class="breadcrumb"><a href="index.html">Wiki</a> → Task Plan</div>
+
+    <div style="display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.2rem;">
+      <h1>State Topology Refactor</h1>
+      <span class="pill pill-blue">Task Plan</span>
+      <span class="pill pill-dim">May 2026</span>
+    </div>
+    <p class="sub">Move state transition topology out of <code>Character._plan_transition</code> and into per-character data tables, so adding an activity or a new character type never requires editing the base class.</p>
+
+    <hr />
+
+    <!-- PROBLEM -->
+    <h2 id="problem">The Problem</h2>
+
+    <p><code>Character._plan_transition</code> (and its helper <code>_plan_movement</code>) is a 50-line match statement that encodes every state-to-state path in the game. It knows that going from LAY to WALK requires a situp chain, that LOOK_AROUND can only be entered from SIT, that movement is blocked if a transition animation is already playing. All of this knowledge is baked into the base <code>Character</code> class.</p>
+
+    <p>This creates two problems:</p>
+
+    <div class="two-col">
+      <div class="mini-card red">
+        <h4>Wrong owner</h4>
+        <p>The chains — situp before standup before walk — are kitty-specific anatomy. A snake or wheelchair character has different rules. They all inherit a match statement written for one body type.</p>
+      </div>
+      <div class="mini-card red">
+        <h4>Growing match</h4>
+        <p>Every new activity means editing <code>Character.gd</code>, <code>Global.StateName</code>, and <code>ActivityBrain</code>. The topology is implicit in code, not declared as data.</p>
+      </div>
+    </div>
+
+    <p>The deletion test confirms the friction: delete <code>_plan_transition</code> and its complexity reappears in every caller. Nothing in the state definitions tells you how they connect — the topology is nowhere except inside the match.</p>
+
+    <hr />
+
+    <!-- DESIGN -->
+    <h2 id="design">Design</h2>
+
+    <p>The topology is expressed as two tables, built once at <code>_ready</code> and cached. <code>Character</code> provides base implementations; subclasses extend them.</p>
+
+    <h3>Posture groups</h3>
+    <p>States are grouped by the character's physical posture — which determines what intermediate steps are needed before a transition can complete. The mapping from <code>StateName</code> to posture group is per-character data.</p>
+
+    <div class="diagram">
+<span class="dim">-- Kitty posture groups --</span>
+<span class="hi">STANDING</span>    <span class="arrow">←</span>  WALK, RUN, SPRINT
+<span class="hi2">SITTING</span>     <span class="arrow">←</span>  SIT, LOOK_AROUND
+<span class="hi3">LYING</span>       <span class="arrow">←</span>  LAY, LAY_DOWN
+<span class="dim">TRANSITIONING ←  STANDUP, SITUP  (all outbound transitions blocked)</span>
+    </div>
+
+    <p>A base <code>Character</code> — no special animations — maps all states to <code>STANDING</code>. Only Kitty needs SITTING, LYING, and TRANSITIONING. A future snake character could define its own groups without touching the base.</p>
+
+    <h3>Transition table</h3>
+    <p>The table maps <code>posture group → activity → Callable</code>. Each entry is a zero-argument callable that returns the full state chain for that transition. A <code>null</code> value means the transition is explicitly blocked. A missing entry is an error.</p>
+
+    <div class="diagram">
+<span class="dim">-- Kitty SITTING row --</span>
+SITTING <span class="arrow">→</span> WALK    <span class="arrow">→</span>  <span class="hi">func(): return StandUpState.new(MovementState.walk())</span>
+SITTING <span class="arrow">→</span> RUN     <span class="arrow">→</span>  <span class="hi">func(): return StandUpState.new(MovementState.run())</span>
+SITTING <span class="arrow">→</span> LAY     <span class="arrow">→</span>  <span class="hi">func(): return LayDownState.new(LayState.new())</span>
+SITTING <span class="arrow">→</span> SIT     <span class="arrow">→</span>  <span class="dim">null (same state, handled by from==to guard)</span>
+
+<span class="dim">-- Kitty LYING row --</span>
+LYING   <span class="arrow">→</span> WALK    <span class="arrow">→</span>  <span class="hi">func(): return SitUpState.new(StandUpState.new(MovementState.walk()))</span>
+LYING   <span class="arrow">→</span> SIT     <span class="arrow">→</span>  <span class="hi">func(): return SitUpState.new(SitState.new(true, true))</span>
+LYING   <span class="arrow">→</span> LOOK_AROUND <span class="arrow">→</span>  <span class="hi2">null  (blocked)</span>
+
+<span class="dim">-- Kitty TRANSITIONING row --</span>
+TRANSITIONING <span class="arrow">→</span> <span class="dim">*all*</span>  <span class="arrow">→</span>  <span class="hi2">null  (blocked — don't interrupt a transition)</span>
+    </div>
+
+    <h3>Lookup</h3>
+    <p>The new <code>_plan_transition</code> is three lines: look up the posture group for <code>from</code>, look up the factory for <code>to</code>, call it or return null.</p>
+
+    <hr />
+
+    <!-- DECISIONS -->
+    <h2 id="decisions">Design Decisions</h2>
+
+    <div class="decision-row">
+      <div class="decision-q">Key granularity — fine-grained [from, to] or coarse-grained [posture, to]?</div>
+      <div class="decision-a">Coarse-grained: posture group → activity.</div>
+      <div class="decision-why">The from-state only matters insofar as it implies a posture. SIT and LOOK_AROUND require the same standup chain regardless of which one you're in. Grouping collapses ~15 entries to 5–6 and makes the table declarative rather than exhaustive.</div>
+    </div>
+
+    <div class="decision-row">
+      <div class="decision-q">Table ownership — base class only, or base + subclass extension?</div>
+      <div class="decision-a">Character defines a base table; subclasses extend it by calling super and merging.</div>
+      <div class="decision-why">The base case is "direct transitions everywhere" — correct for any character with no intermediate animations (snake, wheelchair). Kitty overrides SITTING and LYING rows to insert chains. New character types inherit the base and only override what differs.</div>
+    </div>
+
+    <div class="decision-row">
+      <div class="decision-q">Blocked transitions — absent from table, or explicit null value?</div>
+      <div class="decision-a">Explicit null in the table.</div>
+      <div class="decision-why">Absence is ambiguous — it could mean "not yet implemented" or "intentionally blocked." Explicit null makes blocking a deliberate declaration. A missing entry triggers push_error, which surfaces gaps during development rather than silently doing nothing.</div>
+    </div>
+
+    <div class="decision-row">
+      <div class="decision-q">PostureGroup location — Character inner enum, or Global?</div>
+      <div class="decision-a">Inner enum on <code>Character</code>: <code>enum PostureGroup { STANDING, SITTING, LYING, TRANSITIONING }</code>.</div>
+      <div class="decision-why">GDScript enums cannot be extended in subclasses, but they can be used from subclasses — <code>Kitty</code> accesses <code>PostureGroup.SITTING</code> directly (no prefix needed when extending). <code>Character</code> is the right owner: posture vocabulary belongs to character anatomy, not the engine. A future snake that needs <code>COILED</code> adds one entry to <code>Character</code>'s enum. Global stays free of character-type-specific concepts.</div>
+    </div>
+
+    <hr />
+
+    <!-- INTERFACE -->
+    <h2 id="interface">Interface</h2>
+
+    <h3>Character.gd</h3>
+    <pre><span class="cm"># Built once in _ready(), cached for the lifetime of the character.</span>
+<span class="kw">var</span> <span class="nm">_posture_groups</span>: <span class="tp">Dictionary</span>   <span class="cm"># StateName → PostureGroup</span>
+<span class="kw">var</span> <span class="nm">_transition_table</span>: <span class="tp">Dictionary</span>  <span class="cm"># PostureGroup → { StateName → Callable/null }</span>
+
+<span class="cm"># Subclasses override these to extend the base tables.</span>
+<span class="kw">func</span> <span class="fn">_build_posture_groups</span>() -> <span class="tp">Dictionary</span>:
+    <span class="kw">return</span> {
+        <span class="nm">Global.StateName.WALK</span>:   <span class="nm">PostureGroup.STANDING</span>,
+        <span class="nm">Global.StateName.RUN</span>:    <span class="nm">PostureGroup.STANDING</span>,
+        <span class="nm">Global.StateName.SPRINT</span>: <span class="nm">PostureGroup.STANDING</span>,
+        <span class="cm"># STANDUP and SITUP: TRANSITIONING — all outbound blocked</span>
+        <span class="nm">Global.StateName.STANDUP</span>: <span class="nm">PostureGroup.TRANSITIONING</span>,
+        <span class="nm">Global.StateName.SITUP</span>:   <span class="nm">PostureGroup.TRANSITIONING</span>,
+    }
+
+<span class="kw">func</span> <span class="fn">_build_transition_table</span>() -> <span class="tp">Dictionary</span>:
+    <span class="kw">return</span> {
+        <span class="nm">PostureGroup.STANDING</span>: {
+            <span class="nm">Global.StateName.WALK</span>:        <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">MovementState.walk</span>(),
+            <span class="nm">Global.StateName.RUN</span>:         <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">MovementState.run</span>(),
+            <span class="nm">Global.StateName.SPRINT</span>:      <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">MovementState.sprint</span>(),
+            <span class="nm">Global.StateName.SIT</span>:         <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">SitState.new</span>(),
+            <span class="nm">Global.StateName.LAY</span>:         <span class="kw">null</span>,  <span class="cm"># can't go directly from standing to lay</span>
+            <span class="nm">Global.StateName.LOOK_AROUND</span>: <span class="kw">null</span>,  <span class="cm"># must be sitting first</span>
+        },
+        <span class="nm">PostureGroup.TRANSITIONING</span>: {
+            <span class="nm">Global.StateName.WALK</span>:        <span class="kw">null</span>,
+            <span class="nm">Global.StateName.RUN</span>:         <span class="kw">null</span>,
+            <span class="nm">Global.StateName.SPRINT</span>:      <span class="kw">null</span>,
+            <span class="nm">Global.StateName.SIT</span>:         <span class="kw">null</span>,
+            <span class="nm">Global.StateName.LAY</span>:         <span class="kw">null</span>,
+            <span class="nm">Global.StateName.LOOK_AROUND</span>: <span class="kw">null</span>,
+        },
+    }
+
+<span class="cm"># Unchanged call-site — callers never touch the table directly.</span>
+<span class="kw">func</span> <span class="fn">_plan_transition</span>(from: <span class="tp">Global.StateName</span>, to: <span class="tp">Global.StateName</span>) -> <span class="tp">State</span>:
+    <span class="kw">if</span> from == to: <span class="kw">return null</span>
+    <span class="kw">var</span> posture = _posture_groups.get(from, <span class="nm">PostureGroup.STANDING</span>)
+    <span class="kw">var</span> row: <span class="tp">Dictionary</span> = _transition_table.get(posture, {})
+    <span class="kw">if not</span> row.has(to):
+        push_error(<span class="st">"_plan_transition: no entry for "</span> + str(from) + <span class="st">" → "</span> + str(to))
+        <span class="kw">return null</span>
+    <span class="kw">var</span> factory: <span class="tp">Variant</span> = row[to]
+    <span class="kw">return</span> factory.call() <span class="kw">if</span> factory != <span class="kw">null else null</span></pre>
+
+    <h3>Kitty.gd</h3>
+    <pre><span class="kw">func</span> <span class="fn">_build_posture_groups</span>() -> <span class="tp">Dictionary</span>:
+    <span class="kw">var</span> groups = <span class="kw">super</span>.<span class="fn">_build_posture_groups</span>()
+    groups[<span class="nm">Global.StateName.SIT</span>]          = <span class="nm">PostureGroup.SITTING</span>
+    groups[<span class="nm">Global.StateName.LOOK_AROUND</span>]   = <span class="nm">PostureGroup.SITTING</span>
+    groups[<span class="nm">Global.StateName.LAY</span>]           = <span class="nm">PostureGroup.LYING</span>
+    groups[<span class="nm">Global.StateName.LAY_DOWN</span>]      = <span class="nm">PostureGroup.LYING</span>
+    <span class="kw">return</span> groups
+
+<span class="kw">func</span> <span class="fn">_build_transition_table</span>() -> <span class="tp">Dictionary</span>:
+    <span class="kw">var</span> table = <span class="kw">super</span>.<span class="fn">_build_transition_table</span>()
+    table[<span class="nm">PostureGroup.SITTING</span>] = {
+        <span class="nm">Global.StateName.WALK</span>:        <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">StandUpState.new</span>(<span class="fn">MovementState.walk</span>()),
+        <span class="nm">Global.StateName.RUN</span>:         <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">StandUpState.new</span>(<span class="fn">MovementState.run</span>()),
+        <span class="nm">Global.StateName.SPRINT</span>:      <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">StandUpState.new</span>(<span class="fn">MovementState.sprint</span>()),
+        <span class="nm">Global.StateName.SIT</span>:         <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">SitState.new</span>(<span class="kw">true</span>, <span class="kw">true</span>),
+        <span class="nm">Global.StateName.LAY</span>:         <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">LayDownState.new</span>(<span class="fn">LayState.new</span>()),
+        <span class="nm">Global.StateName.LOOK_AROUND</span>: <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">LookAroundState.new</span>(),
+    }
+    table[<span class="nm">PostureGroup.LYING</span>] = {
+        <span class="nm">Global.StateName.WALK</span>:        <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">SitUpState.new</span>(<span class="fn">StandUpState.new</span>(<span class="fn">MovementState.walk</span>())),
+        <span class="nm">Global.StateName.RUN</span>:         <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">SitUpState.new</span>(<span class="fn">StandUpState.new</span>(<span class="fn">MovementState.run</span>())),
+        <span class="nm">Global.StateName.SPRINT</span>:      <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">SitUpState.new</span>(<span class="fn">StandUpState.new</span>(<span class="fn">MovementState.sprint</span>())),
+        <span class="nm">Global.StateName.SIT</span>:         <span class="kw">func</span>(): <span class="kw">return</span> <span class="fn">SitUpState.new</span>(<span class="fn">SitState.new</span>(<span class="kw">true</span>, <span class="kw">true</span>)),
+        <span class="nm">Global.StateName.LAY</span>:         <span class="kw">null</span>,  <span class="cm"># already lying</span>
+        <span class="nm">Global.StateName.LOOK_AROUND</span>: <span class="kw">null</span>,  <span class="cm"># must sit up first, then stand</span>
+    }
+    <span class="kw">return</span> table</pre>
+
+    <div class="note">
+      <strong>Note:</strong> <code>_plan_movement</code> is deleted entirely. Its logic is now fully captured in the SITTING and LYING table rows above — no separate helper needed.
+    </div>
+
+    <hr />
+
+    <!-- IMPLEMENTATION -->
+    <h2 id="implementation">Implementation Steps</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-title">Add <code>PostureGroup</code> to Global</div>
+        <p>Add <code>enum PostureGroup { STANDING, SITTING, LYING, TRANSITIONING }</code> to <span class="file">Global.gd</span>. No other changes to Global — the enum will grow as new character types are added.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Rewrite <code>Character.gd</code></div>
+        <p>Add <code>_posture_groups</code> and <code>_transition_table</code> as instance variables. Add <code>_build_posture_groups()</code> and <code>_build_transition_table()</code> with base implementations. Replace <code>_plan_transition</code> with the three-line table lookup. Delete <code>_plan_movement</code>. Call both build methods in <code>_ready()</code>.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Extend tables in <code>Kitty.gd</code></div>
+        <p>Override <code>_build_posture_groups()</code> and <code>_build_transition_table()</code>. Call <code>super</code>, merge in SITTING and LYING entries, return. All kitty-specific topology moves here and out of <code>Character</code>.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Verify in Godot</div>
+        <p>Run the scene. Exercise all transitions manually: walk from sit, walk from lay, look around, lay down from sit, stand up mid-transition (should be blocked). Check that <code>push_error</code> never fires for legitimate transitions.</p>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- FILES -->
+    <h2 id="files">Files Affected</h2>
+
+    <table class="ct">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="label">scripts/Character.gd</td>
+          <td>Add <code>PostureGroup</code> inner enum; add build methods + cached tables; replace <code>_plan_transition</code>; delete <code>_plan_movement</code></td>
+        </tr>
+        <tr>
+          <td class="label">scripts/Kitty.gd</td>
+          <td>Override build methods with kitty-specific posture groups and transition chains</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="warn" style="margin-top:1rem;">
+      <strong>No scene changes.</strong> The public interface of <code>Character</code> — <code>begin_activity</code>, <code>change_state</code>, <code>apply_decision</code> — is unchanged. <code>WorldDirector</code>, <code>ActivityBrain</code>, and all state classes are untouched.
+    </div>
+
+    <hr />
+    <p style="font-size:0.75rem; color:var(--dim);">Kitty Barrage Wiki · <code>wiki/task-plan-state-topology.html</code> · May 2026</p>
+
+  </div>
+</div>
+</body>
+</html>

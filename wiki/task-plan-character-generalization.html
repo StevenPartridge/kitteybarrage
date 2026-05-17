@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Plan — Character Generalization</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
+      --b:     #2a2a38; --b2:  #1e1e2a;
+      --text:  #d4d0c8; --dim: #6a6570;
+      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
+      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
+      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
+      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
+      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
+      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--b2);
+      padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; font-size: 0.8rem;
+    }
+    .sidebar a { display: block; color: var(--dim); text-decoration: none; padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
+    .sidebar a:hover { color: var(--text); background: #1e1e2a; }
+    .sidebar .s-head { font-size: 0.68rem; font-weight: 700; color: #404055; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.3rem; }
+
+    .main { flex: 1; padding: 2rem 2.5rem; max-width: 860px; }
+
+    h1   { font-size: 1.45rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
+    h2   { font-size: 0.78rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
+    h3   { font-size: 0.92rem; font-weight: 700; color: #c8c0e0; margin: 1.2rem 0 0.4rem; }
+    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.65rem; }
+    li   { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.3rem; }
+    ul, ol { padding-left: 1.3rem; margin-bottom: 0.75rem; }
+    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
+    .sub  { color: var(--dim); font-size: 0.84rem; margin-bottom: 0.25rem; }
+    hr    { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
+    .breadcrumb { font-size: 0.78rem; color: var(--dim); margin-bottom: 1.5rem; }
+    .breadcrumb a { color: var(--dim); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--text); }
+
+    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
+    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
+    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
+    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
+    .pill-purple { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-b); }
+    .pill-orange { background:var(--orange-bg); color:var(--orange); border:1px solid var(--orange-b); }
+    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
+    .pill-red    { background:var(--red-bg);    color:var(--red);    border:1px solid var(--red-b); }
+
+    /* Question cards */
+    .question {
+      border: 1px solid var(--gold-b); border-left: 3px solid var(--gold);
+      background: var(--gold-bg); border-radius: 0 8px 8px 0;
+      padding: 1rem 1.2rem; margin: 1.25rem 0;
+    }
+    .question-head {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem;
+    }
+    .q-badge {
+      font-size: 0.72rem; font-weight: 700; background: var(--gold); color: #1a1000;
+      border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .q-title { font-size: 0.92rem; font-weight: 700; color: #e8c850; }
+    .question p { color: #b09030; margin-bottom: 0.5rem; }
+    .question p:last-child { margin-bottom: 0; }
+    .question strong { color: #d4a840; }
+    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
+    .q-opt { background: #1a1408; border: 1px solid #3a2e10; border-radius: 6px; padding: 0.65rem 0.85rem; }
+    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.25rem; color: #907020; }
+    .q-opt p { font-size: 0.8rem; color: #907530; margin-bottom: 0; }
+    .q-lean { font-size: 0.81rem; color: #a08030; font-style: italic; border-top: 1px solid #3a2e10; padding-top: 0.5rem; margin-top: 0.5rem; }
+    .q-lean strong { color: #c09830; font-style: normal; }
+
+    /* Decided question cards */
+    .question.decided { border-color: var(--green-b); border-left-color: var(--green); background: var(--green-bg); }
+    .question.decided .question-head { margin-bottom: 0.6rem; }
+    .question.decided .q-title { color: #80d880; }
+    .question.decided p { color: #608060; }
+    .question.decided .q-lean { border-top-color: var(--green-b); color: #507050; }
+    .question.decided .q-lean strong { color: #70a070; }
+    .decided-badge { background: var(--green) !important; color: #001800 !important; }
+    .decided-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
+    .q-opt { background: #0e180e; border: 1px solid var(--green-b); border-radius: 6px; padding: 0.65rem 0.85rem; }
+    .q-opt.chosen { border-color: var(--green); background: #122012; }
+    .q-opt.chosen .q-opt-label { color: var(--green); }
+    .q-opt.unchosen { opacity: 0.45; }
+    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.25rem; color: #507050; }
+    .q-opt p { font-size: 0.8rem; color: #507050; margin-bottom: 0; }
+    .decision-note {
+      margin-top: 0.6rem; padding: 0.6rem 0.85rem; background: #0a1a0a;
+      border: 1px solid var(--green-b); border-radius: 5px;
+      font-size: 0.8rem; color: #608060; line-height: 1.5;
+    }
+    .decision-note strong { color: #70a070; }
+
+    .note {
+      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
+      padding: 0.75rem 1rem; font-size: 0.83rem; color: #7ab8d0; margin: 1rem 0;
+    }
+    .note strong { color: var(--blue); }
+
+    pre {
+      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
+      padding: 0.9rem 1rem; font-family: "SF Mono","Fira Code",monospace; font-size: 0.79rem;
+      color: #b0c8a0; overflow-x: auto; margin: 0.75rem 0; line-height: 1.55;
+    }
+    pre .cm  { color: #505868; }
+    pre .kw  { color: #b890e0; }
+    pre .fn  { color: #80c8e8; }
+    pre .st  { color: #90c890; }
+    pre .nm  { color: #d4a840; }
+    pre .tp  { color: #d09060; }
+    pre .add { color: #60c060; }
+    pre .del { color: #c06060; }
+
+    .steps { counter-reset: step; margin-top: 0.5rem; }
+    .step {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
+      padding: 1rem 1.1rem 1rem 3.5rem; margin-bottom: 0.75rem; position: relative;
+    }
+    .step.blocked { border-color: var(--gold-b); opacity: 0.75; }
+    .step.done { border-color: var(--green-b); }
+    .step::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 1rem; top: 1rem;
+      width: 1.8rem; height: 1.8rem; border-radius: 50%;
+      background: var(--bg2); border: 1px solid var(--b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700; color: var(--dim); font-family: monospace;
+    }
+    .step.blocked::before { border-color: var(--gold-b); color: var(--gold); }
+    .step.done::before { content: "✓"; border-color: var(--green-b); color: var(--green); background: var(--green-bg); }
+    .step-title { font-size: 0.9rem; font-weight: 700; color: #d0c8f0; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .step p { margin-bottom: 0.4rem; }
+
+    /* Migration table */
+    .mt { width:100%; border-collapse:collapse; font-size:0.82rem; margin: 0.75rem 0; }
+    .mt th { text-align:left; padding:0.4rem 0.85rem; color:var(--dim); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--b); background:#131318; }
+    .mt td { padding:0.45rem 0.85rem; border-bottom:1px solid var(--b2); vertical-align:top; color:#a0988a; font-size:0.82rem; }
+    .mt tr:last-child td { border-bottom:none; }
+    .mt .fname { font-family:monospace; color:#7888c8; white-space:nowrap; }
+    .mt .action-new    { color: var(--green); font-weight:700; font-size:0.72rem; }
+    .mt .action-rename { color: var(--blue);  font-weight:700; font-size:0.72rem; }
+    .mt .action-trim   { color: var(--gold);  font-weight:700; font-size:0.72rem; }
+    .mt .action-touch  { color: var(--orange);font-weight:700; font-size:0.72rem; }
+    .mt .action-none   { color: var(--dim);   font-weight:700; font-size:0.72rem; }
+
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li { padding: 0.3rem 0; border-bottom: 1px solid var(--b2); font-size: 0.84rem; color: #a0988a; display: flex; align-items: baseline; gap: 0.6rem; }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before { content: "☐"; color: var(--dim); font-size: 0.9em; flex-shrink: 0; }
+
+    .file { display:inline-block; font-family:monospace; font-size:0.75rem; background:#131320; border:1px solid #2a2a40; border-radius:3px; padding:0.05rem 0.4rem; color:#7888c8; }
+
+    .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
+    .ba-panel { background: var(--bg2); border: 1px solid var(--b); border-radius: 6px; padding: 0.75rem 1rem; }
+    .ba-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+    .ba-label.before { color: var(--red); }
+    .ba-label.after  { color: var(--green); }
+    .ba-panel ul { padding-left: 1rem; margin: 0; }
+    .ba-panel li { font-size: 0.79rem; color: #8080a0; margin-bottom: 0.2rem; }
+    .ba-panel li.hi { color: #a0c8e0; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div style="font-size:0.85rem;font-weight:700;color:#a090c8;margin-bottom:1rem;">Character Plan</div>
+    <div class="s-head">Sections</div>
+    <a href="#goal">Goal</a>
+    <a href="#questions">Design Questions</a>
+    <a href="#what-moves">What Moves Where</a>
+    <a href="#new-character">New Character.gd</a>
+    <a href="#steps">Implementation Steps</a>
+    <a href="#unchanged">What Doesn't Change</a>
+    <a href="#testing">Testing</a>
+    <a href="#next-steps">Next Steps</a>
+    <div class="s-head">Wiki</div>
+    <a href="index.html">← Home</a>
+    <a href="architecture.html">Architecture</a>
+    <a href="task-plan-separation.html">Separation Plan</a>
+  </nav>
+
+  <div class="main">
+
+    <div class="breadcrumb"><a href="index.html">Wiki</a> → Task Plan</div>
+
+    <div style="display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.2rem;">
+      <h1>Character Generalization</h1>
+      <span class="pill pill-green">Complete</span>
+      <span class="pill pill-dim">May 2026</span>
+    </div>
+    <p class="sub">Extract a <code>Character</code> base class from <code>Kitty</code> so the FSM, states, brain, and director work with any character type — not just kitties.</p>
+
+    <hr />
+
+    <!-- GOAL -->
+    <h2 id="goal">Goal &amp; Scope</h2>
+
+    <p>Currently <code>State.entity</code> is typed as <code>Kitty</code> and <code>FiniteStateMachine</code> casts to <code>Kitty</code>. Adding a Dog, Bird, or any other character means either duplicating the entire state system or hitting a type wall immediately.</p>
+
+    <p>This refactor introduces a <code>Character</code> base class. <code>Kitty</code> becomes a thin subclass. States, the FSM, brains, and the director all target <code>Character</code>. After this lands, adding a new character type is: create a scene, extend <code>Character</code>, done.</p>
+
+    <div class="before-after">
+      <div class="ba-panel">
+        <div class="ba-label before">Before</div>
+        <ul>
+          <li class="hi">State.entity: Kitty</li>
+          <li class="hi">FSM casts get_parent() as Kitty</li>
+          <li class="hi">KittyDirector: Array[Kitty]</li>
+          <li>ActivityBrain takes KittyPersonality</li>
+          <li>All logic lives in Kitty.gd</li>
+        </ul>
+      </div>
+      <div class="ba-panel">
+        <div class="ba-label after">After</div>
+        <ul>
+          <li class="hi">State.entity: Character</li>
+          <li class="hi">FSM casts get_parent() as Character</li>
+          <li class="hi">Director: Array[Character]</li>
+          <li>ActivityBrain takes CharacterPersonality</li>
+          <li>Kitty.gd is a thin subclass or empty</li>
+        </ul>
+      </div>
+    </div>
+
+    <p>This refactor does <em>not</em> add new features. Behaviour is identical after it lands. It's purely structural.</p>
+
+    <hr />
+
+    <!-- DESIGN DECISIONS -->
+    <h2 id="questions">Design Decisions</h2>
+    <p>Decisions locked in May 2026. Recorded here for future reference.</p>
+
+    <!-- Q1 -->
+    <div class="question decided">
+      <div class="question-head">
+        <div class="q-badge decided-badge">1</div>
+        <div class="q-title">Director architecture — one director or one per character type?</div>
+        <span class="pill pill-green" style="margin-left:auto;">Option A</span>
+      </div>
+      <p>The current <code>KittyDirector</code> manages player focus, AI brains, spawning, and input — all for kitties. When Dogs exist, should one <code>WorldDirector</code> manage all characters together, or should a <code>DogDirector</code> appear alongside <code>KittyDirector</code> with a thin coordinator above them?</p>
+      <div class="q-options decided-opts">
+        <div class="q-opt chosen">
+          <div class="q-opt-label">✓ Option A — One WorldDirector</div>
+          <p>Rename <code>KittyDirector</code> → <code>WorldDirector</code>. It manages <code>Array[Character]</code>. Kitty-specific spawning becomes one method among many. Focus cycling, brains, and player control all live in one place.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">Option B — Per-type directors</div>
+          <p>Keep <code>KittyDirector</code> for kitties. Add <code>DogDirector</code> for dogs. A separate <code>FocusManager</code> handles cross-type player switching. More focused per-type but more moving parts overall.</p>
+        </div>
+      </div>
+      <div class="q-lean"><strong>Rationale:</strong> The current director is already doing "manage all kitties as a group" — generalising to "manage all characters as a group" is a natural extension. Per-type directors add coordination complexity not yet needed. Can always split later if one type's logic becomes unwieldy.</div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question decided">
+      <div class="question-head">
+        <div class="q-badge decided-badge">2</div>
+        <div class="q-title">Animation names — enforced convention or character-provided?</div>
+        <span class="pill pill-green" style="margin-left:auto;">Option A</span>
+      </div>
+      <p>States currently hardcode animation names: <code>SitState</code> plays <code>"Sit"</code>, <code>MovementState</code> plays <code>"Walk"</code>/<code>"Run"</code>/<code>"Sprint"</code>, <code>LayDownState</code> plays <code>"Lay"</code>, <code>LookAroundState</code> plays <code>"LookAround"</code>. For a Dog to reuse <code>SitState</code>, does it need an animation named exactly <code>"Sit"</code>? Or should each character declare its own animation names?</p>
+      <div class="q-options decided-opts">
+        <div class="q-opt chosen">
+          <div class="q-opt-label">✓ Option A — Enforced convention</div>
+          <p>All character types must provide animations named <code>"Sit"</code>, <code>"Walk"</code>, <code>"Run"</code>, <code>"Sprint"</code>, <code>"Lay"</code>, <code>"LookAround"</code>. States stay as-is. Zero state code changes.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">Option B — Character-provided</div>
+          <p>Character has a <code>get_anim_name(state) -> String</code> method states call instead of hardcoding. A Dog could map <code>SIT</code> → <code>"Rest"</code>. More flexible, more complex.</p>
+        </div>
+      </div>
+      <div class="q-lean"><strong>Rationale:</strong> Simple convention holds for most character types. Option B is available as a virtual method override if a character genuinely needs different names — don't pay for the flexibility until it's needed.</div>
+      <div class="decision-note">
+        <strong>Note:</strong> A snake would use <code>WALK</code>/<code>SIT</code>/<code>LOOK_AROUND</code> but not <code>LAY</code>/<code>SPRINT</code>. Unused activities are handled by setting preference weight = 0 in the personality — they're never chosen. The animation named <code>"Walk"</code> would show slithering. If the semantic mismatch becomes a problem, Option B can be retrofitted as a virtual method without touching shared states.
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question decided">
+      <div class="question-head">
+        <div class="q-badge decided-badge">3</div>
+        <div class="q-title">Personality — shared base or per-character resource?</div>
+        <span class="pill pill-green" style="margin-left:auto;">Option A</span>
+      </div>
+      <p><code>KittyPersonality</code> has two kinds of fields: generic ones shared by any character (<code>preference_walk</code>, <code>duration_sit</code>, <code>rest_threshold</code>, speed multipliers) and kitty-specific ones (<code>look_around_direction</code>, <code>look_around_speed</code>, etc.). <code>ActivityBrain</code> reads the generic fields. The look-around fields are only used by <code>LookAroundState</code>.</p>
+      <div class="q-options decided-opts">
+        <div class="q-opt chosen">
+          <div class="q-opt-label">✓ Option A — Thin base + subclasses</div>
+          <p><code>CharacterPersonality</code> holds the generic fields. <code>KittyPersonality extends CharacterPersonality</code> adds look-around and any other kitty specifics. <code>ActivityBrain</code> takes <code>CharacterPersonality</code>.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">Option B — Rename, keep flat</div>
+          <p>Rename <code>KittyPersonality</code> → <code>CharacterPersonality</code>. All characters share the same resource with the same fields. Dogs just ignore the look-around fields. Simpler short-term, accumulates irrelevant fields over time.</p>
+        </div>
+      </div>
+      <div class="q-lean"><strong>Rationale:</strong> The base/subclass split keeps future character personalities clean — a Dog's inspector shouldn't show look-around sliders. GDScript Resources support this natively. Explicit types over stringly-typed dictionaries.</div>
+    </div>
+
+    <hr />
+
+    <!-- WHAT MOVES WHERE -->
+    <h2 id="what-moves">What Moves Where</h2>
+
+    <table class="mt">
+      <thead>
+        <tr><th>File</th><th>Action</th><th>What changes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="fname">Character.gd</td>
+          <td><span class="action-new">NEW</span></td>
+          <td>Receives everything from <code>Kitty.gd</code>: state_machine, anim, speed, facing_direction, navigation_target, separation_force, initial_activity, personality. All methods: begin_walk/run/sprint, apply_decision, set_target, clear_target, set_highlight, _state_for_activity, _ready. Extends <code>CharacterBody2D</code>.</td>
+        </tr>
+        <tr>
+          <td class="fname">CharacterPersonality.gd</td>
+          <td><span class="action-new">NEW</span></td>
+          <td>Split from <code>KittyPersonality</code>. Contains: all preference/duration fields, rest_threshold, walk_target_chance, run/sprint speed multipliers. Extends <code>Resource</code>.</td>
+        </tr>
+        <tr>
+          <td class="fname">Kitty.gd</td>
+          <td><span class="action-trim">STRIPPED</span></td>
+          <td>Becomes <code>extends Character / class_name Kitty</code>. Possibly empty body. Kitty is now a named type for scene wiring and type checks, nothing more.</td>
+        </tr>
+        <tr>
+          <td class="fname">KittyPersonality.gd</td>
+          <td><span class="action-trim">STRIPPED</span></td>
+          <td>Becomes <code>extends CharacterPersonality / class_name KittyPersonality</code>. Retains only look-around fields and any future kitty-specific params.</td>
+        </tr>
+        <tr>
+          <td class="fname">State.gd</td>
+          <td><span class="action-touch">1 LINE</span></td>
+          <td><code>var entity: Kitty</code> → <code>var entity: Character</code></td>
+        </tr>
+        <tr>
+          <td class="fname">FiniteStateMachine.gd</td>
+          <td><span class="action-touch">1 LINE</span></td>
+          <td><code>get_parent() as Kitty</code> → <code>get_parent() as Character</code>. Error message updated to match.</td>
+        </tr>
+        <tr>
+          <td class="fname">ActivityBrain.gd</td>
+          <td><span class="action-touch">SIGNATURE</span></td>
+          <td><code>_init(rng, personality: KittyPersonality)</code> → <code>_init(rng, personality: CharacterPersonality)</code>. <code>refresh_personality</code> same. No logic changes — it only reads the generic fields that now live on <code>CharacterPersonality</code>.</td>
+        </tr>
+        <tr>
+          <td class="fname">KittyDirector.gd</td>
+          <td><span class="action-touch">TYPES</span></td>
+          <td><code>Array[Kitty]</code> → <code>Array[Character]</code>. <code>controlled_kitty: Kitty</code> → <code>controlled_character: Character</code>. Type annotations on <code>initialize_kitty</code>. Logic unchanged. <em>(Rename to WorldDirector if Q1 = A — but the node in the scene keeps working either way.)</em></td>
+        </tr>
+        <tr>
+          <td class="fname">DebugOverlay.gd</td>
+          <td><span class="action-touch">TYPES</span></td>
+          <td><code>_director: KittyDirector</code> type updated. <code>controlled_kitty</code> references updated to <code>controlled_character</code>. All <code>Kitty</code> type hints in local vars updated.</td>
+        </tr>
+        <tr>
+          <td class="fname">kitty_states/*.gd</td>
+          <td><span class="action-none">NONE</span></td>
+          <td>All state files stay exactly as-is. They already access <code>entity.*</code> — once <code>entity</code> is typed as <code>Character</code>, they inherit the correct type automatically.</td>
+        </tr>
+        <tr>
+          <td class="fname">scenes/Kitty.tscn</td>
+          <td><span class="action-none">NONE</span></td>
+          <td>No scene changes. The script on the root node is still <code>Kitty.gd</code>. Godot sees the class hierarchy automatically.</td>
+        </tr>
+        <tr>
+          <td class="fname">scenes/Main.tscn</td>
+          <td><span class="action-none">NONE</span></td>
+          <td>No scene changes.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr />
+
+    <!-- NEW CHARACTER.GD -->
+    <h2 id="new-character">New Character.gd — Interface Contract</h2>
+
+    <p>This is the public interface all future character types inherit. Everything here becomes the contract states and the director can depend on.</p>
+
+    <pre><span class="kw">extends</span> CharacterBody2D
+<span class="kw">class_name</span> <span class="tp">Character</span>
+
+<span class="cm"># Core components</span>
+<span class="kw">var</span> state_machine: <span class="tp">FiniteStateMachine</span>
+<span class="kw">var</span> anim:          <span class="tp">AnimationController</span>
+
+<span class="cm"># Inspector-configurable</span>
+<span class="kw">@export var</span> personality:       <span class="tp">CharacterPersonality</span>
+<span class="kw">@export var</span> initial_activity:  <span class="tp">Global.StateName</span> = Global.StateName.SIT
+<span class="kw">@export var</span> speed:             <span class="tp">float</span> = <span class="nm">150.0</span>
+
+<span class="cm"># Runtime state</span>
+<span class="kw">var</span> facing_direction:  <span class="tp">Global.Direction</span> = Global.Direction.SOUTH
+<span class="kw">var</span> navigation_target: <span class="tp">NavigationTarget</span> = <span class="kw">null</span>
+<span class="kw">var</span> separation_force:  <span class="tp">Vector2</span>          = Vector2.ZERO
+
+<span class="cm"># Public interface (called by director and states)</span>
+<span class="kw">func</span> <span class="fn">begin_walk</span>()  -> <span class="tp">void</span>: ...
+<span class="kw">func</span> <span class="fn">begin_run</span>()   -> <span class="tp">void</span>: ...
+<span class="kw">func</span> <span class="fn">begin_sprint</span>() -> <span class="tp">void</span>: ...
+<span class="kw">func</span> <span class="fn">apply_decision</span>(decision: <span class="tp">ActivityDecision</span>) -> <span class="tp">void</span>: ...
+<span class="kw">func</span> <span class="fn">change_state</span>(state: <span class="tp">State</span>)                 -> <span class="tp">void</span>: ...
+<span class="kw">func</span> <span class="fn">set_target</span>(target: <span class="tp">NavigationTarget</span>)        -> <span class="tp">void</span>: ...
+<span class="kw">func</span> <span class="fn">clear_target</span>()                                -> <span class="tp">void</span>: ...
+<span class="kw">func</span> <span class="fn">set_highlight</span>(enable: <span class="tp">bool</span>)                  -> <span class="tp">void</span>: ...
+<span class="kw">func</span> <span class="fn">update_direction</span>(vec: <span class="tp">Vector2</span>)               -> <span class="tp">void</span>: ...</pre>
+
+    <div class="note">
+      <strong>set_highlight implementation note:</strong> Currently <code>Kitty.set_highlight</code> accesses <code>$AnimatedSprite2D</code> directly. On <code>Character</code>, this becomes <code>anim._player.modulate = ...</code> — but <code>_player</code> is private. The cleanest fix: add a <code>set_modulate(color: Color)</code> method to <code>AnimationController</code>. One extra line there, no scene changes needed.
+    </div>
+
+    <hr />
+
+    <!-- IMPLEMENTATION STEPS -->
+    <h2 id="steps">Implementation Steps</h2>
+    <p>Steps 1–5 have no dependencies on the design questions. Steps 6–7 assume recommendations are accepted — flag if not.</p>
+
+    <div class="steps">
+
+      <div class="step done">
+        <div class="step-title">Add <code>set_modulate()</code> to <span class="file">AnimationController.gd</span></div>
+        <p>One new method so <code>Character.set_highlight</code> doesn't need to access <code>_player</code> directly:</p>
+        <pre><span class="kw">func</span> <span class="fn">set_modulate</span>(color: <span class="tp">Color</span>) -> <span class="tp">void</span>:
+    <span class="kw">if</span> _player != <span class="kw">null</span>:
+        _player.modulate = color</pre>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Create <span class="file">CharacterPersonality.gd</span></div>
+        <p>Extract all generic fields from <code>KittyPersonality</code>: preference weights, durations, rest_threshold, walk_target_chance, run/sprint multipliers. Same <code>@export_group</code> layout. Extends <code>Resource</code>.</p>
+        <p>Do not remove fields from <code>KittyPersonality</code> yet — strip it in step 4 after Character.gd is working.</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Create <span class="file">Character.gd</span></div>
+        <p>Copy everything from <code>Kitty.gd</code> into a new file. Change the first two lines to <code>extends CharacterBody2D / class_name Character</code>. Change <code>personality: KittyPersonality</code> to <code>personality: CharacterPersonality</code>. Replace <code>$AnimatedSprite2D.modulate</code> in <code>set_highlight</code> with <code>anim.set_modulate(...)</code>. Remove <code>grid_size</code> (unused).</p>
+        <p>At this stage both <code>Character.gd</code> and <code>Kitty.gd</code> exist as-is — nothing is broken yet.</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Strip <span class="file">Kitty.gd</span> and <span class="file">KittyPersonality.gd</span></div>
+        <p><code>Kitty.gd</code> becomes:</p>
+        <pre><span class="kw">extends</span> Character
+<span class="kw">class_name</span> Kitty</pre>
+        <p><code>KittyPersonality.gd</code> becomes <code>extends CharacterPersonality / class_name KittyPersonality</code> and keeps only the look-around fields (<code>look_around_direction</code>, <code>look_around_speed</code>, <code>look_around_pause_right</code>, <code>look_around_pause_left</code>, <code>look_around_pause_center</code>, <code>look_around_repetitions</code>).</p>
+        <p>Verify in Godot that the Kitty scene still loads and the inspector shows the correct personality fields (inherited + extended).</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Update <span class="file">State.gd</span> and <span class="file">FiniteStateMachine.gd</span></div>
+        <p><code>State.gd</code> line 5: <code>var entity: Kitty</code> → <code>var entity: Character</code></p>
+        <p><code>FiniteStateMachine.gd</code> line 23: <code>get_parent() as Kitty</code> → <code>get_parent() as Character</code>. Update the error message on line 25 to say <code>"FiniteStateMachine must be a child of Character."</code></p>
+        <p>All state files in <code>kitty_states/</code> inherit the updated type automatically — no edits needed there.</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Update <span class="file">ActivityBrain.gd</span></div>
+        <p>Change <code>_init</code> and <code>refresh_personality</code> signatures: <code>personality: KittyPersonality</code> → <code>personality: CharacterPersonality</code>. No logic changes — all the fields ActivityBrain reads (<code>preference_walk</code>, <code>duration_sit</code>, etc.) are now on <code>CharacterPersonality</code>.</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Update <span class="file">KittyDirector.gd</span> <span class="pill pill-gold" style="font-size:0.65rem;">depends on Q1</span></div>
+        <p>Change type annotations throughout: <code>Array[Kitty]</code> → <code>Array[Character]</code>, <code>controlled_kitty: Kitty</code> → <code>controlled_character: Character</code>, update <code>initialize_kitty</code> parameter type.</p>
+        <p>If Q1 = rename to <code>WorldDirector</code>: rename the file and class name, update <code>Main.tscn</code>'s script reference, update <code>DebugOverlay</code>'s <code>find_child("KittyDirector"...</code> call.</p>
+        <p>Logic — the brain loop, focus cycling, spawning — is completely unchanged.</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Update <span class="file">DebugOverlay.gd</span></div>
+        <p>Update type annotations for <code>_director</code>, update <code>controlled_kitty</code> references to <code>controlled_character</code>, update the <code>find_child</code> name if director was renamed. The UI, button handlers, and personality panel are fully reusable for any character — no logic changes.</p>
+      </div>
+
+    </div>
+
+    <hr />
+
+    <!-- WHAT DOESN'T CHANGE -->
+    <h2 id="unchanged">What Doesn't Change</h2>
+    <ul>
+      <li>All state behaviour — every <code>kitty_states/</code> file is untouched</li>
+      <li>The FSM transition model, tick loop, and chaining pattern</li>
+      <li>The AnimationController — except one new <code>set_modulate</code> method</li>
+      <li>NavigationTarget and its adapters</li>
+      <li>InputHandler / InputSource / GodotInputSource</li>
+      <li>The Kitty scene (<code>Kitty.tscn</code>) and Main scene</li>
+      <li>All existing Kitty behaviour at runtime — this is a rename/extract, not a redesign</li>
+    </ul>
+
+    <hr />
+
+    <!-- TESTING -->
+    <h2 id="testing">Testing Checklist</h2>
+    <ul class="checklist">
+      <li>Project opens in Godot with no parse errors in any script</li>
+      <li>Kitty scene loads, inspector shows personality fields (both inherited and kitty-specific)</li>
+      <li>Spawning works — right-click creates a kitty that animates and behaves as before</li>
+      <li>AI behaviour unchanged — brains tick, activities cycle, look-around fires</li>
+      <li>Player control works — Tab takes control, movement/run/sprint all function</li>
+      <li>Debug console opens, state display correct, all buttons work, personality sliders work</li>
+      <li>Focus cycling across multiple kitties works</li>
+      <li>No <code>cast failed</code> or <code>Invalid type</code> errors in the output log</li>
+      <li>A new empty scene with a node extending <code>Character</code> loads without errors — proving the base class is usable standalone</li>
+    </ul>
+
+    <hr />
+
+    <h2>Affected Files</h2>
+    <ul>
+      <li><span class="file">scripts/Character.gd</span> — <span style="color:var(--green)">new</span> — base class (<code>class_name Character</code>), extracted from Kitty.gd</li>
+      <li><span class="file">scripts/CharacterPersonality.gd</span> — <span style="color:var(--green)">new</span> — base resource, extracted from KittyPersonality.gd</li>
+      <li><span class="file">scripts/WorldDirector.gd</span> — <span style="color:var(--green)">new</span> — replaces KittyDirector, manages <code>Array[Character]</code></li>
+      <li><span class="file">scripts/Kitty.gd</span> — stripped to 2 lines: <code>extends Character / class_name Kitty</code></li>
+      <li><span class="file">scripts/KittyPersonality.gd</span> — stripped to look-around fields, extends CharacterPersonality</li>
+      <li><span class="file">scripts/KittyDirector.gd</span> — stub comment only, safe to delete from filesystem</li>
+      <li><span class="file">scripts/State.gd</span> — <code>entity: Character</code></li>
+      <li><span class="file">scripts/FiniteStateMachine.gd</span> — <code>get_parent() as Character</code></li>
+      <li><span class="file">scripts/ActivityBrain.gd</span> — <code>CharacterPersonality</code> signatures</li>
+      <li><span class="file">scripts/kitty_states/MovementState.gd</span> — lambda type <code>CharacterPersonality</code></li>
+      <li><span class="file">scripts/kitty_states/LookAroundState.gd</span> — personality fields accessed via <code>.get("field", default)</code></li>
+      <li><span class="file">scripts/DebugOverlay.gd</span> — <code>WorldDirector</code>, <code>controlled_character</code>, <code>_character()</code></li>
+      <li><span class="file">scripts/AnimationController.gd</span> — <code>set_modulate()</code> method added</li>
+      <li><span class="file">scenes/Main.tscn</span> — node renamed to WorldDirector, script path and uid updated to WorldDirector.gd (uid mismatch caused a "RefCounted can't be assigned to Node" error after the rename)</li>
+    </ul>
+
+    <hr />
+
+    <!-- SUGGESTED NEXT STEPS -->
+    <h2 id="next-steps">Suggested Next Steps</h2>
+
+    <div class="steps" style="counter-reset:step;">
+
+      <div class="step done">
+        <div class="step-title">Delete <span class="file">scripts/KittyDirector.gd</span> from the filesystem</div>
+        <p>The file is now a stub comment. Godot will warn about the orphaned <code>.uid</code> file on next open — deleting both <code>KittyDirector.gd</code> and <code>KittyDirector.gd.uid</code> from the filesystem (Finder or terminal) cleans this up. Do this through the Godot editor's FileSystem panel to avoid stale uid references.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Rename <span class="file">scripts/kitty_states/</span> → <span class="file">scripts/states/</span></div>
+        <p>The states in this folder now belong to all characters, not just kitties. Renaming clarifies this. Do through the Godot editor (right-click → Rename) so all <code>.uid</code> references update automatically.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Execute the Separation Plan — update references first</div>
+        <p>The separation task plan (<a href="task-plan-separation.html" style="color:var(--blue)">task-plan-separation.html</a>) was written before this refactor. Before executing, verify any <code>KittyDirector</code> references in that plan map to <code>WorldDirector</code>, and that the separation force property goes on <code>Character</code> (it already does, as that was added during this refactor).</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Prove the base with a second character type</div>
+        <p>Create a minimal second character — even a re-skinned kitty with a different name and personality — to verify the <code>Character</code> base works end-to-end independently of <code>Kitty</code>. This is the acceptance test for the whole refactor. A new scene, <code>extends Character</code>, a <code>CharacterPersonality</code> resource, and confirm it spawns, animates, and takes AI decisions.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Introduce a <code>NavigationState</code> intermediate class</div>
+        <p>The base <code>State</code> class currently carries <code>rotation_frames</code>, <code>_rotation_frame_count</code>, and <code>_tick_rotation()</code> — machinery only used by <code>StandUpState</code>, <code>SitUpState</code>, and <code>MovementState</code>. A <code>NavigationState extends State</code> intermediate class concentrates this in the right place. Identified in the architecture review; now cleaner to implement since <code>entity</code> is typed as <code>Character</code>.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Design the Interactable Items system</div>
+        <p>The next major architectural milestone. Furniture, toys, pet houses — items with interaction spots, occupancy tracking, and capability-based auto-discovery. This warrants its own architecture session (grill/RFC) before any code is written. Key questions: how does a character discover nearby interactables, how does reservation prevent double-use, how do item-specific states clean up on removal.</p>
+      </div>
+
+    </div>
+
+    <hr />
+    <p style="font-size:0.75rem;color:var(--dim);">Kitty Barrage Wiki · <code>wiki/task-plan-character-generalization.html</code> · Updated May 2026</p>
+
+  </div>
+</div>
+
+</body>
+</html>

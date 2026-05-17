@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Plan — Character Separation & Avoidance</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
+      --b:     #2a2a38; --b2:  #1e1e2a;
+      --text:  #d4d0c8; --dim: #6a6570;
+      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
+      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
+      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
+      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
+      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
+      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 210px; min-width: 210px; background: var(--bg2); border-right: 1px solid var(--b2);
+      padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; font-size: 0.8rem;
+    }
+    .sidebar a { display: block; color: var(--dim); text-decoration: none; padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
+    .sidebar a:hover { color: var(--text); background: #1e1e2a; }
+    .sidebar .s-head { font-size: 0.68rem; font-weight: 700; color: #404055; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.3rem; }
+
+    .main { flex: 1; padding: 2rem 2.5rem; max-width: 840px; }
+
+    h1   { font-size: 1.45rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
+    h2   { font-size: 0.78rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
+    h3   { font-size: 0.92rem; font-weight: 700; color: #c8c0e0; margin: 1.2rem 0 0.4rem; }
+    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.65rem; }
+    li   { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.3rem; }
+    ul, ol { padding-left: 1.3rem; margin-bottom: 0.75rem; }
+    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
+    .sub  { color: var(--dim); font-size: 0.84rem; margin-bottom: 0.25rem; }
+    hr    { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
+    .breadcrumb { font-size: 0.78rem; color: var(--dim); margin-bottom: 1.5rem; }
+    .breadcrumb a { color: var(--dim); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--text); }
+
+    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
+    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
+    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
+    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
+    .pill-purple { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-b); }
+    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
+
+    .aside {
+      background: var(--purple-bg); border: 1px solid var(--purple-b); border-left: 3px solid var(--purple);
+      border-radius: 0 6px 6px 0; padding: 1rem 1.2rem; margin: 1.25rem 0;
+    }
+    .aside-head { font-size: 0.72rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+    .aside p { color: #9888c8; margin-bottom: 0.5rem; }
+    .aside p:last-child { margin-bottom: 0; }
+    .aside strong { color: #c0a8e8; }
+    .aside ul { padding-left: 1.2rem; }
+    .aside li { color: #9888c8; font-size: 0.84rem; margin-bottom: 0.3rem; }
+
+    .note {
+      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
+      padding: 0.75rem 1rem; font-size: 0.83rem; color: #7ab8d0; margin: 1rem 0;
+    }
+    .note strong { color: var(--blue); }
+    .warn {
+      background: var(--gold-bg); border: 1px solid var(--gold-b); border-radius: 6px;
+      padding: 0.75rem 1rem; font-size: 0.83rem; color: #c09828; margin: 1rem 0;
+    }
+    .warn strong { color: var(--gold); }
+
+    pre {
+      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
+      padding: 0.9rem 1rem; font-family: "SF Mono","Fira Code",monospace; font-size: 0.79rem;
+      color: #b0c8a0; overflow-x: auto; margin: 0.75rem 0; line-height: 1.55;
+    }
+    pre .cm  { color: #505868; }
+    pre .kw  { color: #b890e0; }
+    pre .fn  { color: #80c8e8; }
+    pre .st  { color: #90c890; }
+    pre .nm  { color: #d4a840; }
+    pre .tp  { color: #d09060; }
+
+    .steps { counter-reset: step; margin-top: 0.5rem; }
+    .step {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
+      padding: 1rem 1.1rem 1rem 3.5rem; margin-bottom: 0.75rem; position: relative;
+    }
+    .step::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 1rem; top: 1rem;
+      width: 1.8rem; height: 1.8rem; border-radius: 50%;
+      background: var(--bg2); border: 1px solid var(--b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700; color: var(--dim); font-family: monospace;
+    }
+    .step-title { font-size: 0.9rem; font-weight: 700; color: #d0c8f0; margin-bottom: 0.35rem; }
+    .step p { margin-bottom: 0.4rem; }
+
+    .ct { width:100%; border-collapse:collapse; font-size:0.82rem; margin: 0.5rem 0; }
+    .ct th { text-align:left; padding:0.4rem 0.9rem; color:var(--dim); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--b); background:#131318; }
+    .ct td { padding:0.45rem 0.9rem; border-bottom:1px solid var(--b2); vertical-align:top; color: #a0988a; }
+    .ct tr:last-child td { border-bottom:none; }
+    .ct .label { font-family:monospace; color:#8888c8; }
+    .ct .good  { color: var(--green); }
+    .ct .meh   { color: var(--gold); }
+
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li { padding: 0.3rem 0; border-bottom: 1px solid var(--b2); font-size: 0.84rem; color: #a0988a; display: flex; align-items: baseline; gap: 0.6rem; }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before { content: "☐"; color: var(--dim); font-size: 0.9em; flex-shrink: 0; }
+
+    .file { display:inline-block; font-family:monospace; font-size:0.75rem; background:#131320; border:1px solid #2a2a40; border-radius:3px; padding:0.05rem 0.4rem; color:#7888c8; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.75rem 0; }
+    .mini-card { background: var(--bg1); border: 1px solid var(--b); border-radius: 6px; padding: 0.85rem 1rem; }
+    .mini-card h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .mini-card.green h4 { color: var(--green); }
+    .mini-card.gold h4 { color: var(--gold); }
+    .mini-card p { font-size: 0.79rem; color: #807880; margin-bottom: 0; }
+
+    .diagram {
+      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
+      padding: 1.2rem; font-family: monospace; font-size: 0.8rem; color: #808898;
+      margin: 0.75rem 0; line-height: 1.8;
+    }
+    .diagram .hi { color: #80c8e8; }
+    .diagram .hi2 { color: #60c060; }
+    .diagram .arrow { color: #d4a840; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div style="font-size:0.85rem; font-weight:700; color:#a090c8; margin-bottom:1rem;">Separation Plan</div>
+    <div class="s-head">Sections</div>
+    <a href="#concepts">Concepts</a>
+    <a href="#two-problems">Two Problems</a>
+    <a href="#approach">Approach</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#implementation">Implementation</a>
+    <a href="#tuning">Tuning</a>
+    <a href="#future">Future Characters</a>
+    <a href="#testing">Testing</a>
+    <div class="s-head">Wiki</div>
+    <a href="index.html">← Home</a>
+    <a href="architecture.html">Architecture</a>
+  </nav>
+
+  <div class="main">
+
+    <div class="breadcrumb"><a href="index.html">Wiki</a> → Task Plan</div>
+
+    <div style="display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.2rem;">
+      <h1>Character Separation &amp; Avoidance</h1>
+      <span class="pill pill-gold">Task Plan</span>
+      <span class="pill pill-dim">May 2026</span>
+    </div>
+    <p class="sub">Characters steer around each other while walking. Characters at rest don't stack on top of each other. Applies to kitties and future character types.</p>
+
+    <hr />
+
+    <!-- CONCEPTS -->
+    <h2 id="concepts">Concepts &amp; Vocabulary</h2>
+
+    <div class="aside">
+      <div class="aside-head">Game Dev Aside — Steering Behaviors</div>
+      <p>In 1987, Craig Reynolds published a paper describing how autonomous agents could move in natural-looking ways using simple mathematical rules called <strong>steering behaviors</strong>. They're still the foundation of how most games handle character movement. The three you care about here:</p>
+      <p><strong>Separation</strong> — each agent pushes away from neighbors within a personal-space radius. The force grows stronger as the distance shrinks. This is what prevents stacking at rest and causes agents to drift apart naturally when they stop near each other.</p>
+      <p><strong>Seek / Arrive</strong> — a force that pulls the agent toward a target. At-distance it's full strength; as it gets close it tapers off so the agent slows to a stop rather than overshooting. Your current MovementState implements a version of this.</p>
+      <p><strong>Avoidance</strong> — predicting that another agent will occupy a position and steering around it before the collision happens. This is what "going around" a blocking kitty requires, as opposed to just being pushed aside reactively.</p>
+      <p>Combining Seek + Separation gives you agents that move toward goals while naturally flowing around each other — which is exactly what this feature calls for.</p>
+    </div>
+
+    <div class="aside">
+      <div class="aside-head">Game Dev Aside — RVO and Why We're Not Using It</div>
+      <p>The academically correct algorithm for multi-agent avoidance is <strong>RVO2 (Reciprocal Velocity Obstacles)</strong>. Godot 4 has it built in via <code>NavigationAgent2D</code> with <code>avoidance_enabled = true</code>. It produces near-perfect avoidance behavior.</p>
+      <p>We're <em>not</em> using it here because it requires moving velocity application into an asynchronous signal callback (<code>velocity_computed</code>), which would significantly restructure <code>MovementState</code>'s synchronous <code>tick()</code> model.</p>
+      <p>For a desktop pet with 5–10 characters on an open screen, <strong>separation forces</strong> produce visually equivalent results with a fraction of the complexity. If avoidance ever needs to be more precise (tight corridors, complex layouts), RVO is the upgrade path.</p>
+    </div>
+
+    <hr />
+
+    <!-- TWO PROBLEMS -->
+    <h2 id="two-problems">Two Distinct Problems</h2>
+
+    <p>The feature request describes two different situations that need different solutions:</p>
+
+    <div class="two-col">
+      <div class="mini-card green">
+        <h4>Problem 1 — En-Route</h4>
+        <p>A walking kitty should steer around a kitty that's in its path. The blocker may be moving or stopped.</p>
+      </div>
+      <div class="mini-card gold">
+        <h4>Problem 2 — At Rest</h4>
+        <p>Two kitties that stop near each other should not sit directly on top of one another. They should settle slightly apart.</p>
+      </div>
+    </div>
+
+    <p>Both are solved by the same underlying mechanism — a <strong>separation force</strong> that pushes kitties apart when they're within a personal-space radius — but applied at different moments and with different strengths.</p>
+
+    <hr />
+
+    <!-- APPROACH -->
+    <h2 id="approach">Approach</h2>
+
+    <h3>Separation Force</h3>
+    <p>Every frame, for each pair of characters closer than a <code>separation_radius</code>, compute a repulsion vector pointing from one toward the other. The force scales with proximity — full strength when nearly overlapping, zero at the edge of the radius. Add this force to the character's velocity when moving, and apply it as a gentle position nudge when at rest.</p>
+
+    <div class="diagram">
+      <span class="hi">kitty_a</span> ←<span class="arrow">──── repulsion ────</span>→ <span class="hi2">kitty_b</span>
+      distance = 30px,  radius = 64px
+      strength = (1.0 - 30/64) = 0.53  →  force = 0.53 × separation_strength
+    </div>
+
+    <p>When a walking kitty passes close to a resting one, the separation force steers the walker sideways. The resting kitty gets a tiny counter-force that's small enough to barely notice. Together they look like natural personal-space awareness.</p>
+
+    <h3>Why not NavigationAgent2D?</h3>
+    <p>Godot's built-in RVO avoidance is async — velocity is returned via a signal, not inline with <code>tick()</code>. Retrofitting that into the state machine would mean restructuring <code>MovementState</code> significantly. Separation forces slot directly into the existing synchronous model.</p>
+
+    <hr />
+
+    <!-- ARCHITECTURE -->
+    <h2 id="architecture">Architecture</h2>
+
+    <p>The key question: <em>who computes the separation force, and how does it reach the state?</em></p>
+
+    <p><code>WorldDirector</code> is the only place that sees all characters simultaneously. States only know about their own <code>entity</code>. So the computation lives in <code>WorldDirector</code>, and the result is placed on <code>Character</code> as a property that <code>MovementState</code> reads.</p>
+
+    <div class="diagram">
+WorldDirector._physics_process()
+  <span class="arrow">1.</span> <span class="hi">_compute_separation_forces()</span>   ← iterates all pairs, writes kitty.separation_force
+  <span class="arrow">2.</span> per-kitty movement / brain tick    ← unchanged
+
+MovementState.tick()
+  desired_velocity = direction × speed
+  <span class="hi2">entity.velocity = desired_velocity + entity.separation_force</span>
+  move_and_slide()
+
+WorldDirector._physics_process()  (rest case)
+  <span class="arrow">3.</span> <span class="hi">_apply_rest_separation(delta)</span>     ← position nudge for stopped kitties
+    </div>
+
+    <p><code>Character</code> gains one new property: <code>separation_force: Vector2</code>. It is written by <code>WorldDirector</code> and read by <code>MovementState</code>. Nothing else changes in the state machine.</p>
+
+    <hr />
+
+    <!-- IMPLEMENTATION -->
+    <h2 id="implementation">Implementation Steps</h2>
+
+    <div class="steps">
+
+      <div class="step done">
+        <div class="step-title">Add <code>separation_force</code> to <span class="file">Character.gd</span> <span class="pill pill-green" style="font-size:0.65rem;">Already done</span></div>
+        <p>Added during the Character generalization refactor. Already present on line 13 of <code>Character.gd</code>:</p>
+        <pre><span class="kw">var</span> separation_force: <span class="tp">Vector2</span> = Vector2.ZERO</pre>
+        <p>Plain var, not exported — per-frame computed value, not a tunable parameter. No action needed.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Add separation constants to <span class="file">WorldDirector.gd</span></div>
+        <p>Two tunable values at the top of the file:</p>
+        <pre><span class="kw">const</span> <span class="nm">SEPARATION_RADIUS</span>:   <span class="tp">float</span> = <span class="nm">64.0</span>   <span class="cm"># pixels — personal-space bubble</span>
+<span class="kw">const</span> <span class="nm">SEPARATION_STRENGTH</span>: <span class="tp">float</span> = <span class="nm">120.0</span>  <span class="cm"># max push speed in px/s when nearly overlapping</span>
+<span class="kw">const</span> <span class="nm">REST_PUSH_STRENGTH</span>:   <span class="tp">float</span> = <span class="nm">20.0</span>   <span class="cm"># gentler nudge for stopped kitties</span></pre>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Add <code>_compute_separation_forces()</code> to <span class="file">WorldDirector.gd</span></div>
+        <p>Call this at the <em>start</em> of <code>_physics_process</code>, before the per-kitty movement pass. It clears last frame's forces and recomputes them:</p>
+        <pre><span class="kw">func</span> <span class="fn">_compute_separation_forces</span>() -> <span class="tp">void</span>:
+    <span class="kw">for</span> character <span class="kw">in</span> characters:
+        character.separation_force = Vector2.ZERO
+
+    <span class="kw">for</span> i <span class="kw">in</span> characters.size():
+        <span class="kw">for</span> j <span class="kw">in</span> range(i + <span class="nm">1</span>, characters.size()):
+            <span class="kw">var</span> a: <span class="tp">Character</span> = characters[i]
+            <span class="kw">var</span> b: <span class="tp">Character</span> = characters[j]
+            <span class="kw">var</span> delta: <span class="tp">Vector2</span> = a.position - b.position
+            <span class="kw">var</span> dist: <span class="tp">float</span>   = delta.length()
+            <span class="kw">if</span> dist >= <span class="nm">SEPARATION_RADIUS</span> <span class="kw">or</span> dist &lt; <span class="nm">0.01</span>:
+                <span class="kw">continue</span>
+            <span class="kw">var</span> strength: <span class="tp">float</span>  = (<span class="nm">1.0</span> - dist / <span class="nm">SEPARATION_RADIUS</span>) * <span class="nm">SEPARATION_STRENGTH</span>
+            <span class="kw">var</span> push: <span class="tp">Vector2</span>    = delta.normalized() * strength
+            a.separation_force += push
+            b.separation_force -= push</pre>
+        <p>O(N²) over pairs — optimal for small N. With 10 kitties that's 45 pair checks per frame, negligible.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Blend <code>separation_force</code> into <span class="file">MovementState.gd</span></div>
+        <p>In <code>tick()</code>, add the separation force to the velocity before moving. The force is already in px/s units, matching velocity:</p>
+        <pre><span class="cm"># Before</span>
+entity.velocity = direction * entity.speed * _speed_fn.<span class="fn">call</span>(entity.personality)
+
+<span class="cm"># After</span>
+entity.velocity = direction * entity.speed * _speed_fn.<span class="fn">call</span>(entity.personality) \
+    + entity.separation_force</pre>
+        <p>When the kitty has no target and is pausing, <code>entity.velocity</code> is set to <code>Vector2.ZERO</code> in the else branch. Leave that as-is — the rest nudge (next step) handles the stopped case separately.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Add <code>_apply_rest_separation()</code> to <span class="file">WorldDirector.gd</span></div>
+        <p>For kitties that are not currently in a movement state, apply the separation force as a direct position offset. This handles the "stopped too close" case without needing the state machine involved:</p>
+        <pre><span class="kw">func</span> <span class="fn">_apply_rest_separation</span>(delta: <span class="tp">float</span>) -> <span class="tp">void</span>:
+    <span class="kw">for</span> character <span class="kw">in</span> characters:
+        <span class="kw">var</span> state: <span class="tp">Global.StateName</span> = character.state_machine.<span class="fn">current_state_name</span>()
+        <span class="kw">if</span> state <span class="kw">in</span> [Global.StateName.WALK, Global.StateName.RUN, Global.StateName.SPRINT]:
+            <span class="kw">continue</span>  <span class="cm"># moving characters handle it via separation_force in velocity</span>
+        <span class="kw">if</span> character.separation_force == Vector2.ZERO:
+            <span class="kw">continue</span>
+        <span class="kw">var</span> nudge: <span class="tp">Vector2</span> = character.separation_force.normalized() \
+            * minf(character.separation_force.length(), <span class="nm">REST_PUSH_STRENGTH</span>) * delta
+        character.position += nudge</pre>
+        <p>The <code>minf</code> clamp keeps the nudge gentle — stopped kitties drift apart slowly rather than snapping. <code>delta</code> makes it frame-rate independent.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Wire it together in <code>_physics_process</code></div>
+        <p>Add both calls to the top of the existing loop in <span class="file">WorldDirector.gd</span>:</p>
+        <pre><span class="kw">func</span> <span class="fn">_physics_process</span>(delta: <span class="tp">float</span>) -> <span class="tp">void</span>:
+    <span class="fn">_compute_separation_forces</span>()      <span class="cm"># ← new, first</span>
+    <span class="kw">for</span> character <span class="kw">in</span> characters:
+        <span class="cm"># ... existing player/AI movement logic unchanged ...</span>
+        <span class="kw">pass</span>
+    <span class="fn">_apply_rest_separation</span>(delta)     <span class="cm"># ← new, after movement pass</span></pre>
+      </div>
+
+    </div>
+
+    <hr />
+
+    <!-- TUNING -->
+    <h2 id="tuning">Tuning</h2>
+
+    <table class="ct">
+      <thead>
+        <tr><th>Constant</th><th>Effect of increasing</th><th>Effect of decreasing</th><th>Starting value</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="label">SEPARATION_RADIUS</td>
+          <td>Kitties start steering earlier, more personal space</td>
+          <td>Only separate when nearly overlapping</td>
+          <td><code>64.0</code> px</td>
+        </tr>
+        <tr>
+          <td class="label">SEPARATION_STRENGTH</td>
+          <td>Harder, more urgent steering deflection while moving</td>
+          <td>Softer, barely noticeable nudge</td>
+          <td><code>120.0</code> px/s</td>
+        </tr>
+        <tr>
+          <td class="label">REST_PUSH_STRENGTH</td>
+          <td>Stopped kitties drift apart faster</td>
+          <td>Very slow drift — subtle but present</td>
+          <td><code>20.0</code> px/s</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>Tuning tip:</strong> Set <code>SEPARATION_RADIUS</code> to roughly the visual width of a kitty sprite. <code>SEPARATION_STRENGTH</code> should be less than walk speed (which appears to be ~150 px/s) so that a walking kitty can still make progress toward its target even when being pushed sideways.
+    </div>
+
+    <div class="warn">
+      <strong>Edge case — exact overlap:</strong> If two kitties spawn at the exact same position, <code>delta.length() &lt; 0.01</code> skips the pair to avoid a zero-vector normalize crash. They'll separate naturally once they start moving. To be safe, offset spawn position slightly if a kitty already exists there (future improvement).
+    </div>
+
+    <hr />
+
+    <!-- FUTURE -->
+    <h2 id="future">Future Character Types</h2>
+
+    <p>The separation pass in <code>WorldDirector</code> currently operates on <code>Array[Character]</code>. When other character types arrive, there are two paths:</p>
+
+    <ul>
+      <li><strong>Minimal:</strong> Each character type's director runs its own separation pass over its own array. Kitties and dogs don't avoid each other, but that may be fine.</li>
+      <li><strong>Unified:</strong> Extract a <code>_compute_separation_forces(characters: Array)</code> free function (or a <code>SeparationSystem</code> node under <code>WorldLayer</code>) that operates on any array of <code>Node2D</code> objects that have a <code>separation_force</code> property. All character types register with it. Cross-species avoidance works automatically.</li>
+    </ul>
+
+    <p>The unified approach is the right end state. The minimal approach is fine until a second character type actually exists. Don't build the abstraction before it's needed.</p>
+
+    <hr />
+
+    <!-- TESTING -->
+    <h2 id="testing">Testing Checklist</h2>
+
+    <ul class="checklist">
+      <li>Spawn 2 kitties close together — they should drift apart slowly while at rest</li>
+      <li>Spawn 2 kitties on top of each other — they should separate without teleporting or snapping</li>
+      <li>Send a walking kitty toward a sitting kitty — walker steers around, doesn't walk through</li>
+      <li>Send two kitties toward each other — both deflect, neither stops dead</li>
+      <li>Walking kitty with a distant target passing near many stopped kitties — reaches destination despite deflections</li>
+      <li>3+ kitties in a cluster — all gradually spread out, no one gets stuck in a corner of forces</li>
+      <li>Single kitty alone on screen — no separation force, movement completely unchanged</li>
+      <li>Kitty in LOOK_AROUND near another kitty — rest separation still nudges them apart</li>
+      <li>No jitter or oscillation when two kitties are just outside separation radius</li>
+      <li>Performance: 8+ kitties on screen, no noticeable frame drop</li>
+    </ul>
+
+    <hr />
+
+    <h2>Affected Files</h2>
+    <ul>
+      <li><span class="file">scripts/Character.gd</span> — <span style="color:var(--green)">already done</span> — <code>var separation_force: Vector2</code> added during Character generalization</li>
+      <li><span class="file">scripts/WorldDirector.gd</span> — add constants, two new methods, two calls in <code>_physics_process</code></li>
+      <li><span class="file">scripts/kitty_states/MovementState.gd</span> — blend <code>separation_force</code> into velocity</li>
+    </ul>
+
+    <p style="font-size:0.8rem; color:var(--dim); margin-top:0.5rem;">2 files remaining. No new nodes. No scene changes.</p>
+
+    <hr />
+    <p style="font-size:0.75rem; color:var(--dim);">Kitty Barrage Wiki · <code>wiki/task-plan-separation.html</code> · May 2026</p>
+
+  </div>
+</div>
+</body>
+</html>

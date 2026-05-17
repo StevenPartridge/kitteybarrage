@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Animation Implementation Plan</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f0f13;
+      --bg1:      #1a1a22;
+      --bg2:      #12101a;
+      --border:   #2a2a38;
+      --border2:  #1e1e2a;
+      --text:     #d4d0c8;
+      --dim:      #6a6570;
+      --purple:   #c9b8f0;
+      --purple2:  #7a4a9a;
+      --green:    #7ee37e;
+      --green2:   #285a28;
+      --orange:   #e3b07e;
+      --orange2:  #5a3a18;
+      --blue:     #7ec8e3;
+      --blue2:    #2a5070;
+      --gold:     #e0c870;
+      --gold2:    #5a4a10;
+      --red:      #e07878;
+      --red2:     #4a2020;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      line-height: 1.6;
+      max-width: 980px;
+    }
+
+    h1 { font-size: 1.55rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
+    h2 { font-size: 0.85rem; font-weight: 700; color: var(--purple); margin: 2.2rem 0 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; }
+    h3 { font-size: 0.92rem; font-weight: 600; color: #f0ece0; margin-bottom: 0.3rem; }
+    p  { font-size: 0.87rem; color: #a8a098; }
+    code {
+      font-family: "SF Mono", "Fira Code", monospace; font-size: 0.81em;
+      background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px;
+      padding: 0.05em 0.35em; color: #a0c0e0;
+    }
+    .subtitle { color: var(--dim); font-size: 0.86rem; margin-bottom: 0.4rem; }
+    .divider  { border: none; border-top: 1px solid var(--border2); margin: 2rem 0; }
+
+    /* Layout */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+    @media (max-width: 700px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    /* Cards */
+    .card { background: var(--bg1); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1rem; }
+    .card p, .card li { font-size: 0.84rem; color: #9a9088; }
+    .card ul { padding-left: 1rem; margin-top: 0.35rem; }
+    .card li { margin-bottom: 0.25rem; }
+
+    /* Tags */
+    .tag { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 3px; margin-right: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .tag-done    { background: #182818; color: #60b060;      border: 1px solid #284028; }
+    .tag-new     { background: #181828; color: var(--blue);  border: 1px solid var(--blue2); }
+    .tag-stub    { background: #282018; color: var(--gold);  border: 1px solid var(--gold2); }
+    .tag-missing { background: var(--red2); color: var(--red); border: 1px solid #6a2a2a; }
+    .tag-art     { background: #2f2010; color: var(--orange); border: 1px solid var(--orange2); }
+    .tag-code    { background: #182030; color: var(--blue);   border: 1px solid var(--blue2); }
+    .tag-design  { background: #221840; color: var(--purple); border: 1px solid #3a2860; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.35rem; }
+
+    /* Animation inventory table */
+    .anim-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    .anim-table th { text-align: left; padding: 0.4rem 0.75rem; color: var(--dim); font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--border); }
+    .anim-table td { padding: 0.45rem 0.75rem; border-bottom: 1px solid var(--border2); vertical-align: middle; }
+    .anim-table td:nth-child(1) { font-family: monospace; color: #a0b8d0; white-space: nowrap; }
+    .anim-table td:nth-child(2) { color: #8880a0; font-size: 0.8rem; }
+    .anim-table td:nth-child(3) { color: var(--dim); font-size: 0.78rem; text-align: center; white-space: nowrap; }
+    .anim-table tr:last-child td { border-bottom: none; }
+    .anim-table .section-head td { background: #141020; color: #605870; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 0.3rem 0.75rem; }
+
+    /* Decisions block */
+    .decisions-card {
+      background: #13101e; border: 1px solid #2e1e4a; border-radius: 8px; padding: 1rem 1.1rem;
+    }
+    .decision-row {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      padding: 0.6rem 0; border-bottom: 1px solid #1e1630;
+    }
+    .decision-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .dq-label {
+      flex-shrink: 0; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; color: #6040a0; padding-top: 0.12rem; min-width: 2.5rem;
+    }
+    .dq-body { flex: 1; }
+    .dq-verdict { font-size: 0.86rem; color: #c0a8e8; font-weight: 600; margin-bottom: 0.15rem; }
+    .dq-detail  { font-size: 0.8rem; color: #7060a0; line-height: 1.5; }
+
+    /* Naming convention box */
+    .naming-box {
+      background: #101820; border: 1px solid #1a3448; border-radius: 8px; padding: 1rem 1.1rem;
+    }
+    .naming-box .example { font-family: monospace; font-size: 0.82rem; color: #70a8d0; margin: 0.3rem 0; }
+    .naming-box .caveat  { font-size: 0.8rem; color: #3a5870; margin-top: 0.5rem; }
+
+    /* Task list */
+    .tasklist { list-style: none; padding: 0; }
+    .tasklist > li {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      padding: 0.65rem 0; border-bottom: 1px solid var(--border2);
+    }
+    .tasklist > li:last-child { border-bottom: none; }
+    .tnum {
+      flex-shrink: 0; width: 1.45rem; height: 1.45rem; background: #222230;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 0.68rem; font-weight: 700; color: #585068; margin-top: 0.06rem;
+    }
+    .tbody { flex: 1; }
+    .ttitle  { font-size: 0.87rem; font-weight: 500; color: #e0d8cc; }
+    .tdetail { font-size: 0.8rem; color: var(--dim); margin-top: 0.15rem; }
+    .tfiles  { font-family: monospace; font-size: 0.74rem; color: #40405a; margin-top: 0.12rem; }
+
+    .phase-label {
+      font-size: 0.71rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.09em; color: #404058; margin: 1.3rem 0 0.4rem;
+    }
+
+    /* Info / warn */
+    .info { background: #101820; border: 1px solid #1a3448; border-left: 3px solid #2a5878; border-radius: 6px; padding: 0.75rem 0.9rem; font-size: 0.84rem; color: #5a8aaa; margin-bottom: 0.75rem; }
+    .info strong { color: #7aaaca; }
+    .warn { background: #181208; border: 1px solid #403010; border-left: 3px solid #806020; border-radius: 6px; padding: 0.75rem 0.9rem; font-size: 0.84rem; color: #907040; margin-bottom: 0.75rem; }
+    .warn strong { color: #b09050; }
+  </style>
+</head>
+<body>
+
+  <h1>Animation Implementation Plan</h1>
+  <p class="subtitle">Kitty Barrage · May 2026 · Verified against current codebase</p>
+
+  <hr class="divider" />
+
+  <!-- INVENTORY -->
+  <h2>Animation inventory</h2>
+
+  <table class="anim-table">
+    <thead><tr><th>SpriteFrames name</th><th>Source / description</th><th>Frames × dirs</th></tr></thead>
+    <tbody>
+      <tr class="section-head"><td colspan="3">Already set up in code</td></tr>
+      <tr>
+        <td>Sit_South … Sit_Northwest</td>
+        <td>Sitting down from standing. Used by <code>SitState</code> (forward) and <code>StandUpState</code> (reverse). <span class="tag tag-done">Wired</span></td>
+        <td>7 × 8</td>
+      </tr>
+      <tr>
+        <td>Walk_South … Walk_Northwest</td>
+        <td>Walking loop. Used by <code>WalkState</code>. <span class="tag tag-done">Wired</span></td>
+        <td>4 × 8</td>
+      </tr>
+      <tr class="section-head"><td colspan="3">In sprite sheet — needs naming &amp; import (Phase 1)</td></tr>
+      <tr>
+        <td>LookAround_South … _Northwest</td>
+        <td>Looking left-to-right while sitting. 5 frames. One-shot, no loop. <span class="tag tag-new">New</span></td>
+        <td>5 × 8</td>
+      </tr>
+      <tr>
+        <td>Lay_South … Lay_Northwest</td>
+        <td>Lying down from sitting. 8 frames. Forward = lie down; <strong>reverse = sit up</strong> (no separate "get up" art needed). <span class="tag tag-new">New</span></td>
+        <td>8 × 8</td>
+      </tr>
+      <tr>
+        <td>Run_South … Run_Northwest</td>
+        <td>Running from standing. 5 frames. Maps to <code>RUN</code> in <code>Global.StateName</code>. <span class="tag tag-new">New</span></td>
+        <td>5 × 8</td>
+      </tr>
+      <tr>
+        <td>Sprint_South … Sprint_Northwest</td>
+        <td>Running 2.0, 8 frames each. Looping. Maps to <code>Global.StateName.SPRINT</code>. <span class="tag tag-new">New</span></td>
+        <td>8 × 8</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="warn" style="margin-top:1rem">
+    <strong>Naming convention — critical.</strong> Every animation name in SpriteFrames must match exactly what the code constructs via <code>Global.get_full_animation_name(state_name, direction)</code>, which produces <code>"StateName_DirectionName"</code>. Example: <code>play_loop("Walk", SOUTH)</code> looks for <code>"Walk_South"</code>. Case sensitive. If the names don't match, <code>AnimationController</code> pushes an error and nothing plays.
+  </div>
+
+  <div class="naming-box">
+    <h3 style="margin-bottom:0.4rem; color:#6080a0">Direction suffix reference</h3>
+    <div class="example">_North &nbsp;&nbsp;_Northeast &nbsp;&nbsp;_East &nbsp;&nbsp;_Southeast</div>
+    <div class="example">_South &nbsp;&nbsp;_Southwest &nbsp;&nbsp;_West &nbsp;&nbsp;_Northwest</div>
+    <p class="caveat">Each animation needs all 8 variants. So <code>Lay</code> = 8 entries: <code>Lay_North</code>, <code>Lay_Northeast</code>, … <code>Lay_Northwest</code>.</p>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- DECISIONS -->
+  <h2>Decisions</h2>
+
+  <div class="decisions-card">
+    <div class="decision-row">
+      <span class="dq-label">Q1</span>
+      <div class="dq-body">
+        <div class="dq-verdict">Running 2.0 name: <strong>Sprint</strong></div>
+        <div class="dq-detail">Animation names: <code>Sprint_South</code> … <code>Sprint_Northwest</code>. New <code>Global.StateName.SPRINT</code> entry.</div>
+      </div>
+    </div>
+    <div class="decision-row">
+      <span class="dq-label">Q2</span>
+      <div class="dq-body">
+        <div class="dq-verdict">LookAround trigger: <strong>Separate AI activity</strong></div>
+        <div class="dq-detail">New <code>StateName.LOOK_AROUND</code>, new <code>preference_look_around</code> + <code>duration_look_around</code> in <code>KittyPersonality</code>, handled in <code>Kitty.apply_decision</code>.</div>
+      </div>
+    </div>
+    <div class="decision-row">
+      <span class="dq-label">Q3</span>
+      <div class="dq-body">
+        <div class="dq-verdict">Getting up from lying: <strong>Play Lay in reverse → SitUpState</strong></div>
+        <div class="dq-detail">Uses existing <code>SITUP</code> enum entry. Full chain: LAY → SitUpState → SitState.</div>
+      </div>
+    </div>
+    <div class="decision-row">
+      <span class="dq-label">Q4</span>
+      <div class="dq-body">
+        <div class="dq-verdict">Running trigger: <strong>Both</strong></div>
+        <div class="dq-detail">AI raises <code>preference_run</code>/<code>preference_sprint</code> above 0. Player holds a run key in <code>KittyDirector</code>. New <code>Kitty.begin_run()</code> method.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- PHASE 1 TASKS -->
+  <h2>Phase 1 — Art setup (Godot editor)</h2>
+
+  <div class="info">
+    All Phase 1 work happens in the <strong>SpriteFrames resource</strong> attached to the <code>AnimatedSprite2D</code> node on the Kitty scene. No code changes in Phase 1 — just importing and naming animations. Phase 2 code will fail gracefully (push_error, no crash) until the names are in place.
+  </div>
+
+  <ul class="tasklist">
+    <li>
+      <span class="tnum">1</span>
+      <div class="tbody">
+        <div class="ttitle">Import and name the <strong>LookAround</strong> animations</div>
+        <div class="tdetail">8 entries: <code>LookAround_North</code>, <code>LookAround_Northeast</code>, … <code>LookAround_Northwest</code>. 5 frames each. One-shot (not looping).</div>
+        <div class="chip-row"><span class="tag tag-art">Art</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="tnum">2</span>
+      <div class="tbody">
+        <div class="ttitle">Import and name the <strong>Lay</strong> animations</div>
+        <div class="tdetail">8 entries: <code>Lay_North</code> … <code>Lay_Northwest</code>. 8 frames each. One-shot forward (lying down); reverse (sitting up) is handled in code — no separate asset.</div>
+        <div class="chip-row"><span class="tag tag-art">Art</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="tnum">3</span>
+      <div class="tbody">
+        <div class="ttitle">Import and name the <strong>Run</strong> animations</div>
+        <div class="tdetail">8 entries: <code>Run_North</code> … <code>Run_Northwest</code>. 5 frames each. Looping.</div>
+        <div class="chip-row"><span class="tag tag-art">Art</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="tnum">4</span>
+      <div class="tbody">
+        <div class="ttitle">Import and name the <strong>Sprint</strong> animations</div>
+        <div class="tdetail">8 entries: <code>Sprint_North</code> … <code>Sprint_Northwest</code>. 8 frames each. Looping.</div>
+        <div class="chip-row"><span class="tag tag-art">Art</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <hr class="divider" />
+
+  <!-- PHASE 2 TASKS -->
+  <h2>Phase 2 — Code implementation</h2>
+
+  <div class="grid-2" style="margin-bottom:1rem">
+    <div class="card">
+      <h3>States being added</h3>
+      <ul>
+        <li><code>LookAroundState</code> — plays LookAround, returns to SitState</li>
+        <li><code>LayDownState</code> — plays Lay forward, chains to LayState</li>
+        <li><code>LayState</code> — holds lying pose (Lay last frame, paused)</li>
+        <li><code>SitUpState</code> — plays Lay in reverse, chains to SitState (uses existing <code>SITUP</code> enum)</li>
+        <li><code>RunState</code> — like WalkState but plays Run loop</li>
+        <li><code>SprintState</code> — like RunState but plays Sprint animation</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Existing code being updated</h3>
+      <ul>
+        <li><code>Global.StateName</code> — add <code>LOOK_AROUND</code>, <code>SPRINT</code></li>
+        <li><code>KittyPersonality</code> — add <code>preference_look_around</code>, <code>duration_look_around</code>, <code>preference_sprint</code>, <code>duration_sprint</code></li>
+        <li><code>ActivityBrain._init</code> — update required-keys validation list</li>
+        <li><code>Kitty.apply_decision</code> — handle LAY → LayDownState, LOOK_AROUND, RUN, SPRINT</li>
+        <li><code>Kitty.begin_run()</code> — new method for player-triggered running</li>
+        <li><code>KittyDirector</code> — run key detection</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="phase-label">Phase 2a · Laying down</p>
+  <div class="info" style="margin-bottom:0.6rem">
+    <strong>Note:</strong> <code>LayDownState</code> needs its own enum entry <code>LAY_DOWN</code> (distinct from <code>LAY</code> used by <code>LayState</code>). Both states returning <code>LAY</code> from <code>get_state_name()</code> would cause the FSM to reject same-name transitions silently.
+  </div>
+  <ul class="tasklist">
+    <li>
+      <span class="tnum">5</span>
+      <div class="tbody">
+        <div class="ttitle">Create <code>LayDownState.gd</code></div>
+        <div class="tdetail">Constructor: <code>_init(next_state: State)</code>. Plays <code>Lay</code> one-shot forward. On <code>animation_finished</code>, returns next_state. Follows StandUpState pattern exactly. Uses <code>LAY_DOWN</code> enum entry.</div>
+        <div class="tfiles">scripts/kitty_states/LayDownState.gd (new)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="tnum">6</span>
+      <div class="tbody">
+        <div class="ttitle">Create <code>LayState.gd</code></div>
+        <div class="tdetail">Plays <code>Lay</code> paused at the last frame (lying pose). Holds until externally transitioned. Mirrors how SitState holds the sitting pose. Uses <code>LAY</code> enum entry.</div>
+        <div class="tfiles">scripts/kitty_states/LayState.gd (new)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="tnum">7</span>
+      <div class="tbody">
+        <div class="ttitle">Create <code>SitUpState.gd</code></div>
+        <div class="tdetail">Plays <code>Lay</code> in reverse (uses <code>play_once("Lay", direction, reverse: true)</code>). Uses existing <code>SITUP</code> entry in <code>Global.StateName</code>.</div>
+        <div class="tfiles">scripts/kitty_states/SitUpState.gd (new)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="tnum">8</span>
+      <div class="tbody">
+        <div class="ttitle">Wire LAY flow into <code>Kitty.apply_decision</code></div>
+        <div class="tdetail">LAY decision → <code>LayDownState.new(LayState.new())</code>. Split from the current <code>SIT, LAY → SitState.new()</code> branch. Handle getting up: when a WALK decision arrives while in LAY, chain <code>SitUpState → SitState → StandUpState → WalkState</code>.</div>
+        <div class="tfiles">scripts/Kitty.gd:64 (apply_decision), :39 (begin_walk)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="phase-label">Phase 2b · Look Around</p>
+  <ul class="tasklist">
+    <li>
+      <span class="tnum">9</span>
+      <div class="tbody">
+        <div class="ttitle">Create <code>LookAroundState.gd</code></div>
+        <div class="tdetail">Plays <code>LookAround</code> one-shot. On finish → <code>SitState.new(true, true)</code> (back to sitting pose, paused). Uses <code>LOOK_AROUND</code> in <code>Global.StateName</code>.</div>
+        <div class="tfiles">scripts/kitty_states/LookAroundState.gd (new)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="tnum">10</span>
+      <div class="tbody">
+        <div class="ttitle">Wire <code>LOOK_AROUND</code> as an AI activity</div>
+        <div class="tdetail">Add <code>LOOK_AROUND</code> to <code>Global.StateName</code>. Add <code>preference_look_around</code> and <code>duration_look_around</code> to <code>KittyPersonality</code>. Update <code>ActivityBrain._init</code> required-keys list. Handle <code>LOOK_AROUND</code> decision in <code>Kitty.apply_decision</code> → <code>LookAroundState.new()</code>.</div>
+        <div class="tfiles">scripts/Global.gd, scripts/KittyPersonality.gd, scripts/ActivityBrain.gd:11, scripts/Kitty.gd</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="phase-label">Phase 2c · Running (Run + Sprint, AI and player)</p>
+  <ul class="tasklist">
+    <li>
+      <span class="tnum">11</span>
+      <div class="tbody">
+        <div class="ttitle">Add <code>SPRINT</code> to <code>Global.StateName</code> and <code>KittyPersonality</code></div>
+        <div class="tdetail">New <code>SPRINT</code> enum entry. Add <code>preference_sprint</code> and <code>duration_sprint</code> fields to <code>KittyPersonality</code>. Update <code>ActivityBrain._init</code> required-keys list. AI can also trigger <code>RUN</code> by raising <code>preference_run</code> above 0.</div>
+        <div class="tfiles">scripts/Global.gd:5, scripts/KittyPersonality.gd, scripts/ActivityBrain.gd:11</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="tnum">12</span>
+      <div class="tbody">
+        <div class="ttitle">Create <code>RunState.gd</code> and <code>SprintState.gd</code></div>
+        <div class="tdetail">Both follow WalkState closely — loop animation, move toward navigation_target, transition to SitState on arrival. <code>RunState</code> plays <code>Run</code>; <code>SprintState</code> plays <code>Sprint</code>. Speed multiplier from <code>KittyPersonality</code> (e.g. <code>run_speed_multiplier: float = 1.6</code>).</div>
+        <div class="tfiles">scripts/kitty_states/RunState.gd (new), scripts/kitty_states/SprintState.gd (new)</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+    <li>
+      <span class="tnum">13</span>
+      <div class="tbody">
+        <div class="ttitle">Wire run trigger — both AI and player</div>
+        <div class="tdetail">Handle <code>RUN</code> and <code>SPRINT</code> decisions in <code>Kitty.apply_decision</code>. Add <code>Kitty.begin_run()</code> method for player-triggered running. Detect run key in <code>KittyDirector._physics_process</code> and call <code>begin_run()</code> instead of <code>begin_walk()</code> when held.</div>
+        <div class="tfiles">scripts/Kitty.gd, scripts/KittyDirector.gd</div>
+        <div class="chip-row"><span class="tag tag-code">Code</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <hr class="divider" />
+  <p style="font-size:0.76rem; color:#303040">Generated by Claude Code · Kitty Barrage · May 2026 · Verified against codebase</p>
+
+</body>
+</html>

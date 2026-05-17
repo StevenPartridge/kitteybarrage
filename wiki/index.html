@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kitty Barrage — Wiki</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
+      --b:     #2a2a38; --b2:  #1e1e2a;
+      --text:  #d4d0c8; --dim: #6a6570;
+      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
+      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
+      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
+      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
+      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
+      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); padding: 2.5rem 2rem; line-height: 1.6; max-width: 960px; margin: 0 auto; }
+    h1   { font-size: 1.6rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.25rem; }
+    h2   { font-size: 0.8rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.85rem; text-transform: uppercase; letter-spacing: 0.12em; }
+    p    { font-size: 0.86rem; color: #a0988a; }
+    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
+    .sub  { color: var(--dim); font-size: 0.85rem; margin-bottom: 1.25rem; }
+    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
+    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
+    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
+    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
+    .pill-purple { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-b); }
+    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
+    .header-row { display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.2rem; }
+    hr { border:none; border-top:1px solid var(--b2); margin: 2rem 0; }
+
+    /* Card grid */
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:0.85rem; margin-top:0.5rem; }
+    .card {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
+      padding: 1rem 1.1rem; border-left: 3px solid var(--b);
+      text-decoration: none; display: block; transition: border-color 0.15s, background 0.15s;
+    }
+    .card:hover { background: #1e1e2a; border-color: var(--b2); }
+    .card.green  { border-left-color: var(--green); }
+    .card.gold   { border-left-color: var(--gold); }
+    .card.blue   { border-left-color: var(--blue); }
+    .card.purple { border-left-color: var(--purple); }
+    .card.dim    { border-left-color: #303040; opacity: 0.7; }
+    .card-title { font-size: 0.92rem; font-weight: 700; color: #d8d0f0; margin-bottom: 0.2rem; }
+    .card-desc  { font-size: 0.8rem; color: #807880; line-height: 1.4; }
+    .card-meta  { font-size: 0.72rem; color: var(--dim); margin-top: 0.55rem; }
+
+    /* Recent changes */
+    .log { font-size: 0.82rem; }
+    .log-entry { display:flex; gap:0.75rem; padding: 0.35rem 0; border-bottom: 1px solid var(--b2); align-items:baseline; }
+    .log-entry:last-child { border-bottom: none; }
+    .log-date { color: var(--dim); font-family: monospace; font-size: 0.78rem; white-space: nowrap; min-width: 90px; }
+    .log-text { color: #a0988a; }
+    .log-tag  { font-size: 0.68rem; font-weight:700; padding: 0.05rem 0.4rem; border-radius: 8px; background: var(--bg2); border: 1px solid var(--b); color: var(--dim); white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+  <div class="header-row">
+    <h1>Kitty Barrage Wiki</h1>
+    <span class="pill pill-green">Beta</span>
+    <span class="pill pill-gold">v0.1</span>
+  </div>
+  <p class="sub">Internal knowledge base — architecture, task plans, design decisions, and issue notes.</p>
+
+  <hr />
+
+  <h2>Core Reference</h2>
+  <div class="grid">
+    <a href="architecture.html" class="card green">
+      <div class="card-title">Architecture Overview</div>
+      <div class="card-desc">State machine, all states, transition graph, debug console reference, AI behavior, module map. Start here.</div>
+      <div class="card-meta">Beta Kickoff · May 2026</div>
+    </a>
+    <a href="wiki-grooming-prompts.html" class="card purple">
+      <div class="card-title">Wiki Grooming Prompts</div>
+      <div class="card-desc">Prompts to run with Claude to keep this wiki current: update pages after features, audit for stale content, add bug reports.</div>
+      <div class="card-meta">Living document</div>
+    </a>
+  </div>
+
+  <h2>Planning Documents</h2>
+  <div class="grid">
+    <a href="state-machine-plan.html" class="card blue">
+      <div class="card-title">State Machine Plan</div>
+      <div class="card-desc">Original design and implementation plan for the FSM architecture.</div>
+      <div class="card-meta">Planning · May 2026</div>
+    </a>
+    <a href="animation-plan.html" class="card blue">
+      <div class="card-title">Animation Plan</div>
+      <div class="card-desc">Animation system design — play_once, play_loop, direction-change-in-flight, progress tracking.</div>
+      <div class="card-meta">Planning · May 2026</div>
+    </a>
+    <a href="circle-state-plan.html" class="card blue">
+      <div class="card-title">Circle State Plan</div>
+      <div class="card-desc">Design for the circular state transition system and state chaining.</div>
+      <div class="card-meta">Planning · May 2026</div>
+    </a>
+    <a href="look-around-plan.html" class="card blue">
+      <div class="card-title">Look Around Plan</div>
+      <div class="card-desc">Design for the LookAroundState — plan-based animation sequencing, direction variants, pauses.</div>
+      <div class="card-meta">Planning · May 2026</div>
+    </a>
+  </div>
+
+  <h2>Task Plans</h2>
+  <div class="grid">
+    <a href="task-plan-character-generalization.html" class="card green">
+      <div class="card-title">Character Generalization <span class="pill pill-green" style="font-size:0.62rem;">Done</span></div>
+      <div class="card-desc">Character base class extracted from Kitty. WorldDirector replaces KittyDirector. States, FSM, and ActivityBrain all target Character. Decisions recorded. Next steps documented.</div>
+      <div class="card-meta">14 files · May 2026</div>
+    </a>
+    <a href="task-plan-separation.html" class="card gold">
+      <div class="card-title">Character Separation &amp; Avoidance</div>
+      <div class="card-desc">Characters steer around each other while walking; don't stack at rest. Separation force blended into MovementState velocity. 3 files, no scene changes.</div>
+      <div class="card-meta">3 files · May 2026</div>
+    </a>
+    <a href="task-plan-y-sort.html" class="card green">
+      <div class="card-title">Y-Sort Depth Rendering <span class="pill pill-green" style="font-size:0.62rem;">Done</span></div>
+      <div class="card-desc">Sort kitties and future characters by Y position so lower = in front. WorldLayer node, one changed line. Includes concept primer on Y-sorting and isometric projection.</div>
+      <div class="card-meta">2 files · May 2026</div>
+    </a>
+  </div>
+
+    <a href="task-plan-state-topology.html" class="card blue">
+      <div class="card-title">State Topology Refactor</div>
+      <div class="card-desc">Move transition topology out of Character._plan_transition into per-character data tables. PostureGroup enum in Global; Kitty extends with SITTING and LYING rows.</div>
+      <div class="card-meta">3 files · May 2026</div>
+    </a>
+  </div>
+
+  <h2>Issue Notes</h2>
+  <div class="grid">
+    <div class="card dim">
+      <div class="card-title">No issue notes yet</div>
+      <div class="card-desc">Say "document this issue" or "add a bug note" to capture known issues here.</div>
+    </div>
+  </div>
+
+  <hr />
+
+  <h2>Recent Changes</h2>
+  <div class="log">
+    <div class="log-entry">
+      <span class="log-date">2026-05-14</span>
+      <span class="log-tag">new</span>
+      <span class="log-text">Wiki created — Beta Kickoff. Added architecture overview and all planning documents.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-16</span>
+      <span class="log-tag">plan</span>
+      <span class="log-text">State topology refactor planned — PostureGroup enum + per-character transition tables replace hardcoded _plan_transition in Character base class.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-14</span>
+      <span class="log-tag">refactor</span>
+      <span class="log-text">Character generalization complete — GameCharacter base class extracted from Kitty; WorldDirector replaces KittyDirector; CharacterPersonality base split from KittyPersonality. All states, FSM, and director now target GameCharacter.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-14</span>
+      <span class="log-tag">fix</span>
+      <span class="log-text">LookAroundState: replaced invalid ?? operator with GDScript ternary; personality fields now accessed via `as KittyPersonality` cast with defaults for non-kitty characters.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-14</span>
+      <span class="log-tag">fix</span>
+      <span class="log-text">Main.tscn uid corrected to point to WorldDirector.gd (was still pointing to KittyDirector.gd stub, causing a RefCounted→Node assignment error).</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-14</span>
+      <span class="log-tag">feature</span>
+      <span class="log-text">Y-sort depth rendering complete — WorldLayer (Node2D, y_sort_enabled) added to Main.tscn; kitties now render in depth order by Y position.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-14</span>
+      <span class="log-tag">fix</span>
+      <span class="log-text">FSM guard bug fixed: SIT (enum=0) was falsy, blocking initial state entry. InputSource seam completed with is_running(). LookAround→SIT and LookAround→movement transitions corrected.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-13</span>
+      <span class="log-tag">fix</span>
+      <span class="log-text">Focus cycling now works with a single spawned kitty (was guarded behind size &lt; 2). Spawned kitties added to WorldLayer for correct y-sort.</span>
+    </div>
+  </div>
+
+  <hr />
+  <p style="font-size:0.75rem; color:var(--dim);">Kitty Barrage Wiki · <code>wiki/index.html</code> · Updated May 2026</p>
+
+</body>
+</html>

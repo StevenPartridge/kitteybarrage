@@ -1,34 +1,34 @@
 class_name StandUpState
 extends State
 
-var start_at_end := false  # Start the Sit animation at the end frame
+var _next_state: State
+var _done: bool = false
 
-func name():
+func _init(next_state: State) -> void:
+	_next_state = next_state
+
+func name() -> Global.StateName:
 	return Global.StateName.STANDUP
 
-func _init(_start_at_end := false):
-	start_at_end = _start_at_end
+func _enter_state(_from: Global.StateName) -> void:
+	assert(entity != null, "StandUpState requires a Kitty entity — FSM must be a child of Kitty")
+	_done = false
+	_rotation_frame_count = 0
+	entity.anim.play_transition("Sit", entity.facing_direction, _on_standup_finished, true)
 
-func _enter_state():
-	if entity:
-		entity.velocity = Vector2.ZERO
-		entity.play_animation_once("Sit", entity.facing_direction, !start_at_end)
-		# Connect the animation_finished signal to transition to WalkState
-		listen_for_animation_end(_on_animation_finished)
-	else:
-		push_error("Entity reference is null in StandUpState")
+func _on_standup_finished() -> void:
+	_done = true
 
-func _physics_process(_delta):
-	pass
+func tick(_delta: float) -> State:
+	_tick_rotation()
+	if _done:
+		return _next_state
+	if entity.navigation_target != null and entity.navigation_target.is_valid():
+		var progress: float = entity.anim.get_playback_progress()
+		var direction: Vector2 = (entity.navigation_target.get_position() - entity.position).normalized()
+		entity.velocity = direction * entity.speed * pow(progress, 2)
+	return null
 
-func _exit_state():
-	# Disconnect the signal to avoid interference
-	if entity:
-		if entity.animation_player.is_connected("animation_finished", _on_animation_finished):
-			entity.animation_player.disconnect("animation_finished", _on_animation_finished)
-
-# Handle the transition to WalkState after animation finishes
-func _on_animation_finished():
-	if entity:
-		disconnect_from_animation_end(_on_animation_finished)
-		entity.state_machine.change_state(WalkState.new())
+func _exit_state() -> void:
+	entity.anim.cancel()
+	entity.velocity = Vector2.ZERO

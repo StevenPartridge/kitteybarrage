@@ -1,41 +1,23 @@
 class_name SitState
 extends State
 
-var start_at_end := false  # Start the Sit animation at the end frame
-var start_paused := false  # Start the Sit animation paused
+var reverse := false
+var start_paused := false
 
-func name():
+func name() -> Global.StateName:
 	return Global.StateName.SIT
 
-func _init(_start_at_end := false, _start_paused := false):
-	start_at_end = _start_at_end
+func _init(_reverse := false, _start_paused := false) -> void:
+	reverse = _reverse
 	start_paused = _start_paused
 
-func _enter_state():
-	if entity:
-		entity.velocity = Vector2.ZERO
-		entity.play_animation_once("Sit", entity.facing_direction, start_at_end)
-		# Connect the animation_finished signal to transition to WalkState
-		
-		listen_for_animation_end(_on_animation_finished)
+func _enter_state(_from: Global.StateName) -> void:
+	assert(entity != null, "SitState requires a Kitty entity — FSM must be a child of Kitty")
+	entity.velocity = Vector2.ZERO
+	entity.anim.play_once("Sit", entity.facing_direction, reverse, start_paused)
 
-		if start_paused:
-			entity.pause()
-	else:
-		push_error("Entity reference is null in SitState")
+func tick(_delta: float) -> State:
+	return null
 
-func _physics_process(_delta):
-	pass
-
-func _exit_state():
-	# Disconnect the signal to avoid interference
-	if entity:
-		if entity.animation_player.is_connected("animation_finished", _on_animation_finished):
-			entity.animation_player.disconnect("animation_finished", _on_animation_finished)
-
-# Handle the transition to WalkState after animation finishes
-func _on_animation_finished():
-	if entity:
-		#entity.state_machine.change_state(WalkState.new())
-		disconnect_from_animation_end(_on_animation_finished)
-		pass
+func _exit_state() -> void:
+	entity.anim.cancel()

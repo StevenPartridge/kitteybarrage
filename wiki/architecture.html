@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kitty Barrage — Architecture</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
+      --b: #2a2a38; --b2: #1e1e2a;
+      --text: #d4d0c8; --dim: #6a6570;
+      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
+      --gold: #d4a840; --gold-bg: #1a1408; --gold-b: #3a2e10;
+      --orange: #d08030; --orange-bg: #1a1008; --orange-b: #3a2010;
+      --red: #c06060; --red-bg: #1a0e0e; --red-b: #3a1e1e;
+      --blue: #7ec8e3; --blue-bg: #0e1820; --blue-b: #1e3848;
+      --purple: #b890e0; --purple-bg: #140e1e; --purple-b: #2e1e48;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+    /* ---- Layout ---- */
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 220px; flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+      overflow-y: auto; background: var(--bg2); border-right: 1px solid var(--b2);
+      padding: 1.4rem 0 2rem;
+    }
+    .sidebar-logo { font-size: 0.75rem; font-weight: 700; color: var(--dim); text-transform: uppercase;
+      letter-spacing: 0.1em; padding: 0 1.1rem 1rem; border-bottom: 1px solid var(--b2); margin-bottom: 0.8rem; }
+    .sidebar nav a {
+      display: block; padding: 0.3rem 1.1rem; font-size: 0.82rem; color: #7a7288;
+      text-decoration: none; border-left: 2px solid transparent; transition: color 0.12s, border-color 0.12s;
+    }
+    .sidebar nav a:hover { color: var(--text); border-left-color: var(--purple); }
+    .sidebar nav .nav-section {
+      font-size: 0.68rem; font-weight: 700; color: #3a3848; text-transform: uppercase;
+      letter-spacing: 0.1em; padding: 0.9rem 1.1rem 0.2rem;
+    }
+    .sidebar nav .breadcrumb { font-size: 0.72rem; color: #3a3848; padding: 0 1.1rem 0.6rem; }
+    .sidebar nav .breadcrumb a { display: inline; padding: 0; border: none; color: #3a3848; }
+    .sidebar nav .breadcrumb a:hover { color: var(--dim); }
+
+    .main { flex: 1; padding: 2rem 2.5rem 4rem; max-width: 900px; }
+
+    @media (max-width: 760px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--b2); padding: 0.8rem 0; }
+      .sidebar nav { display: flex; flex-wrap: wrap; gap: 0; }
+      .sidebar nav a { padding: 0.25rem 0.8rem; }
+      .sidebar nav .nav-section { display: none; }
+      .main { padding: 1.5rem 1.2rem 3rem; }
+    }
+
+    /* ---- Typography ---- */
+    h1 { font-size: 1.5rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
+    h2 { font-size: 0.85rem; font-weight: 700; color: var(--purple); margin: 0 0 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.1em; }
+    h3 { font-size: 0.9rem; font-weight: 600; color: #e8e0d4; margin-bottom: 0.3rem; }
+    p  { font-size: 0.86rem; color: #a0988a; }
+    code {
+      font-family: "SF Mono", "Fira Code", monospace; font-size: 0.8em;
+      background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px;
+      padding: 0.05em 0.35em; color: #a0c0e0;
+    }
+    .sub  { color: var(--dim); font-size: 0.86rem; margin-bottom: 0.4rem; }
+    .div  { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
+
+    /* ---- Header row ---- */
+    .page-header { margin-bottom: 1.2rem; }
+    .header-top { display: flex; align-items: flex-start; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.15rem; }
+    .badge {
+      display: inline-block; font-size: 0.66rem; font-weight: 700; padding: 0.18rem 0.55rem;
+      border-radius: 10px; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap;
+      background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-b);
+      margin-top: 0.35rem;
+    }
+    .print-hint { font-size: 0.74rem; color: #3a3848; margin-top: 0.5rem; }
+
+    /* ---- Collapsible sections ---- */
+    .section { margin-bottom: 0.5rem; }
+    .section > details { border: 1px solid var(--b); border-radius: 8px; overflow: hidden; }
+    .section > details > summary {
+      list-style: none; cursor: pointer; user-select: none;
+      background: var(--bg1); padding: 0.75rem 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section > details > summary::-webkit-details-marker { display: none; }
+    .section > details > summary .caret {
+      font-size: 0.7rem; color: var(--dim); transition: transform 0.15s;
+      display: inline-block;
+    }
+    .section > details[open] > summary .caret { transform: rotate(90deg); }
+    .section > details > summary:hover { background: #1e1e28; }
+    .section > details > .section-body { padding: 1.2rem 1.1rem 1.3rem; }
+
+    /* ---- State pills ---- */
+    .sp { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 0.12rem 0.5rem;
+      border-radius: 10px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; font-family: monospace; }
+    .sp-rest  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-b); }
+    .sp-trans { background: var(--gold-bg);   color: var(--gold);   border: 1px solid var(--gold-b); }
+    .sp-move  { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue-b); }
+    .sp-meta  { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-b); }
+    .sp-dim   { background: #141418;          color: var(--dim);    border: 1px solid #2a2a30; }
+
+    /* ---- State card grid ---- */
+    .state-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.8rem; }
+    .sc {
+      background: var(--bg2); border: 1px solid var(--b); border-radius: 8px; padding: 0.85rem 1rem;
+      border-top: 3px solid var(--b);
+    }
+    .sc.rest  { border-top-color: var(--green); }
+    .sc.trans { border-top-color: var(--gold); }
+    .sc.move  { border-top-color: var(--blue); }
+    .sc-head  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+    .sc-enum  { font-family: monospace; font-size: 0.7rem; color: #505068; }
+    .sc-body  { font-size: 0.81rem; color: #888080; }
+    .sc-body li { margin-bottom: 0.2rem; }
+    .sc-body ul { padding-left: 1.1rem; margin-top: 0.25rem; }
+    .sc-row { display: flex; gap: 0.4rem; align-items: baseline; margin-top: 0.35rem; }
+    .sc-label { font-size: 0.68rem; color: #404050; text-transform: uppercase; letter-spacing: 0.07em; min-width: 3.5rem; flex-shrink: 0; }
+    .sc-val { font-size: 0.78rem; color: #6a6880; font-family: monospace; }
+
+    /* ---- Tables ---- */
+    .tt { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .tt th {
+      text-align: left; padding: 0.4rem 0.75rem; color: var(--dim); font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--b);
+      background: #131318;
+    }
+    .tt td { padding: 0.42rem 0.75rem; border-bottom: 1px solid var(--b2); vertical-align: top; }
+    .tt tr:last-child td { border-bottom: none; }
+    .tt td:first-child { font-family: monospace; color: #8888c8; font-size: 0.8rem; white-space: nowrap; }
+    .tt .from-rest  td:first-child { color: var(--green); }
+    .tt .from-trans td:first-child { color: var(--gold); }
+    .tt .from-move  td:first-child { color: var(--blue); }
+    .tt td.how { font-size: 0.78rem; color: #5a6870; }
+    .tt td.to   { font-family: monospace; font-size: 0.78rem; color: #8888c8; }
+    .tt-wrap { overflow-x: auto; }
+
+    /* ---- Module map table ---- */
+    .mt { width: 100%; border-collapse: collapse; font-size: 0.81rem; }
+    .mt th { text-align: left; padding: 0.38rem 0.7rem; color: var(--dim); font-size: 0.71rem;
+      text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--b); background: #131318; }
+    .mt td { padding: 0.38rem 0.7rem; border-bottom: 1px solid var(--b2); vertical-align: top; }
+    .mt tr:last-child td { border-bottom: none; }
+    .mt td:first-child { font-family: monospace; font-size: 0.78rem; color: #7a9ab8; white-space: nowrap; }
+    .mt td:nth-child(2) { font-family: monospace; font-size: 0.78rem; color: #a090d0; white-space: nowrap; }
+    .mt td:nth-child(3) { font-size: 0.79rem; color: #706880; }
+    .mt-section td { background: #141020; color: #50406a; font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em; padding: 0.28rem 0.7rem; }
+
+    /* ---- Debug console table ---- */
+    .bt { width: 100%; border-collapse: collapse; font-size: 0.81rem; }
+    .bt th { text-align: left; padding: 0.38rem 0.7rem; color: var(--dim); font-size: 0.71rem;
+      text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--b); background: #131318; }
+    .bt td { padding: 0.38rem 0.7rem; border-bottom: 1px solid var(--b2); vertical-align: top; font-size: 0.8rem; color: #7a7288; }
+    .bt tr:last-child td { border-bottom: none; }
+    .bt td:first-child { font-family: monospace; font-size: 0.78rem; white-space: nowrap; }
+    .bt td.btn-list { font-size: 0.77rem; color: #5a6060; }
+    .bt td.btn-list .none { color: #3a3040; font-style: italic; }
+
+    /* ---- Info / warn / note callouts ---- */
+    .info { background: #0e1820; border: 1px solid #1a3448; border-left: 3px solid #2a5878; border-radius: 6px; padding: 0.7rem 0.9rem; font-size: 0.83rem; color: #5a8aaa; margin-bottom: 0.75rem; }
+    .info strong { color: #7aaaca; }
+    .warn { background: #181208; border: 1px solid #403010; border-left: 3px solid #806020; border-radius: 6px; padding: 0.7rem 0.9rem; font-size: 0.83rem; color: #907040; margin-bottom: 0.75rem; }
+    .warn strong { color: #b09050; }
+    .note { background: var(--purple-bg); border: 1px solid var(--purple-b); border-left: 3px solid var(--purple); border-radius: 6px; padding: 0.7rem 0.9rem; font-size: 0.83rem; color: #8a70b0; margin-bottom: 0.75rem; }
+    .note strong { color: var(--purple); }
+
+    /* ---- FSM mechanics ---- */
+    .mech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+    @media (max-width: 600px) { .mech-grid { grid-template-columns: 1fr; } }
+    .mech-card { background: var(--bg2); border: 1px solid var(--b); border-radius: 8px; padding: 0.85rem 1rem; }
+    .mech-card h3 { font-size: 0.84rem; font-weight: 600; color: #c0b8e0; margin-bottom: 0.4rem; }
+    .mech-card p, .mech-card li { font-size: 0.81rem; color: #7a7080; }
+    .mech-card ul { padding-left: 1.1rem; margin-top: 0.3rem; }
+    .mech-card li { margin-bottom: 0.2rem; }
+
+    /* ---- Bug report example ---- */
+    .bug-example {
+      background: #131018; border: 1px solid #2a1e3a; border-left: 3px solid #5a3888;
+      border-radius: 6px; padding: 0.85rem 1rem; font-size: 0.82rem; color: #8a7898; font-style: italic;
+      margin-top: 0.75rem;
+    }
+    .bug-example strong { color: #a090c8; font-style: normal; }
+
+    /* ---- Bug report checklist ---- */
+    .checklist { list-style: none; padding: 0; }
+    .checklist li {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      padding: 0.55rem 0; border-bottom: 1px solid var(--b2); font-size: 0.84rem; color: #8a8090;
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .cnum {
+      flex-shrink: 0; width: 1.4rem; height: 1.4rem; background: #1e1a2a; border: 1px solid #2e2840;
+      border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.68rem; font-weight: 700; color: #504868; margin-top: 0.05rem;
+    }
+    .checklist strong { color: #b0a8c8; }
+
+    /* ---- AI brain ---- */
+    .brain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-top: 0.75rem; }
+    @media (max-width: 600px) { .brain-grid { grid-template-columns: 1fr; } }
+    .brain-card { background: var(--bg2); border: 1px solid var(--b); border-radius: 8px; padding: 0.85rem 1rem; }
+    .brain-card h3 { font-size: 0.82rem; font-weight: 600; color: #b0a8d0; margin-bottom: 0.4rem; }
+    .brain-card p, .brain-card li { font-size: 0.8rem; color: #706878; }
+    .brain-card ul { padding-left: 1.1rem; margin-top: 0.3rem; }
+    .brain-card li { margin-bottom: 0.2rem; }
+
+    /* ---- Flow line ---- */
+    .flow { font-family: monospace; font-size: 0.84rem; color: #6070a0; background: #0e0e18; border: 1px solid #1e1e30; border-radius: 6px; padding: 0.65rem 0.9rem; margin: 0.5rem 0; }
+    .flow .arrow { color: #404860; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Kitty Barrage</div>
+    <nav>
+      <div class="breadcrumb"><a href="#">Home</a> › Architecture</div>
+      <div class="nav-section">Sections</div>
+      <a href="#fsm">1. State Machine</a>
+      <a href="#states">2. State Reference</a>
+      <a href="#graph">3. Transition Graph</a>
+      <a href="#debug">4. Debug Console</a>
+      <a href="#ai">5. AI (ActivityBrain)</a>
+      <a href="#modules">6. Module Map</a>
+      <a href="#bugs">7. How to Describe a Bug</a>
+    </nav>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <div class="page-header">
+      <div class="header-top">
+        <h1>Architecture</h1>
+        <span class="badge">Beta Kickoff</span>
+      </div>
+      <p class="sub">Kitty Barrage &nbsp;·&nbsp; Godot 4 Desktop Pet &nbsp;·&nbsp; May 2026</p>
+      <p class="print-hint">Cmd+P to save as PDF</p>
+    </div>
+
+    <hr class="div" />
+
+    <!-- ============ SECTION 1: FSM ============ -->
+    <div class="section" id="fsm">
+      <details open>
+        <summary>
+          <h2 style="margin:0">1 &nbsp; The State Machine</h2>
+          <span class="caret">▶</span>
+        </summary>
+        <div class="section-body">
+          <p style="margin-bottom:1rem">
+            Every kitty owns one <code>FiniteStateMachine</code> node. Each physics frame, the FSM calls
+            <code>state.tick(delta)</code> on the active <code>State</code>. A state returns <code>null</code>
+            to stay, or a new <code>State</code> instance to request a transition. The FSM does all
+            transitions — states never call <code>change_state()</code> themselves.
+          </p>
+
+          <div class="mech-grid" style="margin-bottom:1rem">
+            <div class="mech-card">
+              <h3>The tick loop</h3>
+              <ul>
+                <li><code>_physics_process(delta)</code> fires every physics frame</li>
+                <li>Calls <code>state.tick(delta)</code> on the active state</li>
+                <li><code>null</code> return → stay in current state</li>
+                <li>New <code>State</code> instance return → call <code>change_state()</code></li>
+              </ul>
+            </div>
+            <div class="mech-card">
+              <h3>Transition rules</h3>
+              <ul>
+                <li>Same-state guard: if the new state's <code>name()</code> equals the current name, transition is <strong>blocked</strong> (no re-entry)</li>
+                <li>Exiting state gets <code>_exit_state()</code> then <code>queue_free()</code></li>
+                <li>New state: <code>_enter_state(from)</code>, added to scene tree, <code>set_physics_process(false)</code></li>
+                <li>Only the FSM drives <code>_physics_process</code> — states have it disabled</li>
+              </ul>
+            </div>
+            <div class="mech-card">
+              <h3>State ownership</h3>
+              <ul>
+                <li>States are <code>Node</code> children of the FSM</li>
+                <li>Each state gets a reference to its <code>entity</code> (<code>Kitty</code>) on enter</li>
+                <li>States access <code>entity.anim</code>, <code>entity.navigation_target</code>, etc.</li>
+                <li>Transition states chain: constructor receives the <em>next</em> state as a parameter</li>
+              </ul>
+            </div>
+            <div class="mech-card">
+              <h3>External triggers</h3>
+              <ul>
+                <li><code>Kitty.change_state(state)</code> — direct override (buttons, AI SIT/LAY)</li>
+                <li><code>Kitty.begin_walk/run/sprint()</code> — smart routing through stand-up / sit-up chains</li>
+                <li><code>Character.apply_decision(decision)</code> — entry point for AI brain outputs</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="note">
+            <strong>The chaining pattern.</strong> Transition states like <code>StandUpState</code> and <code>SitUpState</code>
+            receive their <em>next state</em> in their constructor. When the animation finishes, <code>tick()</code>
+            returns that next state. This lets you express multi-step sequences as nested constructors:
+            <code>SitUpState.new(StandUpState.new(MovementState.walk()))</code>.
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- ============ SECTION 2: STATE REFERENCE ============ -->
+    <div class="section" id="states">
+      <details open>
+        <summary>
+          <h2 style="margin:0">2 &nbsp; State Reference</h2>
+          <span class="caret">▶</span>
+        </summary>
+        <div class="section-body">
+
+          <h3 style="color:var(--green); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.09em; margin-bottom:0.6rem">Rest States</h3>
+          <div class="state-grid" style="margin-bottom:1.25rem">
+
+            <div class="sc rest">
+              <div class="sc-head">
+                <span class="sp sp-rest">SIT</span>
+                <span class="sc-enum">StateName.SIT</span>
+              </div>
+              <div class="sc-body">
+                <div class="sc-row"><span class="sc-label">Constructor</span><span class="sc-val">SitState(reverse=false, start_paused=false)</span></div>
+                <div class="sc-row"><span class="sc-label">Animation</span><span class="sc-val">"Sit" — forward or reverse</span></div>
+                <div class="sc-row"><span class="sc-label">Behavior</span><span class="sc-val" style="color:#808890">Defaults: plays sit-down animation from standing. With <code>reverse=true, start_paused=true</code>: shows the held sitting pose (last Sit frame, paused). Stays until externally transitioned.</span></div>
+              </div>
+            </div>
+
+            <div class="sc rest">
+              <div class="sc-head">
+                <span class="sp sp-rest">LAY</span>
+                <span class="sc-enum">StateName.LAY</span>
+              </div>
+              <div class="sc-body">
+                <div class="sc-row"><span class="sc-label">Constructor</span><span class="sc-val">LayState()</span></div>
+                <div class="sc-row"><span class="sc-label">Animation</span><span class="sc-val">"Lay" reversed + paused</span></div>
+                <div class="sc-row"><span class="sc-label">Behavior</span><span class="sc-val" style="color:#808890">Holds the lying pose (last Lay frame, paused). Stays until externally transitioned.</span></div>
+              </div>
+            </div>
+
+          </div>
+
+          <h3 style="color:var(--gold); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.09em; margin-bottom:0.6rem">Transition States</h3>
+          <div class="state-grid" style="margin-bottom:1.25rem">
+
+            <div class="sc trans">
+              <div class="sc-head">
+                <span class="sp sp-trans">STANDUP</span>
+                <span class="sc-enum">StateName.STANDUP</span>
+              </div>
+              <div class="sc-body">
+                <div class="sc-row"><span class="sc-label">Constructor</span><span class="sc-val">StandUpState(next_state)</span></div>
+                <div class="sc-row"><span class="sc-label">Animation</span><span class="sc-val">"Sit" played <em>backwards</em></span></div>
+                <div class="sc-row"><span class="sc-label">Behavior</span><span class="sc-val" style="color:#808890">Kitty stands up. Rotates toward navigation target while animating. On finish → <code>next_state</code>.</span></div>
+              </div>
+            </div>
+
+            <div class="sc trans">
+              <div class="sc-head">
+                <span class="sp sp-trans">SITUP</span>
+                <span class="sc-enum">StateName.SITUP</span>
+              </div>
+              <div class="sc-body">
+                <div class="sc-row"><span class="sc-label">Constructor</span><span class="sc-val">SitUpState(next_state)</span></div>
+                <div class="sc-row"><span class="sc-label">Animation</span><span class="sc-val">"Lay" played <em>backwards</em></span></div>
+                <div class="sc-row"><span class="sc-label">Behavior</span><span class="sc-val" style="color:#808890">Kitty sits up from lying. Rotates toward target. On finish → <code>next_state</code>.</span></div>
+              </div>
+            </div>
+
+            <div class="sc trans">
+              <div class="sc-head">
+                <span class="sp sp-trans">LAY_DOWN</span>
+                <span class="sc-enum">StateName.LAY_DOWN</span>
+              </div>
+              <div class="sc-body">
+                <div class="sc-row"><span class="sc-label">Constructor</span><span class="sc-val">LayDownState(next_state)</span></div>
+                <div class="sc-row"><span class="sc-label">Animation</span><span class="sc-val">"Lay" played <em>forward</em></span></div>
+                <div class="sc-row"><span class="sc-label">Behavior</span><span class="sc-val" style="color:#808890">Kitty lies down. On animation finish → <code>next_state</code>. Typically: <code>LayDownState.new(LayState.new())</code>.</span></div>
+              </div>
+            </div>
+
+            <div class="sc trans">
+              <div class="sc-head">
+                <span class="sp sp-trans">LOOK_AROUND</span>
+                <span class="sc-enum">StateName.LOOK_AROUND</span>
+              </div>
+              <div class="sc-body">
+                <div class="sc-row"><span class="sc-label">Constructor</span><span class="sc-val">LookAroundState(next_state=SitState(true,true), loop=false, direction=BOTH, speed=1.0, pause_right=0, pause_left=0, pause_center=0, repetitions=1)</span></div>
+                <div class="sc-row"><span class="sc-label">Animation</span><span class="sc-val">"LookAround" — configurable plan</span></div>
+                <div class="sc-row"><span class="sc-label">Behavior</span><span class="sc-val" style="color:#808890">Builds a sequence of play/pause steps from its parameters. When complete (<code>loop=false</code>) or on interrupt → <code>next_state</code>. Default ends in <code>SitState(true,true)</code> (held sitting pose).</span></div>
+              </div>
+            </div>
+
+          </div>
+
+          <h3 style="color:var(--blue); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.09em; margin-bottom:0.6rem">Movement States</h3>
+          <div class="state-grid">
+
+            <div class="sc move">
+              <div class="sc-head">
+                <span class="sp sp-move">WALK</span>
+                <span class="sc-enum">StateName.WALK</span>
+              </div>
+              <div class="sc-body">
+                <div class="sc-row"><span class="sc-label">Constructor</span><span class="sc-val">MovementState.walk()</span></div>
+                <div class="sc-row"><span class="sc-label">Animation</span><span class="sc-val">"Walk" loop</span></div>
+                <div class="sc-row"><span class="sc-label">Behavior</span><span class="sc-val" style="color:#808890">Moves toward <code>navigation_target</code> at base speed. Target reached (&lt;5px) → <code>SitState.new()</code>. No target → pauses.</span></div>
+              </div>
+            </div>
+
+            <div class="sc move">
+              <div class="sc-head">
+                <span class="sp sp-move">RUN</span>
+                <span class="sc-enum">StateName.RUN</span>
+              </div>
+              <div class="sc-body">
+                <div class="sc-row"><span class="sc-label">Constructor</span><span class="sc-val">MovementState.run()</span></div>
+                <div class="sc-row"><span class="sc-label">Animation</span><span class="sc-val">"Run" loop</span></div>
+                <div class="sc-row"><span class="sc-label">Behavior</span><span class="sc-val" style="color:#808890">Like WALK, speed × <code>personality.run_speed_multiplier</code> (default 1.6). Target reached → <code>SitState.new()</code>.</span></div>
+              </div>
+            </div>
+
+            <div class="sc move">
+              <div class="sc-head">
+                <span class="sp sp-move">SPRINT</span>
+                <span class="sc-enum">StateName.SPRINT</span>
+              </div>
+              <div class="sc-body">
+                <div class="sc-row"><span class="sc-label">Constructor</span><span class="sc-val">MovementState.sprint()</span></div>
+                <div class="sc-row"><span class="sc-label">Animation</span><span class="sc-val">"Sprint" loop</span></div>
+                <div class="sc-row"><span class="sc-label">Behavior</span><span class="sc-val" style="color:#808890">Like WALK, speed × <code>personality.sprint_speed_multiplier</code> (default 2.4). Target reached → <code>SitState.new()</code>.</span></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- ============ SECTION 3: TRANSITION GRAPH ============ -->
+    <div class="section" id="graph">
+      <details open>
+        <summary>
+          <h2 style="margin:0">3 &nbsp; Transition Graph</h2>
+          <span class="caret">▶</span>
+        </summary>
+        <div class="section-body">
+          <p style="margin-bottom:0.9rem">All valid state transitions, how each is triggered, and whether the trigger comes from AI, player input, or a debug button.</p>
+          <div class="tt-wrap">
+            <table class="tt">
+              <thead><tr><th>From</th><th>To</th><th>How / Trigger</th></tr></thead>
+              <tbody>
+
+                <tr class="from-rest">
+                  <td><span class="sp sp-rest">SIT</span></td>
+                  <td class="to"><span class="sp sp-trans">STANDUP</span> → <span class="sp sp-move">WALK</span></td>
+                  <td class="how"><code>begin_walk()</code> — AI WALK decision or Walk button</td>
+                </tr>
+                <tr class="from-rest">
+                  <td><span class="sp sp-rest">SIT</span></td>
+                  <td class="to"><span class="sp sp-trans">STANDUP</span> → <span class="sp sp-move">RUN</span></td>
+                  <td class="how"><code>begin_run()</code> — AI RUN decision or Run button</td>
+                </tr>
+                <tr class="from-rest">
+                  <td><span class="sp sp-rest">SIT</span></td>
+                  <td class="to"><span class="sp sp-trans">STANDUP</span> → <span class="sp sp-move">SPRINT</span></td>
+                  <td class="how"><code>begin_sprint()</code> — AI SPRINT decision or Sprint button</td>
+                </tr>
+                <tr class="from-rest">
+                  <td><span class="sp sp-rest">SIT</span></td>
+                  <td class="to"><span class="sp sp-trans">LAY_DOWN</span> → <span class="sp sp-rest">LAY</span></td>
+                  <td class="how">AI LAY decision — <code>LayDownState.new(LayState.new())</code></td>
+                </tr>
+                <tr class="from-rest">
+                  <td><span class="sp sp-rest">SIT</span></td>
+                  <td class="to"><span class="sp sp-trans">LOOK_AROUND</span></td>
+                  <td class="how">AI LOOK_AROUND decision — <code>LookAroundState.new()</code></td>
+                </tr>
+
+                <tr class="from-trans">
+                  <td><span class="sp sp-trans">LOOK_AROUND</span></td>
+                  <td class="to"><span class="sp sp-rest">SIT</span> (held pose)</td>
+                  <td class="how">Natural end of animation — <code>SitState(true,true)</code></td>
+                </tr>
+                <tr class="from-trans">
+                  <td><span class="sp sp-trans">LOOK_AROUND</span></td>
+                  <td class="to"><span class="sp sp-rest">SIT</span> (held pose)</td>
+                  <td class="how">AI SIT decision — <code>change_state(SitState(true,true))</code></td>
+                </tr>
+                <tr class="from-trans">
+                  <td><span class="sp sp-trans">LOOK_AROUND</span></td>
+                  <td class="to"><span class="sp sp-trans">STANDUP</span> → <span class="sp sp-move">WALK/RUN/SPRINT</span></td>
+                  <td class="how"><code>begin_walk/run/sprint()</code> — routes through StandUp</td>
+                </tr>
+
+                <tr class="from-rest">
+                  <td><span class="sp sp-rest">LAY</span> / <span class="sp sp-trans">LAY_DOWN</span></td>
+                  <td class="to"><span class="sp sp-trans">SITUP</span> → <span class="sp sp-rest">SIT</span> (held)</td>
+                  <td class="how">AI SIT decision — <code>SitUpState.new(SitState(true,true))</code></td>
+                </tr>
+                <tr class="from-rest">
+                  <td><span class="sp sp-rest">LAY</span> / <span class="sp sp-trans">LAY_DOWN</span></td>
+                  <td class="to"><span class="sp sp-trans">SITUP</span> → <span class="sp sp-trans">STANDUP</span> → <span class="sp sp-move">WALK/RUN/SPRINT</span></td>
+                  <td class="how"><code>begin_walk/run/sprint()</code> — full chain</td>
+                </tr>
+
+                <tr class="from-move">
+                  <td><span class="sp sp-move">WALK/RUN/SPRINT</span></td>
+                  <td class="to"><span class="sp sp-rest">SIT</span></td>
+                  <td class="how">Target reached (&lt;5px) — <code>SitState.new()</code></td>
+                </tr>
+
+                <tr class="from-trans">
+                  <td><span class="sp sp-trans">STANDUP</span></td>
+                  <td class="to"><em>next_state</em></td>
+                  <td class="how">Animation completes — whatever was passed to constructor</td>
+                </tr>
+                <tr class="from-trans">
+                  <td><span class="sp sp-trans">SITUP</span></td>
+                  <td class="to"><em>next_state</em></td>
+                  <td class="how">Animation completes — whatever was passed to constructor</td>
+                </tr>
+                <tr class="from-trans">
+                  <td><span class="sp sp-trans">LAY_DOWN</span></td>
+                  <td class="to"><em>next_state</em></td>
+                  <td class="how">Animation completes — whatever was passed to constructor</td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- ============ SECTION 4: DEBUG CONSOLE ============ -->
+    <div class="section" id="debug">
+      <details open>
+        <summary>
+          <h2 style="margin:0">4 &nbsp; Debug Console Reference</h2>
+          <span class="caret">▶</span>
+        </summary>
+        <div class="section-body">
+
+          <div class="info" style="margin-bottom:1rem">
+            <strong>Backtick ` </strong> toggles the console panel (state display, transition log, kitty control buttons).
+            <strong>&nbsp; Backslash \ </strong> (while console is open) toggles the kitty personality controls panel.
+          </div>
+
+          <h3 style="margin-bottom:0.65rem">Buttons available per state</h3>
+          <div class="tt-wrap" style="margin-bottom:1.2rem">
+            <table class="bt">
+              <thead><tr><th>Current State</th><th>Enabled Buttons</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="sp sp-rest">SIT</span></td>
+                  <td class="btn-list">Look Around, Lay Down, Stand Up, Walk, Run, Sprint</td>
+                </tr>
+                <tr>
+                  <td><span class="sp sp-trans">STANDUP</span></td>
+                  <td class="btn-list">Sit</td>
+                </tr>
+                <tr>
+                  <td><span class="sp sp-move">WALK</span></td>
+                  <td class="btn-list">Sit, Run, Sprint</td>
+                </tr>
+                <tr>
+                  <td><span class="sp sp-move">RUN</span></td>
+                  <td class="btn-list">Sit, Walk, Sprint</td>
+                </tr>
+                <tr>
+                  <td><span class="sp sp-move">SPRINT</span></td>
+                  <td class="btn-list">Sit, Walk, Run</td>
+                </tr>
+                <tr>
+                  <td><span class="sp sp-trans">LAY_DOWN</span></td>
+                  <td class="btn-list">Sit Up, Walk, Run, Sprint</td>
+                </tr>
+                <tr>
+                  <td><span class="sp sp-rest">LAY</span></td>
+                  <td class="btn-list">Sit Up, Walk, Run, Sprint</td>
+                </tr>
+                <tr>
+                  <td><span class="sp sp-trans">SITUP</span></td>
+                  <td class="btn-list"><span class="none">none — wait for animation to finish</span></td>
+                </tr>
+                <tr>
+                  <td><span class="sp sp-trans">LOOK_AROUND</span></td>
+                  <td class="btn-list">Stand Up, Walk, Run, Sprint</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style="margin-bottom:0.65rem">What each button actually does</h3>
+          <div class="tt-wrap" style="margin-bottom:1.2rem">
+            <table class="bt">
+              <thead><tr><th>Button</th><th>Action</th><th>What to expect</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>Sit</td>
+                  <td style="font-size:0.77rem; color:#6a6070"><code>SitState.new()</code></td>
+                  <td style="font-size:0.77rem; color:#6a6070">Plays sit-down animation from standing pose. Use from WALK/RUN/SPRINT.</td>
+                </tr>
+                <tr>
+                  <td>Lay Down</td>
+                  <td style="font-size:0.77rem; color:#6a6070"><code>LayDownState.new(LayState.new())</code></td>
+                  <td style="font-size:0.77rem; color:#6a6070">Plays lay-down animation, then holds lying pose.</td>
+                </tr>
+                <tr>
+                  <td>Sit Up</td>
+                  <td style="font-size:0.77rem; color:#6a6070"><code>SitUpState.new(SitState.new(true,true))</code></td>
+                  <td style="font-size:0.77rem; color:#6a6070">Plays sit-up animation (Lay reversed), then holds sitting pose.</td>
+                </tr>
+                <tr>
+                  <td>Stand Up</td>
+                  <td style="font-size:0.77rem; color:#6a6070"><code>StandUpState.new(SitState.new())</code></td>
+                  <td style="font-size:0.77rem; color:#6a6070"><strong>Kitty stands up, then immediately sits back down.</strong> This is intentional — it's an animation preview loop. It does NOT start walking.</td>
+                </tr>
+                <tr>
+                  <td>Walk / Run / Sprint to random</td>
+                  <td style="font-size:0.77rem; color:#6a6070"><code>begin_walk/run/sprint()</code> with random on-screen position</td>
+                  <td style="font-size:0.77rem; color:#6a6070">Routes through StandUp if sitting/looking-around. Routes through SitUp→StandUp if lying. Kitty moves to random position then sits.</td>
+                </tr>
+                <tr>
+                  <td>Look Around</td>
+                  <td style="font-size:0.77rem; color:#6a6070"><code>LookAroundState.new(...)</code> with panel settings</td>
+                  <td style="font-size:0.77rem; color:#6a6070">Plays look-around animation. When done, <strong>freezes in sitting pose</strong> (<code>SitState(true,true)</code>) — waiting for next action.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="warn">
+            <strong>Common confusion points.</strong>
+            "Stand Up" button plays stand-up then sit-down — this is correct, it previews the transition animation.
+            After "Look Around" completes, the kitty freezes in sitting pose — also correct, it's waiting for the next AI or player decision.
+            From LOOK_AROUND, the "Sit" button is not available because the kitty is already sitting. Use Walk/Run/Sprint to move, or Stand Up to preview the animation.
+          </div>
+
+        </div>
+      </details>
+    </div>
+
+    <!-- ============ SECTION 5: AI BRAIN ============ -->
+    <div class="section" id="ai">
+      <details open>
+        <summary>
+          <h2 style="margin:0">5 &nbsp; Autonomous AI (ActivityBrain)</h2>
+          <span class="caret">▶</span>
+        </summary>
+        <div class="section-body">
+
+          <p style="margin-bottom:0.9rem">
+            Each autonomous character (not the player-controlled one) has an <code>ActivityBrain</code>.
+            <code>WorldDirector</code> calls <code>brain.tick(delta, viewport_rect)</code> every physics frame.
+            The brain decides when to fire a new activity and what it should be.
+          </p>
+
+          <div class="brain-grid">
+            <div class="brain-card">
+              <h3>Decision cycle</h3>
+              <ul>
+                <li><code>_activity_timer</code> accumulates delta every frame</li>
+                <li>When <code>_activity_timer &gt;= _duration[current_activity]</code>, a new decision fires</li>
+                <li>Timer resets to 0 after each decision</li>
+                <li>Decision is weighted-random across all activities with weight &gt; 0</li>
+                <li>Result: an <code>ActivityDecision</code> (activity + optional walk target)</li>
+                <li>Passed to <code>Character.apply_decision()</code></li>
+              </ul>
+            </div>
+            <div class="brain-card">
+              <h3>Fatigue system</h3>
+              <ul>
+                <li><code>_rest_timer</code> accumulates the duration of each completed activity</li>
+                <li>When <code>_rest_timer &gt;= rest_threshold</code>, the brain forces a <code>LAY</code> decision</li>
+                <li>Forces rest regardless of activity weights</li>
+                <li><code>_rest_timer</code> resets to 0 after the forced rest</li>
+                <li>Default threshold: <code>10.0</code> seconds of accumulated activity</li>
+              </ul>
+            </div>
+            <div class="brain-card">
+              <h3>Walk target selection</h3>
+              <ul>
+                <li>Movement decisions (WALK, RUN, SPRINT) may include a <code>walk_target</code></li>
+                <li><code>walk_target_chance</code> probability of picking a random position within viewport bounds</li>
+                <li>If no target generated, kitty moves but may not have a destination</li>
+              </ul>
+            </div>
+            <div class="brain-card">
+              <h3>CharacterPersonality fields <span style="font-size:0.75em;font-weight:400;color:#507050">(base — all characters)</span></h3>
+              <ul>
+                <li><strong>Activity weights:</strong> <code>preference_walk/sit/lay/run/look_around/sprint</code> — relative probability. 0 = never chosen.</li>
+                <li><strong>Activity durations:</strong> how long each activity runs before next decision (seconds)</li>
+                <li><strong>rest_threshold:</strong> total activity time before forcing lay-down rest</li>
+                <li><strong>run_speed_multiplier</strong> (1.6) / <strong>sprint_speed_multiplier</strong> (2.4)</li>
+              </ul>
+              <h3>KittyPersonality fields <span style="font-size:0.75em;font-weight:400;color:#507050">(extends CharacterPersonality)</span></h3>
+              <ul>
+                <li><strong>Look Around params:</strong> direction (BOTH/LEFT_ONLY/RIGHT_ONLY), speed, pauses, repetitions</li>
+                <li>These are accessed via <code>as KittyPersonality</code> cast in <code>LookAroundState</code> — returns null for non-kitty characters, which fall back to defaults</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="flow" style="margin-top:1rem">
+            brain.tick(delta) <span class="arrow">→</span> timer fires <span class="arrow">→</span> _decide() <span class="arrow">→</span> ActivityDecision <span class="arrow">→</span> Character.apply_decision() <span class="arrow">→</span> change_state(...)
+          </div>
+
+        </div>
+      </details>
+    </div>
+
+    <!-- ============ SECTION 6: MODULE MAP ============ -->
+    <div class="section" id="modules">
+      <details>
+        <summary>
+          <h2 style="margin:0">6 &nbsp; Module Map</h2>
+          <span class="caret">▶</span>
+        </summary>
+        <div class="section-body">
+          <div class="tt-wrap">
+            <table class="mt">
+              <thead><tr><th>File</th><th>Class</th><th>Role</th></tr></thead>
+              <tbody>
+
+                <tr class="mt-section"><td colspan="3">Core — Entity &amp; Orchestration</td></tr>
+                <tr>
+                  <td>Character.gd</td>
+                  <td>Character</td>
+                  <td>Base class for all characters. Owns FSM, AnimController, personality, navigation target, separation force. Public interface: <code>begin_walk/run/sprint</code>, <code>apply_decision</code>, <code>set_target</code>, <code>set_highlight</code>. Extends <code>CharacterBody2D</code>.</td>
+                </tr>
+                <tr>
+                  <td>Kitty.gd</td>
+                  <td>Kitty</td>
+                  <td>Extends <code>Character</code>. Named subtype for the kitty character — no additional logic. Exists so scenes and type checks can reference <code>Kitty</code> specifically.</td>
+                </tr>
+                <tr>
+                  <td>WorldDirector.gd</td>
+                  <td>WorldDirector</td>
+                  <td>Orchestrates all characters (<code>Array[Character]</code>). Routes player input → controlled character. Ticks ActivityBrain → autonomous characters. Handles spawning and focus cycling.</td>
+                </tr>
+
+                <tr class="mt-section"><td colspan="3">State Machine</td></tr>
+                <tr>
+                  <td>FiniteStateMachine.gd</td>
+                  <td>FiniteStateMachine</td>
+                  <td>Owns the current State node. Drives <code>tick()</code> each physics frame. Handles transitions and same-state guard.</td>
+                </tr>
+                <tr>
+                  <td>State.gd</td>
+                  <td>State</td>
+                  <td>Base class for all states. <code>var entity</code> is intentionally untyped (duck-typed to <code>Character</code> at runtime) to avoid a parse-time circular dependency. Provides <code>_tick_rotation()</code> for navigation-aware states.</td>
+                </tr>
+
+                <tr class="mt-section"><td colspan="3">States — Rest</td></tr>
+                <tr>
+                  <td>kitty_states/SitState.gd</td>
+                  <td>SitState</td>
+                  <td>Sitting pose or sit-down animation. <code>reverse+paused</code> args control held pose vs playing animation.</td>
+                </tr>
+                <tr>
+                  <td>kitty_states/LayState.gd</td>
+                  <td>LayState</td>
+                  <td>Held lying pose. Lay animation reversed and paused at last frame.</td>
+                </tr>
+
+                <tr class="mt-section"><td colspan="3">States — Transitions</td></tr>
+                <tr>
+                  <td>kitty_states/StandUpState.gd</td>
+                  <td>StandUpState</td>
+                  <td>Plays Sit animation backwards. Rotates toward target. On finish → next_state.</td>
+                </tr>
+                <tr>
+                  <td>kitty_states/SitUpState.gd</td>
+                  <td>SitUpState</td>
+                  <td>Plays Lay animation backwards (sits up from lying). On finish → next_state.</td>
+                </tr>
+                <tr>
+                  <td>kitty_states/LayDownState.gd</td>
+                  <td>LayDownState</td>
+                  <td>Plays Lay animation forward (lies down). On finish → next_state.</td>
+                </tr>
+                <tr>
+                  <td>kitty_states/LookAroundState.gd</td>
+                  <td>LookAroundState</td>
+                  <td>Configurable look-around animation plan. On finish → next_state (default: held sitting pose).</td>
+                </tr>
+
+                <tr class="mt-section"><td colspan="3">States — Movement</td></tr>
+                <tr>
+                  <td>kitty_states/MovementState.gd</td>
+                  <td>MovementState</td>
+                  <td>Handles WALK, RUN, and SPRINT via static constructors. Moves toward navigation_target. On arrival → <code>SitState.new()</code>.</td>
+                </tr>
+
+                <tr class="mt-section"><td colspan="3">AI</td></tr>
+                <tr>
+                  <td>ActivityBrain.gd</td>
+                  <td>ActivityBrain</td>
+                  <td>Autonomous decision engine. <code>tick(delta, bounds)</code> returns an <code>ActivityDecision</code> when the timer fires.</td>
+                </tr>
+                <tr>
+                  <td>ActivityDecision.gd</td>
+                  <td>ActivityDecision</td>
+                  <td>Value object: activity (<code>StateName</code>) + optional <code>walk_target</code> (<code>Vector2</code>).</td>
+                </tr>
+                <tr>
+                  <td>CharacterPersonality.gd</td>
+                  <td>CharacterPersonality</td>
+                  <td>Base Resource: activity weights, durations, fatigue threshold, walk target chance, speed multipliers. Used by <code>ActivityBrain</code>. Extend this for each character type.</td>
+                </tr>
+                <tr>
+                  <td>KittyPersonality.gd</td>
+                  <td>KittyPersonality</td>
+                  <td>Extends <code>CharacterPersonality</code>. Adds kitty-specific look-around params: direction, speed, pauses, repetitions.</td>
+                </tr>
+
+                <tr class="mt-section"><td colspan="3">Input</td></tr>
+                <tr>
+                  <td>InputHandler.gd</td>
+                  <td>InputHandler</td>
+                  <td>Reads from <code>InputSource</code> each frame. Exposes <code>is_moving()</code>, <code>is_running()</code>.</td>
+                </tr>
+                <tr>
+                  <td>InputSource.gd</td>
+                  <td>InputSource</td>
+                  <td>Abstract seam for input. <code>get_input_vector()</code>, <code>is_running()</code>.</td>
+                </tr>
+                <tr>
+                  <td>GodotInputSource.gd</td>
+                  <td>GodotInputSource</td>
+                  <td>Production adapter: reads the Godot Input singleton.</td>
+                </tr>
+
+                <tr class="mt-section"><td colspan="3">Navigation</td></tr>
+                <tr>
+                  <td>NavigationTarget.gd</td>
+                  <td>NavigationTarget</td>
+                  <td>Abstract seam for movement destination. <code>get_position()</code>, <code>is_valid()</code>.</td>
+                </tr>
+                <tr>
+                  <td>PositionTarget.gd</td>
+                  <td>PositionTarget</td>
+                  <td>Fixed <code>Vector2</code> target. Always valid.</td>
+                </tr>
+                <tr>
+                  <td>NodeTarget.gd</td>
+                  <td>NodeTarget</td>
+                  <td>Node2D reference target. Valid only while the node is in the scene tree.</td>
+                </tr>
+
+                <tr class="mt-section"><td colspan="3">Global &amp; Dev</td></tr>
+                <tr>
+                  <td>Global.gd</td>
+                  <td>Global (autoload)</td>
+                  <td>Enums: <code>StateName</code>, <code>Direction</code>, <code>LookDirection</code>. Helpers: <code>direction_from_vector</code>, <code>get_full_animation_name</code>.</td>
+                </tr>
+                <tr>
+                  <td>DebugOverlay.gd</td>
+                  <td>DebugOverlay</td>
+                  <td>Dev console. State display, transition log, force-trigger buttons, kitty personality controls.</td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- ============ SECTION 7: HOW TO DESCRIBE A BUG ============ -->
+    <div class="section" id="bugs">
+      <details open>
+        <summary>
+          <h2 style="margin:0">7 &nbsp; How to Describe a Bug</h2>
+          <span class="caret">▶</span>
+        </summary>
+        <div class="section-body">
+
+          <p style="margin-bottom:1rem">A good bug report gives enough context to reproduce the problem in one attempt. The debug console (backtick `) shows current state and a timestamped transition log — use it.</p>
+
+          <ul class="checklist">
+            <li>
+              <span class="cnum">1</span>
+              <div><strong>What state was the kitty in?</strong> Use the exact state name from the State display in the debug console (e.g. <code>LOOK_AROUND</code>, not "looking around").</div>
+            </li>
+            <li>
+              <span class="cnum">2</span>
+              <div><strong>What triggered the transition?</strong> Was it an AI decision, a button press in the debug console, or player input? If AI: how long had the current state been running?</div>
+            </li>
+            <li>
+              <span class="cnum">3</span>
+              <div><strong>What animation played?</strong> Describe what you saw. Which direction was the kitty facing?</div>
+            </li>
+            <li>
+              <span class="cnum">4</span>
+              <div><strong>What did you expect?</strong> Use the exact state names and behaviors from this document to describe the intended outcome.</div>
+            </li>
+            <li>
+              <span class="cnum">5</span>
+              <div><strong>Which states were involved?</strong> List them in order: the state you were in, any intermediate states, the final state. Copy from the transition log if available.</div>
+            </li>
+            <li>
+              <span class="cnum">6</span>
+              <div><strong>Is it reproducible?</strong> Can you reproduce it with a specific button press, or does it only happen with the AI? Reliable reproduction steps are worth more than a detailed description.</div>
+            </li>
+          </ul>
+
+          <h3 style="margin-top:1.2rem; margin-bottom:0.4rem">Example of a good bug report</h3>
+          <div class="bug-example">
+            "Kitty was in <strong>LOOK_AROUND</strong> (AI-triggered, had been running for ~2s). AI then decided <strong>SIT</strong>.
+            Expected: kitty stays in sitting pose (<code>SitState(true,true)</code> — paused, held pose).
+            Actual: kitty stood up slightly then sat back down — the full sit animation played from standing.
+            Reproduced consistently by pressing Look Around, then immediately pressing Sit Up before the animation ends."
+          </div>
+
+          <h3 style="margin-top:1.2rem; margin-bottom:0.4rem">Anti-patterns</h3>
+          <div class="warn" style="margin-bottom:0">
+            <strong>Too vague:</strong> "The kitty does the wrong animation sometimes." — no state, no trigger, not reproducible.<br /><br />
+            <strong>Missing trigger:</strong> "After looking around the kitty stood up." — was it an AI decision, a button press? From which exact state?<br /><br />
+            <strong>Wrong state names:</strong> "It was in the idle state" — use the enum names from this document (<code>SIT</code>, <code>LAY</code>, etc.).
+          </div>
+
+        </div>
+      </details>
+    </div>
+
+    <hr class="div" />
+    <p style="font-size:0.74rem; color:#2a2838">Kitty Barrage &nbsp;·&nbsp; Architecture Reference &nbsp;·&nbsp; May 2026 &nbsp;·&nbsp; Beta Kickoff</p>
+
+  </main>
+</div>
+
+</body>
+</html>
