@@ -136,6 +136,11 @@
       <div class="card-desc">Atlas swap at spawn gives each kitty a random coat from 24 color families. ColorVariantPool resource manages the enabled set. Debug overlay palette UI lets player configure which colors can spawn.</div>
       <div class="card-meta">4 files · May 2026</div>
     </a>
+    <a href="task-plan-kitty-blemishes.html" class="card green">
+      <div class="card-title">Kitty Marking Overlays <span class="pill pill-green" style="font-size:0.62rem;">Done</span></div>
+      <div class="card-desc">Shader composite overlays (tabby, white paws, ears, face, tail) on the base AnimatedSprite2D. MarkingPool with 30% probability; AnimationController manages shader uniform. Debug overlay palette + probability slider.</div>
+      <div class="card-meta">5 files · May 2026</div>
+    </a>
   </div>
 
   <h2>Issue Notes</h2>
@@ -156,9 +161,19 @@
       <span class="log-text">Wiki created — Beta Kickoff. Added architecture overview and all planning documents.</span>
     </div>
     <div class="log-entry">
+      <span class="log-date">2026-05-17</span>
+      <span class="log-tag">feature</span>
+      <span class="log-text">Kitty marking overlays complete — shader composite on base AnimatedSprite2D (MarkingOverlay.gdshader), MarkingPool (14 markings, 30% probability), AnimationController.set_marking/clear_marking, WorldDirector wired, DebugOverlay marking palette + probability slider.</span>
+    </div>
+    <div class="log-entry">
       <span class="log-date">2026-05-16</span>
       <span class="log-tag">fix</span>
       <span class="log-text">MovementState freeze bug fixed — kitties hanging mid-run/sprint when navigation_target became invalid now transition to SitState instead of returning null.</span>
+    </div>
+    <div class="log-entry">
+      <span class="log-date">2026-05-17</span>
+      <span class="log-tag">plan</span>
+      <span class="log-text">Kitty marking overlays plan created — 14 marking PNGs from asset pack; 5 design questions open (scene structure, sync, SpriteFrames build, assignment, layer count). Variants plan converted to locked-in decisions reference.</span>
     </div>
     <div class="log-entry">
       <span class="log-date">2026-05-16</span>

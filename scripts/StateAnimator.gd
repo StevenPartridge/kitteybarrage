@@ -37,3 +37,9 @@ func change_direction_while_playing(new_direction: int) -> void:
 
 func set_modulate(color: Color) -> void:
 	pass
+
+func set_marking(_texture: Texture2D) -> void:
+	pass
+
+func clear_marking() -> void:
+	pass

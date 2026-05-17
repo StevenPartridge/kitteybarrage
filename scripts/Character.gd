@@ -82,6 +82,12 @@ func apply_color_variant(atlas: Texture2D) -> void:
 	color_variant = atlas
 	_swap_atlas(atlas)
 
+func apply_marking_variant(texture: Texture2D) -> void:
+	if texture != null:
+		anim.set_marking(texture)
+	else:
+		anim.clear_marking()
+
 func _swap_atlas(atlas: Texture2D) -> void:
 	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	if sprite == null:

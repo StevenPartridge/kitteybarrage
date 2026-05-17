@@ -42,7 +42,8 @@ var _kitty_panel_header: Label
 var _kitty_controls: Array = []
 var _last_kitty: Character = null
 var _sep_draw: SeparationDebugDraw
-var _palette_checks: Dictionary = {}  # family: String → CheckBox
+var _palette_checks: Dictionary = {}   # family: String → CheckBox
+var _marking_checks: Dictionary = {}   # path: String → CheckBox
 
 func _ready() -> void:
 	layer = 100
@@ -476,6 +477,8 @@ func _build_buttons() -> ScrollContainer:
 	vbox.add_child(HSeparator.new())
 	_build_palette_section(vbox)
 	vbox.add_child(HSeparator.new())
+	_build_marking_section(vbox)
+	vbox.add_child(HSeparator.new())
 
 	var sep_check := CheckBox.new()
 	sep_check.text = "Separation radius"
@@ -563,6 +566,69 @@ func _build_palette_section(parent: VBoxContainer) -> void:
 		)
 		grid.add_child(cb)
 		_palette_checks[family] = cb
+
+func _build_marking_section(parent: VBoxContainer) -> void:
+	parent.add_child(_label("MARKING OVERLAY", 8, Color(0.4, 0.55, 0.4)))
+
+	var prob_row := HBoxContainer.new()
+	prob_row.add_theme_constant_override("separation", 4)
+	parent.add_child(prob_row)
+	prob_row.add_child(_label("Prob", 9, Color(0.4, 0.4, 0.55)))
+	var prob_sl := HSlider.new()
+	prob_sl.min_value = 0.0; prob_sl.max_value = 1.0; prob_sl.step = 0.05; prob_sl.value = 0.3
+	prob_sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	prob_sl.custom_minimum_size = Vector2(0, 16)
+	var prob_lbl := Label.new()
+	prob_lbl.text = "0.30"
+	prob_lbl.add_theme_font_size_override("font_size", 9)
+	prob_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.5))
+	prob_lbl.custom_minimum_size = Vector2(28, 0)
+	prob_sl.value_changed.connect(func(v: float) -> void:
+		prob_lbl.text = "%.2f" % v
+		if _director: _director.marking_probability = v
+	)
+	prob_row.add_child(prob_sl)
+	prob_row.add_child(prob_lbl)
+
+	var all_none_row := HBoxContainer.new()
+	all_none_row.add_theme_constant_override("separation", 4)
+	parent.add_child(all_none_row)
+
+	all_none_row.add_child(_small_button("All", func() -> void:
+		if _director and _director.marking_pool:
+			_director.marking_pool.set_all_enabled(true)
+			for cb: CheckBox in _marking_checks.values():
+				cb.button_pressed = true
+	))
+	all_none_row.add_child(_small_button("None", func() -> void:
+		if _director and _director.marking_pool:
+			_director.marking_pool.set_all_enabled(false)
+			for cb: CheckBox in _marking_checks.values():
+				cb.button_pressed = false
+	))
+
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 2)
+	grid.add_theme_constant_override("v_separation", 1)
+	parent.add_child(grid)
+
+	var markings: Array[String] = []
+	if _director != null and _director.marking_pool != null:
+		markings = _director.marking_pool.get_all()
+
+	for path: String in markings:
+		var path_captured: String = path
+		var cb := CheckBox.new()
+		cb.text = _director.marking_pool.get_label(path) if _director and _director.marking_pool else path.get_file()
+		cb.button_pressed = true
+		cb.add_theme_font_size_override("font_size", 9)
+		cb.toggled.connect(func(on: bool) -> void:
+			if _director and _director.marking_pool:
+				_director.marking_pool.set_enabled(path_captured, on)
+		)
+		grid.add_child(cb)
+		_marking_checks[path] = cb
 
 func _build_status_and_log() -> VBoxContainer:
 	var vbox := VBoxContainer.new()

@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Plan — Kitty Marking Overlays</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
+      --b:     #2a2a38; --b2:  #1e1e2a;
+      --text:  #d4d0c8; --dim: #6a6570;
+      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
+      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
+      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
+      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
+      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
+      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--b2);
+      padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; font-size: 0.8rem;
+    }
+    .sidebar a { display: block; color: var(--dim); text-decoration: none; padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
+    .sidebar a:hover { color: var(--text); background: #1e1e2a; }
+    .sidebar .s-head { font-size: 0.68rem; font-weight: 700; color: #404055; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.3rem; }
+
+    .main { flex: 1; padding: 2rem 2.5rem; max-width: 860px; }
+
+    h1   { font-size: 1.45rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
+    h2   { font-size: 0.78rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
+    h3   { font-size: 0.92rem; font-weight: 700; color: #c8c0e0; margin: 1.2rem 0 0.4rem; }
+    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.65rem; }
+    li   { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.3rem; }
+    ul, ol { padding-left: 1.3rem; margin-bottom: 0.75rem; }
+    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
+    .sub  { color: var(--dim); font-size: 0.84rem; margin-bottom: 0.25rem; }
+    hr    { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
+    .breadcrumb { font-size: 0.78rem; color: var(--dim); margin-bottom: 1.5rem; }
+    .breadcrumb a { color: var(--dim); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--text); }
+
+    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
+    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
+    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
+    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
+    .pill-purple { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-b); }
+    .pill-orange { background:var(--orange-bg); color:var(--orange); border:1px solid var(--orange-b); }
+    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
+    .pill-red    { background:var(--red-bg);    color:var(--red);    border:1px solid var(--red-b); }
+
+    /* Question cards — interactive */
+    .question {
+      border: 1px solid var(--gold-b); border-left: 3px solid var(--gold);
+      background: var(--gold-bg); border-radius: 0 8px 8px 0;
+      padding: 1rem 1.2rem; margin: 1.25rem 0;
+    }
+    .question-head {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem;
+    }
+    .q-badge {
+      font-size: 0.72rem; font-weight: 700; background: var(--gold); color: #1a1000;
+      border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .q-title { font-size: 0.92rem; font-weight: 700; color: #e8c850; }
+    .question > p { color: #b09030; margin-bottom: 0.5rem; }
+    .question > p:last-of-type { margin-bottom: 0.75rem; }
+    .q-lean { font-size: 0.81rem; color: #a08030; font-style: italic; border-top: 1px solid #3a2e10; padding-top: 0.5rem; margin-top: 0.75rem; }
+    .q-lean strong { color: #c09830; font-style: normal; }
+
+    /* Radio options grid */
+    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.75rem 0 0.5rem; }
+    .q-opt-radio {
+      background: #1a1408; border: 1px solid #3a2e10; border-radius: 6px;
+      padding: 0.6rem 0.8rem; cursor: pointer; transition: border-color 0.1s, background 0.1s;
+      display: flex; align-items: flex-start; gap: 0.55rem;
+    }
+    .q-opt-radio:has(input:checked) {
+      border-color: var(--gold); background: #251d08;
+    }
+    .q-opt-radio input[type="radio"] { margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--gold); }
+    .q-opt-body { flex: 1; }
+    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; color: #907020; }
+    .q-opt-radio:has(input:checked) .q-opt-label { color: var(--gold); }
+    .q-opt-body p { font-size: 0.79rem; color: #807030; margin-bottom: 0; line-height: 1.4; }
+    .q-opt-radio:has(input:checked) .q-opt-body p { color: #a08828; }
+
+    /* Text note input */
+    .q-notes { margin-top: 0.65rem; }
+    .q-notes label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #707020; display: block; margin-bottom: 0.3rem; }
+    .q-notes input {
+      width: 100%; background: #12100a; border: 1px solid #3a2e10; border-radius: 5px;
+      padding: 0.4rem 0.65rem; font-size: 0.82rem; color: #c0a840; font-family: inherit;
+      outline: none; transition: border-color 0.15s;
+    }
+    .q-notes input:focus { border-color: var(--gold); }
+    .q-notes input::placeholder { color: #4a3a10; }
+
+    /* Decided question cards */
+    .question.decided { border-color: var(--green-b); border-left-color: var(--green); background: var(--green-bg); }
+    .question.decided .question-head { margin-bottom: 0.6rem; }
+    .question.decided .q-title { color: #80d880; }
+    .question.decided p { color: #608060; }
+    .question.decided .q-lean { border-top-color: var(--green-b); color: #507050; }
+    .question.decided .q-lean strong { color: #70a070; }
+    .decided-badge { background: var(--green) !important; color: #001800 !important; }
+    .decided-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
+    .q-opt { background: #0e180e; border: 1px solid var(--green-b); border-radius: 6px; padding: 0.65rem 0.85rem; }
+    .q-opt.chosen { border-color: var(--green); background: #122012; }
+    .q-opt.chosen .q-opt-label { color: var(--green); }
+    .q-opt.unchosen { opacity: 0.45; }
+    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.25rem; color: #507050; }
+    .q-opt p { font-size: 0.8rem; color: #507050; margin-bottom: 0; }
+    .decision-note {
+      margin-top: 0.6rem; padding: 0.6rem 0.85rem; background: #0a1a0a;
+      border: 1px solid var(--green-b); border-radius: 5px;
+      font-size: 0.8rem; color: #608060; line-height: 1.5;
+    }
+    .decision-note strong { color: #70a070; }
+
+    .note {
+      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
+      padding: 0.75rem 1rem; font-size: 0.83rem; color: #7ab8d0; margin: 1rem 0;
+    }
+    .note strong { color: var(--blue); }
+
+    .warn {
+      background: var(--orange-bg); border: 1px solid var(--orange-b); border-radius: 6px;
+      padding: 0.75rem 1rem; font-size: 0.83rem; color: #c07828; margin: 1rem 0;
+    }
+    .warn strong { color: var(--orange); }
+
+    pre {
+      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
+      padding: 0.9rem 1rem; font-family: "SF Mono","Fira Code",monospace; font-size: 0.79rem;
+      color: #b0c8a0; overflow-x: auto; margin: 0.75rem 0; line-height: 1.55;
+    }
+    pre .cm  { color: #505868; }
+    pre .kw  { color: #b890e0; }
+    pre .fn  { color: #80c8e8; }
+    pre .st  { color: #90c890; }
+    pre .nm  { color: #d4a840; }
+    pre .tp  { color: #d09060; }
+
+    .steps { counter-reset: step; margin-top: 0.5rem; }
+    .step {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
+      padding: 1rem 1.1rem 1rem 3.5rem; margin-bottom: 0.75rem; position: relative;
+    }
+    .step.blocked { border-color: var(--gold-b); opacity: 0.75; }
+    .step.done { border-color: var(--green-b); }
+    .step::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 1rem; top: 1rem;
+      width: 1.8rem; height: 1.8rem; border-radius: 50%;
+      background: var(--bg2); border: 1px solid var(--b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700; color: var(--dim); font-family: monospace;
+    }
+    .step.blocked::before { border-color: var(--gold-b); color: var(--gold); }
+    .step.done::before { content: "✓"; border-color: var(--green-b); color: var(--green); background: var(--green-bg); }
+    .step-title { font-size: 0.9rem; font-weight: 700; color: #d0c8f0; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .step p { margin-bottom: 0.4rem; }
+
+    /* Asset table */
+    .mt { width:100%; border-collapse:collapse; font-size:0.82rem; margin: 0.75rem 0; }
+    .mt th { text-align:left; padding:0.4rem 0.85rem; color:var(--dim); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--b); background:#131318; }
+    .mt td { padding:0.45rem 0.85rem; border-bottom:1px solid var(--b2); vertical-align:top; color:#a0988a; font-size:0.82rem; }
+    .mt tr:last-child td { border-bottom:none; }
+    .mt .fname { font-family:monospace; color:#7888c8; white-space:nowrap; }
+    .mt .count { color: var(--gold); font-weight: 700; font-size: 0.78rem; }
+    .mt .rare  { color: var(--purple); font-weight: 700; font-size: 0.72rem; }
+    .mt .common{ color: var(--green);  font-weight: 700; font-size: 0.72rem; }
+
+    .file { display:inline-block; font-family:monospace; font-size:0.75rem; background:#131320; border:1px solid #2a2a40; border-radius:3px; padding:0.05rem 0.4rem; color:#7888c8; }
+
+    .checklist { list-style: none; padding-left: 0; }
+    .checklist li { padding: 0.3rem 0; border-bottom: 1px solid var(--b2); font-size: 0.84rem; color: #a0988a; display: flex; align-items: baseline; gap: 0.6rem; }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li::before { content: "☐"; color: var(--dim); font-size: 0.9em; flex-shrink: 0; }
+
+    /* Copy answers button */
+    .copy-section {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
+      padding: 1.25rem 1.5rem; margin-top: 2rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .copy-section p { margin: 0; font-size: 0.85rem; color: #807880; }
+    .copy-btn {
+      background: var(--gold); color: #1a1000; border: none; border-radius: 6px;
+      padding: 0.55rem 1.2rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .copy-btn:hover { opacity: 0.88; }
+    .copy-btn:active { opacity: 0.75; }
+    .copy-confirm { font-size: 0.78rem; color: var(--green); display: none; }
+    .copy-confirm.show { display: inline; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div style="font-size:0.85rem;font-weight:700;color:#a090c8;margin-bottom:1rem;">Blemishes Plan</div>
+    <div class="s-head">Sections</div>
+    <a href="#goal">Goal</a>
+    <a href="#assets">Asset Inventory</a>
+    <a href="#technical">Technical Context</a>
+    <a href="#questions">Design Questions</a>
+    <a href="#outline">Implementation Outline</a>
+    <a href="#testing">Testing</a>
+    <div class="s-head">Wiki</div>
+    <a href="index.html">← Home</a>
+    <a href="architecture.html">Architecture</a>
+    <a href="task-plan-kitty-variants.html">← Kitty Variants Plan</a>
+  </nav>
+
+  <div class="main">
+
+    <div class="breadcrumb"><a href="index.html">Wiki</a> → Task Plan</div>
+
+    <div style="display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.2rem;">
+      <h1>Kitty Marking Overlays</h1>
+      <span class="pill pill-blue">Planning</span>
+      <span class="pill pill-dim">May 2026</span>
+    </div>
+    <p class="sub">Add marking overlays (white paws, tabby stripes, ear and face markings, tail tips) as a second composited sprite layer on top of each kitty's base coat.</p>
+
+    <hr />
+
+    <!-- GOAL -->
+    <h2 id="goal">Goal &amp; Scope</h2>
+
+    <p>The color variant system (<a href="task-plan-kitty-variants.html" style="color:var(--blue)">task-plan-kitty-variants.html</a>) gives each kitty a unique base coat from 24 color families. This task adds the next layer of visual variety: marking overlays composited on top of the base coat at spawn time.</p>
+
+    <p>The asset pack ships 14 marking overlay PNGs in <code>assets/sprites/cats/Markings/</code>. Each PNG shares the same frame grid as the base cat sprite sheets, so the same atlas-swap mechanism used for color variants can drive a second <code>AnimatedSprite2D</code> node that renders the marking on top.</p>
+
+    <p>There are two core concerns to resolve before implementation starts:</p>
+    <ul>
+      <li><strong>Scene structure and sync</strong> — where does the marking sprite live (baked into the scene or dynamic), and how does it stay in sync with the base sprite's animation, direction changes, pauses, and speed.</li>
+      <li><strong>Assignment and distribution</strong> — how are markings chosen at spawn: probabilistic, always-one, player-configurable, or color-family-influenced.</li>
+    </ul>
+
+    <p>The goal for v1 is a single marking layer (0 or 1 per kitty). Stacking multiple markings is an explicit non-goal for now — address once the single-layer infrastructure is stable.</p>
+
+    <hr />
+
+    <!-- ASSET INVENTORY -->
+    <h2 id="assets">Asset Inventory</h2>
+
+    <h3>Marking Overlays — <code>assets/sprites/cats/Markings/</code></h3>
+    <p>14 overlay PNG files. All share the same sprite sheet frame grid as the base cat atlases — same dimensions, same animation frame regions. They are designed to composite on top of any base coat color.</p>
+
+    <table class="mt">
+      <thead>
+        <tr><th>File</th><th>Category</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="fname">Feet 000.png</td><td>Paws</td><td>All four paws, white markings</td></tr>
+        <tr><td class="fname">Front Left Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
+        <tr><td class="fname">Front Right Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
+        <tr><td class="fname">Back Left Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
+        <tr><td class="fname">Back Right Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
+        <tr><td class="fname">Ears 000.png</td><td>Ears</td><td>Both ears</td></tr>
+        <tr><td class="fname">Left Ear 000.png</td><td>Ears</td><td>Left ear only</td></tr>
+        <tr><td class="fname">Right Ear 000.png</td><td>Ears</td><td>Right ear only</td></tr>
+        <tr><td class="fname">Face Marking 000.png</td><td>Face</td><td>Face patch</td></tr>
+        <tr><td class="fname">Tabby Markings 000.png</td><td>Coat</td><td>Tabby stripe overlay</td></tr>
+        <tr><td class="fname">Tail 000.png</td><td>Tail</td><td>Tail tip marking</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>Frame compatibility:</strong> Marking PNGs share the same atlas grid as base cat sprites. The existing <code>_swap_atlas</code> mechanism in <code>Character.gd</code> can be applied directly to a second <code>AnimatedSprite2D</code> whose SpriteFrames starts as a duplicate of the base kitty's SpriteFrames — only the atlas path differs.
+    </div>
+
+    <hr />
+
+    <!-- TECHNICAL CONTEXT -->
+    <h2 id="technical">Technical Context</h2>
+
+    <h3>How base animation is driven</h3>
+    <p><code>AnimationController.gd</code> wraps a single <code>_player: AnimatedSprite2D</code>. All animation calls go through it: <code>play_loop</code>, <code>play_once</code>, <code>play_transition</code>, <code>play_pose</code>, <code>hold_frame</code>, <code>change_direction_while_playing</code>, and <code>pause</code>. Nothing outside <code>AnimationController</code> calls <code>_player.play()</code> directly.</p>
+
+    <p>To synchronize a marking overlay, something must make the marking sprite play the same animation name, at the same frame, with the same speed_scale and pause state, including direction-change-in-flight. The challenge is that <code>AnimationController</code> tracks in-progress animations and handles partial-progress transitions — a naive "play the same name" call will restart the animation from frame 0.</p>
+
+    <h3>SpriteFrames for the marking sprite</h3>
+    <p>The simplest approach is to start from the base kitty's SpriteFrames resource: <code>sprite_frames.duplicate(true)</code> gives a deep copy with the same frame regions. Then <code>_swap_atlas</code> replaces the atlas on that duplicate with the marking PNG. The marking sprite has a transparent background — it composites on top as a natural alpha overlay. <code>z_index = 1</code> on the marking sprite ensures it renders above the base coat.</p>
+
+    <h3>Known edge cases for sync</h3>
+    <ul>
+      <li><strong>play_once then play_loop</strong> — AnimationController sequences these via a <code>animation_finished</code> signal. A brute-force mirror approach handles this correctly since it copies frame and speed_scale each physics tick.</li>
+      <li><strong>hold_frame</strong> — AnimationController calls <code>_player.pause()</code> and <code>_player.frame = N</code>. A mirror approach propagates this automatically. A signal-driven approach misses it.</li>
+      <li><strong>change_direction_while_playing</strong> — AnimationController calculates progress and seeks to the same frame in the new animation. A mirror copies frame after the seek, which is correct.</li>
+      <li><strong>pause / unpause</strong> — AnimationController sets <code>_player.speed_scale = 0</code> and restores it. Mirror propagates; signal-driven misses speed_scale changes.</li>
+    </ul>
+
+    <hr />
+
+    <!-- DESIGN QUESTIONS -->
+    <h2 id="questions">Design Questions</h2>
+    <p>Answer these before implementation starts. Fill in the radios and notes below, then copy your answers at the bottom.</p>
+
+    <!-- Q1 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">1</div>
+        <div class="q-title">How does the marking layer live in the scene?</div>
+      </div>
+      <p>A marking overlay needs a second <code>AnimatedSprite2D</code> to render on top of the base coat. The question is whether this node always exists in the scene (with <code>visible = false</code> when unused) or is added dynamically only when a marking is assigned.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q1" value="A" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Baked into Kitty.tscn</div>
+            <p>A second <code>AnimatedSprite2D</code> child node always present in the scene. <code>visible = false</code> when no marking is chosen. <code>z_index = 1</code>. No scene modifications at spawn, inspector-friendly, always accessible via <code>$MarkingSprite</code>.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q1" value="B" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Added dynamically</div>
+            <p>Only created and added as a child if a marking is actually assigned at spawn. No scene changes needed. Kitties without markings have zero overhead from an invisible node.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q1" value="C" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Shader composite</div>
+            <p>Pass the marking texture as a shader uniform on the base sprite and blend it in GPU. Single sprite node. Requires a custom shader and shader parameter management per kitty.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q1" value="D" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">D — Pre-bake offline</div>
+            <p>Composite marking into color variant textures in an image editor ahead of time. No runtime layering or extra nodes. Zero runtime complexity, loses any runtime flexibility.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q1-note">Notes / thoughts</label>
+        <input type="text" id="q1-note" placeholder="anything worth adding…" />
+      </div>
+      <p class="q-lean"><strong>Lean:</strong> A or B. A is cleaner for the scene — always-accessible reference, inspector-friendly, easy to verify in the editor. B avoids an always-present node when most kitties may have no marking. Both are straightforward; the choice mainly affects whether <code>Kitty.tscn</code> changes.</p>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">2</div>
+        <div class="q-title">How is the marking sprite synchronized with the base animation?</div>
+      </div>
+      <p><code>AnimationController</code> drives the base sprite through all animation states: play_loop, play_once, play_transition, hold_frame, change_direction_while_playing, pause. The marking sprite must track all of these — not just the animation name, but also frame, speed_scale, and pause state.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q2" value="A" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Extend AnimationController</div>
+            <p>Add optional <code>_overlay: AnimatedSprite2D</code> member. All play/pause/seek calls forward to it too. Most architecturally clean — sync is guaranteed because the same call drives both sprites. Requires changes to AnimationController.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q2" value="B" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Brute-force mirror per frame</div>
+            <p><code>Character._physics_process</code> copies <code>animation</code>, <code>frame</code>, and <code>speed_scale</code> from the base sprite to the marking sprite each tick. Handles all edge cases automatically. Zero AnimationController changes.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q2" value="C" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Signal-driven</div>
+            <p>Connect <code>AnimatedSprite2D.animation_changed</code> to call <code>marking_sprite.play(base_sprite.animation)</code>. Simple but misses pause, hold_frame, speed_scale changes, and direction-change-in-flight frame-seek behavior.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q2" value="D" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">D — AnimationController overlay registry</div>
+            <p><code>anim.add_overlay_sprite(marking_sprite)</code> — AnimationController internally loops through all registered overlays on every play call. More general than A, slightly more complex, same AnimationController changes required.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q2-note">Notes / thoughts</label>
+        <input type="text" id="q2-note" placeholder="anything worth adding…" />
+      </div>
+      <p class="q-lean"><strong>Lean:</strong> A is cleanest long-term — sync is structural, not inferred. B is the fastest to implement and handles all edge cases with zero AnimationController risk. C is insufficient given the complexity of AnimationController's state. D is a more general version of A if multiple overlays are anticipated.</p>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">3</div>
+        <div class="q-title">How is the marking sprite's SpriteFrames built?</div>
+      </div>
+      <p>The marking sprite needs a SpriteFrames resource that has the same animation names and frame regions as the base cat sprite, but with a different atlas image — the marking PNG instead of the coat PNG. The question is how this resource is constructed.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q3" value="A" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Reuse base SpriteFrames via _swap_atlas</div>
+            <p>Duplicate the base cat SpriteFrames (<code>duplicate(true)</code>) and call <code>_swap_atlas</code> with the marking PNG. Same mechanism already proven for color variants. Zero new framework — markings are the same problem as color variants, just a second sprite.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q3" value="B" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Pre-built .tres per marking</div>
+            <p>Create a dedicated SpriteFrames <code>.tres</code> resource for each of the 14 markings in the Godot editor. Clean external resources. 14 resources to create manually in the editor.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q3" value="C" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Reconstruct from grid at runtime</div>
+            <p>Build Rect2 frame regions programmatically using the known grid dimensions of the base cat atlas. Construct a new SpriteFrames from scratch at runtime. Fragile if grid dimensions ever change.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q3" value="D" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">D — Not applicable</div>
+            <p>Only relevant if using the shader approach (Q1=C) or the offline bake approach (Q1=D), where no runtime SpriteFrames is needed.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q3-note">Notes / thoughts</label>
+        <input type="text" id="q3-note" placeholder="anything worth adding…" />
+      </div>
+      <p class="q-lean"><strong>Lean:</strong> A — the <code>_swap_atlas</code> approach already handles deep duplication and atlas swapping. Markings are structurally the same problem as color variants applied to a second sprite node. Reusing the existing mechanism keeps the codebase consistent and requires no new tools.</p>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">4</div>
+        <div class="q-title">How are markings assigned at spawn?</div>
+      </div>
+      <p>With 14 marking overlays available, the spawning system needs a strategy for deciding whether a kitty gets a marking and which one. This mirrors the same question that was decided for color variants (player-configurable palette), but markings may warrant a different approach given they're less frequent than coat colors.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q4" value="A" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Probabilistic</div>
+            <p>Each kitty has an N% chance of getting any marking at all; if selected, one is chosen from the enabled set. Probability tunable in debug overlay. Most kitties bare coat, occasional marked ones feel like discoveries.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q4" value="B" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Always one</div>
+            <p>Every kitty gets exactly one marking chosen from the enabled set. All kitties have some coat detail. Maximizes visual variety but makes unmarked kitties impossible.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q4" value="C" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Player-configurable MarkingPool</div>
+            <p>Mirrors the spawn palette from color variants. A section in the debug overlay lets the player enable/disable individual markings and set the marking probability. Full player control over which markings can appear and how often.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q4" value="D" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">D — Color-family hints</div>
+            <p>Certain colors have affinity for markings: tabby stripes suit grey/brown, face markings suit white/creme, no markings for calico/game_boy (already patterned). Encodes as a rule table per color family.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q4-note">Notes / thoughts</label>
+        <input type="text" id="q4-note" placeholder="anything worth adding…" />
+      </div>
+      <p class="q-lean"><strong>Lean:</strong> C (consistent with how color palette was handled — keeps the pattern uniform) or A (simpler implementation with one tunable probability slider). D adds flavor but requires a data table coupling colors to markings, which may be premature before seeing how the overlays look in practice.</p>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">5</div>
+        <div class="q-title">How many marking layers per kitty?</div>
+      </div>
+      <p>The marking system could support stacking — a kitty could get tabby stripes plus white paws plus a face mark. Each additional layer requires another sprite node and another sync mechanism. This question sets the v1 scope.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q5" value="A" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — 0 or 1 marking</div>
+            <p>Either no marking or exactly one. Clean, simple, one sprite node. Easy to extend later. Strongly recommended for v1.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q5" value="B" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — 0, 1, or 2 markings</div>
+            <p>Base marking plus optional accent (e.g., tabby stripes + white paws). Two optional sprite nodes. More variety, more scene complexity and sync surface area.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q5" value="C" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Unlimited layers</div>
+            <p>Any combination of markings; N sprite nodes added per assigned marking. Maximum flexibility. Significantly more implementation complexity and performance considerations at 20+ kitties.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q5" value="D" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">D — Rarity-driven stacking</div>
+            <p>Common kitties get 0–1 markings; rare or special kitties can stack 2+. Marking count is tied to a rarity tier, not a fixed cap. Interesting for game feel, complex to implement cleanly.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q5-note">Notes / thoughts</label>
+        <input type="text" id="q5-note" placeholder="anything worth adding…" />
+      </div>
+      <p class="q-lean"><strong>Lean:</strong> A — get one layer working first. Stacking is a natural follow-up once the infrastructure is stable and the sync approach is proven across all animation edge cases. The scene and sync mechanism for A extends cleanly to B or C without rework.</p>
+    </div>
+
+    <hr />
+
+    <!-- IMPLEMENTATION OUTLINE -->
+    <h2 id="outline">Implementation Outline</h2>
+    <p>All steps below are blocked pending design question answers. The shape shown assumes Q1=A or B, Q2=A or B, Q3=A, Q4=C, Q5=A — revise if decisions differ.</p>
+
+    <div class="steps">
+
+      <div class="step blocked">
+        <div class="step-title">Build <span class="file">MarkingPool.gd</span> <span class="pill pill-gold">new resource</span></div>
+        <p>New <code>Resource</code> subclass mirroring <code>ColorVariantPool</code>. Lists all 14 marking PNG paths with per-marking enable/disable flags. Exposes a <code>pick_random(rng)</code> method that returns a loaded <code>Texture2D</code> from the enabled set (or <code>null</code> if none are enabled or the probability roll fails). Probability scalar configurable as an exported property.</p>
+      </div>
+
+      <div class="step blocked">
+        <div class="step-title">Add marking sprite to scene or create dynamically <span class="pill pill-gold">depends Q1</span></div>
+        <p>If Q1=A: add a second <code>AnimatedSprite2D</code> child to <code>Kitty.tscn</code> with <code>z_index=1</code> and <code>visible=false</code> initially. Reference it in <code>Character.gd</code> via <code>@onready var marking_sprite: AnimatedSprite2D = $MarkingSprite</code>.<br />If Q1=B: create the node in code at spawn time and call <code>add_child</code> on the kitty before it enters the scene tree.</p>
+      </div>
+
+      <div class="step blocked">
+        <div class="step-title">Implement sync mechanism <span class="pill pill-gold">depends Q2</span></div>
+        <p>If Q2=A: add optional <code>_overlay: AnimatedSprite2D</code> to <code>AnimationController</code>. Thread it through <code>play_loop</code>, <code>play_once</code>, <code>play_transition</code>, <code>play_pose</code>, <code>hold_frame</code>, <code>change_direction_while_playing</code>, and <code>pause</code>.<br />If Q2=B: in <code>Character._physics_process</code>, check if <code>marking_sprite</code> is set and copy <code>anim._player.animation</code>, <code>anim._player.frame</code>, and <code>anim._player.speed_scale</code> to <code>marking_sprite</code> each tick.</p>
+      </div>
+
+      <div class="step blocked">
+        <div class="step-title">Apply marking at spawn using <code>_swap_atlas</code> <span class="pill pill-gold">depends Q3=A</span></div>
+        <p>If Q3=A: in <code>Character.apply_marking(atlas)</code>, duplicate the base SpriteFrames (<code>anim._player.sprite_frames.duplicate(true)</code>), assign to <code>marking_sprite.sprite_frames</code>, then call <code>_swap_atlas(marking_sprite, atlas)</code>. Set <code>marking_sprite.visible = true</code>.</p>
+      </div>
+
+      <div class="step blocked">
+        <div class="step-title">Wire <span class="file">MarkingPool.gd</span> into <span class="file">WorldDirector.gd</span></div>
+        <p>Add <code>@export var marking_pool: MarkingPool</code> to <code>WorldDirector</code>. In <code>initialize_character</code>, after <code>apply_color_variant</code>, call <code>marking_pool.pick_random(_rng)</code>. If non-null, call <code>character.apply_marking(texture)</code>. Order matters: color variant must be applied first so the marking sprite has the correct SpriteFrames to duplicate from.</p>
+      </div>
+
+      <div class="step blocked">
+        <div class="step-title">Add Marking Palette section to <span class="file">DebugOverlay.gd</span> <span class="pill pill-gold">depends Q4=C</span></div>
+        <p>Mirror the SPAWN PALETTE section from color variants. A collapsible MARKING PALETTE section in the debug overlay shows a 2-column checkbox grid for all 14 markings. A probability slider controls the chance of any marking spawning. All/None buttons. Checkboxes write directly to the <code>MarkingPool</code> resource on the director.</p>
+      </div>
+
+    </div>
+
+    <hr />
+
+    <!-- TESTING -->
+    <h2 id="testing">Testing Checklist</h2>
+    <ul class="checklist">
+      <li>Spawn 10 kitties — some have markings visible on top of coat, others are bare coat with no marking node visible</li>
+      <li>Marking stays in sync through all animation states: Walk, Run, Sprint, Sit, Lay, LookAround, and all transitions between them</li>
+      <li>Marking stays in sync when direction changes mid-animation (change_direction_while_playing path)</li>
+      <li>Marking stays in sync through hold_frame states (paused on a specific frame)</li>
+      <li>Marking stays in sync when kitty is paused and unpaused (speed_scale = 0 propagated)</li>
+      <li>Color and marking are independent — any base coat color can appear with any marking</li>
+      <li>Disabling a marking in the debug overlay palette prevents it from spawning on subsequent kitties</li>
+      <li>Unmarked kitties are visually identical to kitties before this feature shipped — no regression</li>
+      <li>No Godot errors about missing textures or invalid resource paths in the Output log</li>
+      <li>Performance: marking sprites at 20+ kitties add no noticeable frame cost compared to the unmarked baseline</li>
+    </ul>
+
+    <hr />
+
+    <!-- COPY SECTION -->
+    <div class="copy-section" id="copy-section">
+      <div>
+        <p style="color:#c0b878;font-weight:700;margin-bottom:0.2rem;">Share your answers</p>
+        <p>Select your options above, add any notes, then copy to paste back into the conversation.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.85rem;">
+        <span class="copy-confirm" id="copy-confirm">Copied!</span>
+        <button class="copy-btn" id="copy-btn" onclick="copyAnswers()">Copy Answers</button>
+      </div>
+    </div>
+
+    <hr />
+    <p style="font-size:0.75rem;color:var(--dim);">Kitty Barrage Wiki · <code>wiki/task-plan-kitty-blemishes.html</code> · Created May 2026</p>
+
+  </div>
+</div>
+
+<script>
+function copyAnswers() {
+  var questions = [
+    {
+      label: "Q1 — How does the marking layer live in the scene?",
+      name: "q1",
+      opts: {
+        A: "Baked into Kitty.tscn (always present, visible=false when unused)",
+        B: "Added dynamically at spawn (only when a marking is assigned)",
+        C: "Shader composite on the base sprite",
+        D: "Pre-baked offline into color variant textures"
+      },
+      noteId: "q1-note"
+    },
+    {
+      label: "Q2 — How is the marking sprite synchronized with the base animation?",
+      name: "q2",
+      opts: {
+        A: "Extend AnimationController with optional _overlay member",
+        B: "Brute-force mirror per physics frame in Character._physics_process",
+        C: "Signal-driven via animation_changed",
+        D: "AnimationController overlay registry (add_overlay_sprite)"
+      },
+      noteId: "q2-note"
+    },
+    {
+      label: "Q3 — How is the marking sprite's SpriteFrames built?",
+      name: "q3",
+      opts: {
+        A: "Reuse base SpriteFrames via duplicate(true) + _swap_atlas",
+        B: "Pre-built .tres SpriteFrames per marking in the Godot editor",
+        C: "Reconstruct from known frame grid at runtime",
+        D: "Not applicable (shader or offline bake approach)"
+      },
+      noteId: "q3-note"
+    },
+    {
+      label: "Q4 — How are markings assigned at spawn?",
+      name: "q4",
+      opts: {
+        A: "Probabilistic — N% chance, tunable in debug overlay",
+        B: "Always one — every kitty gets exactly one marking",
+        C: "Player-configurable MarkingPool (mirrors spawn palette)",
+        D: "Color-family hints — certain colors have marking affinity"
+      },
+      noteId: "q4-note"
+    },
+    {
+      label: "Q5 — How many marking layers per kitty?",
+      name: "q5",
+      opts: {
+        A: "0 or 1 — clean, simple, one sprite node",
+        B: "0, 1, or 2 — base marking + optional accent",
+        C: "Unlimited — any combination, N sprite nodes",
+        D: "Rarity-driven stacking — common = 0-1, rare = 2+"
+      },
+      noteId: "q5-note"
+    }
+  ];
+
+  var lines = ["=== Kitty Blemishes Task Plan — Design Answers ===", ""];
+
+  questions.forEach(function(q) {
+    var selected = document.querySelector('input[name="' + q.name + '"]:checked');
+    var note = document.getElementById(q.noteId).value.trim();
+    var answer = selected ? selected.value + " — " + q.opts[selected.value] : "(no answer selected)";
+    lines.push(q.label);
+    lines.push("  Answer: " + answer);
+    if (note) lines.push("  Notes:  " + note);
+    lines.push("");
+  });
+
+  lines.push("=== End of answers ===");
+
+  var text = lines.join("\n");
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      showCopied();
+    }).catch(function() {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand("copy");
+  document.body.removeChild(ta);
+  showCopied();
+}
+
+function showCopied() {
+  var el = document.getElementById("copy-confirm");
+  el.classList.add("show");
+  setTimeout(function() { el.classList.remove("show"); }, 2500);
+}
+</script>
+
+</body>
+</html>

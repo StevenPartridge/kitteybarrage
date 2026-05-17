@@ -6,6 +6,8 @@ class_name WorldDirector
 @export var kitty_scene: PackedScene
 @export var world_layer: Node2D
 @export var color_pool: ColorVariantPool
+@export var marking_pool: MarkingPool
+@export var marking_probability: float = 0.3
 
 var input_handler: InputHandler
 var controlled_character: Character = null
@@ -20,6 +22,8 @@ func _ready() -> void:
 	_rng.randomize()
 	if color_pool == null:
 		color_pool = ColorVariantPool.build_kitty_pool()
+	if marking_pool == null:
+		marking_pool = MarkingPool.build_default()
 
 	if characters.is_empty() and get_parent():
 		for sibling in get_parent().get_children():
@@ -68,6 +72,8 @@ func initialize_character(character: Character) -> void:
 	brains[character] = ActivityBrain.new(rng, p)
 	if character.color_variant == null and color_pool != null:
 		character.apply_color_variant(color_pool.pick_random(rng))
+	if marking_pool != null:
+		character.apply_marking_variant(marking_pool.pick_random(rng, marking_probability))
 
 func WalkToLocation(character: Character, target_position: Vector2) -> void:
 	character.set_target(PositionTarget.new(target_position))

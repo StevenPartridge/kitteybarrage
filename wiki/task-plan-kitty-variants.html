@@ -52,7 +52,7 @@
     .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
     .pill-red    { background:var(--red-bg);    color:var(--red);    border:1px solid var(--red-b); }
 
-    /* Question cards — interactive */
+    /* Question cards — interactive (base style, kept for CSS completeness) */
     .question {
       border: 1px solid var(--gold-b); border-left: 3px solid var(--gold);
       background: var(--gold-bg); border-radius: 0 8px 8px 0;
@@ -67,38 +67,37 @@
       flex-shrink: 0;
     }
     .q-title { font-size: 0.92rem; font-weight: 700; color: #e8c850; }
-    .question > p { color: #b09030; margin-bottom: 0.5rem; }
-    .question > p:last-of-type { margin-bottom: 0.75rem; }
-    .q-lean { font-size: 0.81rem; color: #a08030; font-style: italic; border-top: 1px solid #3a2e10; padding-top: 0.5rem; margin-top: 0.75rem; }
+    .question p { color: #b09030; margin-bottom: 0.5rem; }
+    .question p:last-child { margin-bottom: 0; }
+    .question strong { color: #d4a840; }
+    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
+    .q-opt { background: #1a1408; border: 1px solid #3a2e10; border-radius: 6px; padding: 0.65rem 0.85rem; }
+    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.25rem; color: #907020; }
+    .q-opt p { font-size: 0.8rem; color: #907530; margin-bottom: 0; }
+    .q-lean { font-size: 0.81rem; color: #a08030; font-style: italic; border-top: 1px solid #3a2e10; padding-top: 0.5rem; margin-top: 0.5rem; }
     .q-lean strong { color: #c09830; font-style: normal; }
 
-    /* Radio options grid */
-    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.75rem 0 0.5rem; }
-    .q-opt-radio {
-      background: #1a1408; border: 1px solid #3a2e10; border-radius: 6px;
-      padding: 0.6rem 0.8rem; cursor: pointer; transition: border-color 0.1s, background 0.1s;
-      display: flex; align-items: flex-start; gap: 0.55rem;
+    /* Decided question cards */
+    .question.decided { border-color: var(--green-b); border-left-color: var(--green); background: var(--green-bg); }
+    .question.decided .question-head { margin-bottom: 0.6rem; }
+    .question.decided .q-title { color: #80d880; }
+    .question.decided p { color: #608060; }
+    .question.decided .q-lean { border-top-color: var(--green-b); color: #507050; }
+    .question.decided .q-lean strong { color: #70a070; }
+    .decided-badge { background: var(--green) !important; color: #001800 !important; }
+    .decided-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
+    .q-opt { background: #0e180e; border: 1px solid var(--green-b); border-radius: 6px; padding: 0.65rem 0.85rem; }
+    .q-opt.chosen { border-color: var(--green); background: #122012; }
+    .q-opt.chosen .q-opt-label { color: var(--green); }
+    .q-opt.unchosen { opacity: 0.45; }
+    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.25rem; color: #507050; }
+    .q-opt p { font-size: 0.8rem; color: #507050; margin-bottom: 0; }
+    .decision-note {
+      margin-top: 0.6rem; padding: 0.6rem 0.85rem; background: #0a1a0a;
+      border: 1px solid var(--green-b); border-radius: 5px;
+      font-size: 0.8rem; color: #608060; line-height: 1.5;
     }
-    .q-opt-radio:has(input:checked) {
-      border-color: var(--gold); background: #251d08;
-    }
-    .q-opt-radio input[type="radio"] { margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--gold); }
-    .q-opt-body { flex: 1; }
-    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; color: #907020; }
-    .q-opt-radio:has(input:checked) .q-opt-label { color: var(--gold); }
-    .q-opt-body p { font-size: 0.79rem; color: #807030; margin-bottom: 0; line-height: 1.4; }
-    .q-opt-radio:has(input:checked) .q-opt-body p { color: #a08828; }
-
-    /* Text note input */
-    .q-notes { margin-top: 0.65rem; }
-    .q-notes label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #707020; display: block; margin-bottom: 0.3rem; }
-    .q-notes input {
-      width: 100%; background: #12100a; border: 1px solid #3a2e10; border-radius: 5px;
-      padding: 0.4rem 0.65rem; font-size: 0.82rem; color: #c0a840; font-family: inherit;
-      outline: none; transition: border-color 0.15s;
-    }
-    .q-notes input:focus { border-color: var(--gold); }
-    .q-notes input::placeholder { color: #4a3a10; }
+    .decision-note strong { color: #70a070; }
 
     .note {
       background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
@@ -129,6 +128,8 @@
       background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
       padding: 1rem 1.1rem 1rem 3.5rem; margin-bottom: 0.75rem; position: relative;
     }
+    .step.blocked { border-color: var(--gold-b); opacity: 0.75; }
+    .step.done { border-color: var(--green-b); }
     .step::before {
       counter-increment: step; content: counter(step);
       position: absolute; left: 1rem; top: 1rem;
@@ -138,6 +139,7 @@
       font-size: 0.78rem; font-weight: 700; color: var(--dim); font-family: monospace;
     }
     .step.blocked::before { border-color: var(--gold-b); color: var(--gold); }
+    .step.done::before { content: "✓"; border-color: var(--green-b); color: var(--green); background: var(--green-bg); }
     .step-title { font-size: 0.9rem; font-weight: 700; color: #d0c8f0; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .step p { margin-bottom: 0.4rem; }
 
@@ -156,9 +158,19 @@
     .checklist { list-style: none; padding-left: 0; }
     .checklist li { padding: 0.3rem 0; border-bottom: 1px solid var(--b2); font-size: 0.84rem; color: #a0988a; display: flex; align-items: baseline; gap: 0.6rem; }
     .checklist li:last-child { border-bottom: none; }
-    .checklist li::before { content: "☐"; color: var(--dim); font-size: 0.9em; flex-shrink: 0; }
+    .checklist li::before { content: "☑"; color: var(--green); font-size: 0.9em; flex-shrink: 0; }
 
-    /* Copy answers button */
+    /* What shipped block */
+    .shipped {
+      background: var(--green-bg); border: 1px solid var(--green-b); border-radius: 8px;
+      padding: 1rem 1.2rem; margin: 1.25rem 0;
+    }
+    .shipped-head { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--green); margin-bottom: 0.65rem; }
+    .shipped ul { margin-bottom: 0; }
+    .shipped li { color: #609060; }
+    .shipped li strong { color: #80c080; }
+
+    /* Copy section (kept for CSS completeness) */
     .copy-section {
       background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
       padding: 1.25rem 1.5rem; margin-top: 2rem;
@@ -171,7 +183,6 @@
       font-family: inherit; transition: opacity 0.15s; white-space: nowrap;
     }
     .copy-btn:hover { opacity: 0.88; }
-    .copy-btn:active { opacity: 0.75; }
     .copy-confirm { font-size: 0.78rem; color: var(--green); display: none; }
     .copy-confirm.show { display: inline; }
   </style>
@@ -185,13 +196,15 @@
     <a href="#goal">Goal</a>
     <a href="#assets">Asset Inventory</a>
     <a href="#technical">Technical Context</a>
-    <a href="#questions">Design Questions</a>
+    <a href="#questions">Design Decisions</a>
     <a href="#outline">Implementation Outline</a>
+    <a href="#shipped">What Shipped</a>
     <a href="#testing">Testing</a>
     <div class="s-head">Wiki</div>
     <a href="index.html">← Home</a>
     <a href="architecture.html">Architecture</a>
     <a href="task-plan-character-generalization.html">Character Plan</a>
+    <a href="task-plan-kitty-blemishes.html">Blemishes Plan →</a>
   </nav>
 
   <div class="main">
@@ -200,7 +213,7 @@
 
     <div style="display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.2rem;">
       <h1>Kitty Color Variants &amp; Markings</h1>
-      <span class="pill pill-blue">Planning</span>
+      <span class="pill pill-green">Complete</span>
       <span class="pill pill-dim">May 2026</span>
     </div>
     <p class="sub">Give each spawned kitty a unique appearance by swapping sprite sheet variants at runtime — with optional marking overlays and personality ties to color.</p>
@@ -214,11 +227,11 @@
 
     <p>There are two separable concerns here:</p>
     <ul>
-      <li><strong>Base color swap</strong> — pick one of the 52 sprite sheets at spawn time instead of always using <code>orange_0.png</code>. This might be trivially simple in Godot, or it might require meaningful prep work depending on how the SpriteFrames resource reacts to runtime atlas replacement.</li>
-      <li><strong>Markings/overlays</strong> — a second composited layer (tabby stripes, white paws, face markings) drawn on top of the base coat. These exist as separate sprite sheets in the asset pack, aligned to the same animation frames.</li>
+      <li><strong>Base color swap</strong> — pick one of the 52 sprite sheets at spawn time instead of always using <code>orange_0.png</code>. This is handled via runtime atlas replacement on a duplicated SpriteFrames resource.</li>
+      <li><strong>Markings/overlays</strong> — a second composited layer (tabby stripes, white paws, face markings) drawn on top of the base coat. These exist as separate sprite sheets in the asset pack, aligned to the same animation frames. Deferred to a follow-up task.</li>
     </ul>
 
-    <p>Optionally: color can influence personality — a ghost kitty might be inherently more sprinting-prone; an orange kitty might be bold and sociable. This is flavor, not a hard requirement, but worth deciding upfront so the personality system isn't retrofitted awkwardly.</p>
+    <p>Color is cosmetic only. Personality is randomized entirely independently — color variant is visual flavor, not a behavioral signal.</p>
 
     <hr />
 
@@ -233,8 +246,8 @@
         <tr><th>Family</th><th>Variants</th><th>Notes</th></tr>
       </thead>
       <tbody>
-        <tr><td class="fname">orange</td><td><span class="count">4</span> (0–3)</td><td class="common">Common — currently in use</td></tr>
-        <tr><td class="fname">brown</td><td><span class="count">9</span> (0–8)</td><td class="common">Common — most variants</td></tr>
+        <tr><td class="fname">orange</td><td><span class="count">4</span> (0–3)</td><td class="common">Common — was the only active family before this feature</td></tr>
+        <tr><td class="fname">brown</td><td><span class="count">9</span> (0–8)</td><td class="common">Common — most variants of any family</td></tr>
         <tr><td class="fname">black</td><td><span class="count">5</span> (0–4)</td><td class="common">Common</td></tr>
         <tr><td class="fname">blue</td><td><span class="count">4</span> (0–3)</td><td class="common">Common</td></tr>
         <tr><td class="fname">grey</td><td><span class="count">3</span> (0–2)</td><td class="common">Common</td></tr>
@@ -250,7 +263,7 @@
     </table>
 
     <h3>Markings / Overlays — <code>assets/sprites/cats/Markings/</code></h3>
-    <p>14 overlay PNG files, aligned to the same frame grid as the base cat sprite sheets. They are designed to be composited on top of any base coat color.</p>
+    <p>14 overlay PNG files, aligned to the same frame grid as the base cat sprite sheets. Deferred to <a href="task-plan-kitty-blemishes.html" style="color:var(--blue)">task-plan-kitty-blemishes.html</a>.</p>
     <ul>
       <li><strong>Feet/Paws</strong> — <code>Feet 000.png</code> (all four white), plus individual foot sheets (<code>Front Left Foot</code>, <code>Front Right Foot</code>, <code>Back Left Foot</code>, <code>Back Right Foot</code>) with 000 and 001 variants</li>
       <li><strong>Ears</strong> — <code>Ears 000.png</code> (both), <code>Left Ear 000.png</code>, <code>Right Ear 000.png</code> (individual)</li>
@@ -267,293 +280,225 @@
     <h3>How the current sprite is loaded</h3>
     <p>The Kitty scene (<code>scenes/Kitty.tscn</code>) contains an <code>AnimatedSprite2D</code> node with a <code>SpriteFrames</code> sub-resource baked inline. Each animation frame is an <code>AtlasTexture</code> whose <code>atlas</code> property points to <code>orange_0.png</code>. There are 8-directional variants of each animation state (<code>Sit_North</code>, <code>Walk_East</code>, etc.), resulting in many AtlasTexture objects all sharing the same atlas file.</p>
 
-    <h3>Key Godot 4 fact: sub-resource duplication on scene instantiation</h3>
-    <p>When a <code>PackedScene</code> is instantiated in Godot 4, sub-resources defined inline (not as external <code>.tres</code> files) are <strong>duplicated</strong> for each instance. This means each spawned kitty gets its own private copy of the <code>SpriteFrames</code> resource — modifying it at runtime only affects that kitty, not others.</p>
-
-    <div class="note">
-      <strong>Practical implication:</strong> We can iterate <code>animated_sprite.sprite_frames</code>, swap the <code>.atlas</code> property on every AtlasTexture frame, and only that kitty's appearance changes. No resource cloning or duplication needed beyond what Godot already does at instantiation.
-    </div>
-
-    <h3>Potential atlas swap code</h3>
-    <pre><span class="kw">func</span> <span class="fn">apply_color_variant</span>(sprite: <span class="tp">AnimatedSprite2D</span>, atlas: <span class="tp">Texture2D</span>) -> <span class="tp">void</span>:
-    <span class="kw">var</span> frames := sprite.sprite_frames
-    <span class="kw">for</span> anim <span class="kw">in</span> frames.get_animation_names():
-        <span class="kw">for</span> i <span class="kw">in</span> frames.get_frame_count(anim):
-            <span class="kw">var</span> tex := frames.get_frame_texture(anim, i)
-            <span class="kw">if</span> tex <span class="kw">is</span> <span class="tp">AtlasTexture</span>:
-                (tex <span class="kw">as</span> <span class="tp">AtlasTexture</span>).atlas = atlas</pre>
+    <h3>Sub-resource sharing in Godot 4</h3>
+    <p>When a <code>PackedScene</code> is instantiated in Godot 4, inline sub-resources are <strong>not</strong> automatically deep-copied per instance. AtlasTexture objects are shared across instances — modifying one kitty's atlas without duplication would corrupt all kitties using the same resource. The fix is to call <code>sprite_frames.duplicate(true)</code> before modifying, forcing a deep copy.</p>
 
     <div class="warn">
-      <strong>Needs verification:</strong> The assumption above (sub-resources are per-instance) holds for inline sub-resources. If Godot 4 shares AtlasTexture objects across instances in practice, the safe fallback is calling <code>sprite_frames.duplicate(true)</code> before modifying — this forces a deep copy. Worth testing with two kitties before building the full system.
+      <strong>Bug fixed during implementation:</strong> The naive atlas-swap loop (replacing <code>.atlas</code> directly on the shared SpriteFrames) modified every kitty that had already been spawned. The <code>duplicate(true)</code> guard in <code>_swap_atlas</code> is the correct solution and must not be removed.
     </div>
 
-    <h3>Markings as a second AnimatedSprite2D</h3>
-    <p>A marking overlay could be a second <code>AnimatedSprite2D</code> node (child of Kitty, <code>z_index = 1</code>) with its own <code>SpriteFrames</code> resource built from a marking PNG. Since <code>AnimationController</code> drives the base sprite, the marking sprite would need to mirror the same animation name and be told to play in sync. The marking sprite has a transparent background — it just adds pixels on top.</p>
+    <h3>Atlas swap implementation</h3>
+    <pre><span class="kw">func</span> <span class="fn">_swap_atlas</span>(sprite: <span class="tp">AnimatedSprite2D</span>, atlas: <span class="tp">Texture2D</span>) -> <span class="tp">void</span>:
+    sprite.sprite_frames = sprite.sprite_frames.<span class="fn">duplicate</span>(<span class="kw">true</span>)
+    <span class="kw">var</span> frames := sprite.sprite_frames
+    <span class="kw">for</span> anim <span class="kw">in</span> frames.<span class="fn">get_animation_names</span>():
+        <span class="kw">for</span> i <span class="kw">in</span> frames.<span class="fn">get_frame_count</span>(anim):
+            <span class="kw">var</span> tex := frames.<span class="fn">get_frame_texture</span>(anim, i)
+            <span class="kw">if</span> tex <span class="kw">is</span> <span class="tp">AtlasTexture</span>:
+                (tex <span class="kw">as</span> <span class="tp">AtlasTexture</span>).atlas = atlas
+
+<span class="kw">func</span> <span class="fn">apply_color_variant</span>(atlas: <span class="tp">Texture2D</span>) -> <span class="tp">void</span>:
+    <span class="fn">_swap_atlas</span>(anim._player, atlas)</pre>
 
     <hr />
 
-    <!-- DESIGN QUESTIONS -->
-    <h2 id="questions">Design Questions</h2>
-    <p>Answer these before implementation starts. Fill in the radios and notes below, then copy your answers at the bottom.</p>
+    <!-- DESIGN DECISIONS -->
+    <h2 id="questions">Design Decisions</h2>
+    <p>Decisions locked in May 2026. Recorded here for future reference.</p>
 
     <!-- Q1 -->
-    <div class="question">
+    <div class="question decided">
       <div class="question-head">
-        <div class="q-badge">1</div>
+        <div class="q-badge decided-badge">1</div>
         <div class="q-title">Sprite swap mechanism — how do we apply a color variant?</div>
+        <span class="pill pill-green" style="margin-left:auto;">Option A</span>
       </div>
-      <p>The current scene has one SpriteFrames resource baked in with <code>orange_0.png</code> as the atlas. At spawn time, we need to replace the atlas with the chosen variant's PNG. The key question is whether we do this at runtime, or pre-build resources ahead of time.</p>
-      <div class="q-options">
-        <label class="q-opt-radio">
-          <input type="radio" name="q1" value="A" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">A — Atlas swap at runtime</div>
-            <p>After instantiating the Kitty scene, iterate every AtlasTexture in SpriteFrames and replace its <code>.atlas</code> property. No editor prep, no extra files. Works with the existing scene as-is.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q1" value="B" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">B — Pre-built SpriteFrames per color</div>
-            <p>Create a separate <code>.tres</code> SpriteFrames resource for each of the 52 variants in the Godot editor. At spawn time, set <code>animated_sprite.sprite_frames = preloaded_resource</code>. Clean runtime, significant upfront editor work.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q1" value="C" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">C — Shader palette swap</div>
-            <p>Keep one sprite sheet (orange). Use a Godot shader to remap the orange palette to any target palette at runtime. Minimal memory, but won't handle complex patterns like calico or game_boy correctly — they're structurally different, not just recolored.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q1" value="D" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">D — Prototype first</div>
-            <p>Write a quick proof-of-concept with two kitties and confirm sub-resource isolation before committing to an approach. Safest path if the Godot 4 sub-resource behavior is uncertain.</p>
-          </div>
-        </label>
+      <p>The current scene has one SpriteFrames resource baked in with <code>orange_0.png</code> as the atlas. At spawn time we need to replace the atlas with the chosen variant's PNG.</p>
+      <div class="decided-opts">
+        <div class="q-opt chosen">
+          <div class="q-opt-label">✓ A — Atlas swap at runtime</div>
+          <p>After instantiating the Kitty scene, deep-duplicate the SpriteFrames, iterate every AtlasTexture, and replace <code>.atlas</code>. No editor prep, no extra files. Works with the existing scene as-is.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">B — Pre-built SpriteFrames per color</div>
+          <p>Create a separate <code>.tres</code> SpriteFrames for each of the 52 variants in the Godot editor. Clean runtime, significant upfront editor work.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">C — Shader palette swap</div>
+          <p>Keep one sprite sheet; use a shader to remap the orange palette. Won't handle complex patterns like calico or game_boy correctly.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">D — Prototype first</div>
+          <p>Write a proof-of-concept before committing. Superseded — the atlas swap approach was verified immediately during implementation.</p>
+        </div>
       </div>
-      <div class="q-notes">
-        <label for="q1-note">Notes / thoughts</label>
-        <input type="text" id="q1-note" placeholder="anything worth adding…" />
-      </div>
-      <p class="q-lean"><strong>Lean:</strong> Option A — if sub-resource isolation holds (and it should based on Godot 4 docs), this is a dozen lines of GDScript and requires zero editor prep. Option D is a quick safety check that confirms before we build.</p>
+      <div class="decision-note"><strong>Rationale:</strong> we already have <code>_swap_atlas</code>, zero editor prep. The <code>duplicate(true)</code> guard handles the Godot 4 sub-resource sharing issue cleanly.</div>
     </div>
 
     <!-- Q2 -->
-    <div class="question">
+    <div class="question decided">
       <div class="question-head">
-        <div class="q-badge">2</div>
+        <div class="q-badge decided-badge">2</div>
         <div class="q-title">Where does color selection live?</div>
+        <span class="pill pill-green" style="margin-left:auto;">Option D</span>
       </div>
       <p>Something has to decide which sprite sheet a kitty gets. The right home for this logic depends on what drives the decision — is it purely random, does the director control the pool, or does the kitty's personality inform it?</p>
-      <div class="q-options">
-        <label class="q-opt-radio">
-          <input type="radio" name="q2" value="A" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">A — WorldDirector picks at spawn</div>
-            <p>Director manages the available color pool and passes a texture path (or texture resource) to the kitty after instantiation, before the first frame. Keeps all spawning logic in one place.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q2" value="B" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">B — Kitty picks in _ready()</div>
-            <p>The kitty randomizes its own color on <code>_ready()</code> from a hard-coded or exported list. Self-contained. Harder to control distribution from the outside.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q2" value="C" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">C — KittyPersonality stores the variant</div>
-            <p>The personality resource exports a color variant field. Each personality preset has a preferred color. Color is set in the inspector, not randomized at runtime.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q2" value="D" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">D — Dedicated ColorVariantPool</div>
-            <p>A new autoload or Resource manages the available variants, rarity tiers, and distribution tracking. Director queries it at spawn. Most flexible, most new code.</p>
-          </div>
-        </label>
+      <div class="decided-opts">
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">A — WorldDirector picks at spawn</div>
+          <p>Director manages the available color pool and passes a texture path to the kitty after instantiation. Keeps all spawning logic in one place.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">B — Kitty picks in _ready()</div>
+          <p>The kitty randomizes its own color on <code>_ready()</code> from a hard-coded or exported list. Harder to control distribution from the outside.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">C — KittyPersonality stores the variant</div>
+          <p>The personality resource exports a color variant field. Color is set in the inspector, not randomized at runtime.</p>
+        </div>
+        <div class="q-opt chosen">
+          <div class="q-opt-label">✓ D — Dedicated ColorVariantPool</div>
+          <p>A new Resource (<code>ColorVariantPool.gd</code>) manages the available variants, enabled/disabled state, and random selection. Director exports a <code>color_pool</code> reference and calls <code>pick_random()</code> at spawn.</p>
+        </div>
       </div>
-      <div class="q-notes">
-        <label for="q2-note">Notes / thoughts</label>
-        <input type="text" id="q2-note" placeholder="anything worth adding…" />
-      </div>
-      <p class="q-lean"><strong>Lean:</strong> Option A — the director already owns spawning and initialization (<code>initialize_character</code>). Color selection fits there naturally. Option D is the right call later if rarity tiers or player-configurable pools are added.</p>
+      <div class="decision-note"><strong>Rationale:</strong> color variants depend wholly on character type; <code>ColorVariantPool</code> keeps seams clean as more character types arrive. The pool is also the natural home for the debug overlay's spawn palette UI — the director just queries it.</div>
     </div>
 
     <!-- Q3 -->
-    <div class="question">
+    <div class="question decided">
       <div class="question-head">
-        <div class="q-badge">3</div>
+        <div class="q-badge decided-badge">3</div>
         <div class="q-title">Markings / overlays — do we tackle them in v1?</div>
+        <span class="pill pill-green" style="margin-left:auto;">Option B</span>
       </div>
       <p>The asset pack includes 14 marking overlay sheets (tabby stripes, white paws, face marks, ear colors, tail tips) designed to layer on top of any base coat. They add a lot of visual variety but require additional scene structure and synchronized animation playback.</p>
-      <div class="q-options">
-        <label class="q-opt-radio">
-          <input type="radio" name="q3" value="A" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">A — Yes, second sprite layer</div>
-            <p>Add a second <code>AnimatedSprite2D</code> to the Kitty scene (<code>z_index 1</code>). At spawn, optionally pick a marking overlay and sync it to the same animation name as the base sprite. Adds ~5–10% visual variety on top of base color.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q3" value="B" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">B — Not yet, color swap first</div>
-            <p>Get the base color variant working and visible. Treat markings as a separate follow-up task once the foundation is confirmed stable. Keeps this task's scope clean.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q3" value="C" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">C — Bake markings offline</div>
-            <p>Use Photoshop/GIMP/Aseprite to composite selected markings into specific color variants ahead of time. No runtime layering; just more pre-baked PNGs. Zero runtime complexity, loses runtime flexibility.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q3" value="D" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">D — Color-family specific only</div>
-            <p>Some markings only appear on certain color families (e.g. tabby stripes only on grey/brown, white paws only on dark cats). Encode this as a rule table so markings are contextually appropriate.</p>
-          </div>
-        </label>
+      <div class="decided-opts">
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">A — Yes, second sprite layer</div>
+          <p>Add a second <code>AnimatedSprite2D</code> to the Kitty scene (<code>z_index 1</code>). At spawn, optionally pick a marking overlay and sync it to the same animation name as the base sprite.</p>
+        </div>
+        <div class="q-opt chosen">
+          <div class="q-opt-label">✓ B — Not yet, color swap first</div>
+          <p>Get the base color variant working and visible. Treat markings as a separate follow-up task once the foundation is confirmed stable. Keeps this task's scope clean.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">C — Bake markings offline</div>
+          <p>Use Photoshop/GIMP/Aseprite to composite selected markings into specific color variants. Zero runtime complexity, loses runtime flexibility.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">D — Color-family specific only</div>
+          <p>Some markings only appear on certain color families. Encode as a rule table so markings are contextually appropriate.</p>
+        </div>
       </div>
-      <div class="q-notes">
-        <label for="q3-note">Notes / thoughts</label>
-        <input type="text" id="q3-note" placeholder="anything worth adding…" />
-      </div>
-      <p class="q-lean"><strong>Lean:</strong> Option B — start clean with just the color swap so there's a working baseline to test. Markings are a great v2 since the overlay mechanism is straightforward once the base is stable.</p>
+      <div class="decision-note"><strong>Rationale:</strong> get color swap stable first; markings as a follow-up. See <a href="task-plan-kitty-blemishes.html" style="color:var(--green)">task-plan-kitty-blemishes.html</a> for the planned marking overlay work.</div>
     </div>
 
     <!-- Q4 -->
-    <div class="question">
+    <div class="question decided">
       <div class="question-head">
-        <div class="q-badge">4</div>
+        <div class="q-badge decided-badge">4</div>
         <div class="q-title">Color → personality relationship</div>
+        <span class="pill pill-green" style="margin-left:auto;">Option C</span>
       </div>
-      <p>Should a kitty's coat color say anything about how it behaves? This is purely flavor, but it can make the game feel richer if orange cats are reliably bold while ghost cats are reliably skittish. The question is whether this connection is hard, soft, or nonexistent.</p>
-      <div class="q-options">
-        <label class="q-opt-radio">
-          <input type="radio" name="q4" value="A" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">A — Hard color presets</div>
-            <p>Each color family maps to a specific <code>KittyPersonality</code> resource or override set. Orange = bold/playful, black = aloof/slow, ghost = wild/sprinty, radioactive = hyperactive. Players can learn to predict behavior from coat.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q4" value="B" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">B — Soft biases</div>
-            <p>Color nudges personality weight sliders within their existing random ranges (e.g. orange adds +0.15 to <code>preference_run</code>, black adds +0.2 to <code>preference_sit</code>). Behavior is still random, just tilted.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q4" value="C" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">C — Fully independent</div>
-            <p>Color is cosmetic only. Personality is randomized entirely separately. Simpler. Color variety is purely visual.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q4" value="D" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">D — Personality picks color</div>
-            <p>Pick personality first (randomize all weights), then select a color family that fits the resulting personality (high sprint → ghost/radioactive, high sit → dark/black). Color is a visual expression of already-decided personality.</p>
-          </div>
-        </label>
+      <p>Should a kitty's coat color say anything about how it behaves? This is purely flavor, but it can make the game feel richer if orange cats are reliably bold while ghost cats are reliably skittish.</p>
+      <div class="decided-opts">
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">A — Hard color presets</div>
+          <p>Each color family maps to a specific <code>KittyPersonality</code> resource or override set. Players can learn to predict behavior from coat.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">B — Soft biases</div>
+          <p>Color nudges personality weight sliders within their existing random ranges. Behavior is still random, just tilted.</p>
+        </div>
+        <div class="q-opt chosen">
+          <div class="q-opt-label">✓ C — Fully independent</div>
+          <p>Color is cosmetic only. Personality is randomized entirely separately. Simpler. Color variety is purely visual.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">D — Personality picks color</div>
+          <p>Pick personality first, then select a color family that fits the resulting personality. Color is a visual expression of already-decided personality.</p>
+        </div>
       </div>
-      <div class="q-notes">
-        <label for="q4-note">Notes / thoughts</label>
-        <input type="text" id="q4-note" placeholder="anything worth adding…" />
-      </div>
-      <p class="q-lean"><strong>Lean:</strong> Option C to start — keeps this task's scope to the visual system. Option B or D can be layered on later with a color-to-personality mapping table without touching the core spawning logic.</p>
+      <div class="decision-note"><strong>Rationale:</strong> color is cosmetic, personality is randomized separately. Keeps both systems clean and independently tunable. Color→personality biases can be layered on later without touching the core spawning logic.</div>
     </div>
 
     <!-- Q5 -->
-    <div class="question">
+    <div class="question decided">
       <div class="question-head">
-        <div class="q-badge">5</div>
+        <div class="q-badge decided-badge">5</div>
         <div class="q-title">Color selection pool — how is a variant chosen?</div>
+        <span class="pill pill-green" style="margin-left:auto;">Option D</span>
       </div>
       <p>With 52 variants across 24 families, there are real choices about distribution. Purely uniform random means brown appears 9× more often than ghost. A tiered system or family-based selection can balance this, but adds complexity.</p>
-      <div class="q-options">
-        <label class="q-opt-radio">
-          <input type="radio" name="q5" value="A" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">A — Uniform across all 52</div>
-            <p>Pick randomly from all 52 individual PNGs with equal probability. Simple. Brown will dominate; ghost will be rare. Mirrors real cat population distribution somewhat accidentally.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q5" value="B" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">B — One per family (24 families)</div>
-            <p>Pick randomly from 24 color families, then pick a random variant within the chosen family. Each family has equal weight. Prevents brown from dominating; individual variant selection within a family is still random.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q5" value="C" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">C — Rarity tiers</div>
-            <p>Common (orange, brown, black, grey, blue — high weight), uncommon (creme, teal, calico, seal_point, red — medium), rare (ghost, radioactive, game_boy, cotton_candy — low). Special kitties feel earned.</p>
-          </div>
-        </label>
-        <label class="q-opt-radio">
-          <input type="radio" name="q5" value="D" />
-          <div class="q-opt-body">
-            <div class="q-opt-label">D — Player-configurable palette</div>
-            <p>An exported array on <code>WorldDirector</code> (or a UI) lets the player choose which color families can spawn. Default is all families. Advanced control, most code.</p>
-          </div>
-        </label>
+      <div class="decided-opts">
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">A — Uniform across all 52</div>
+          <p>Pick randomly from all 52 individual PNGs with equal probability. Brown will dominate; ghost will be rare.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">B — One per family (24 families)</div>
+          <p>Pick randomly from 24 color families, then pick a random variant within the chosen family. Prevents brown from dominating.</p>
+        </div>
+        <div class="q-opt unchosen">
+          <div class="q-opt-label">C — Rarity tiers</div>
+          <p>Common/uncommon/rare weights. Special kitties feel earned.</p>
+        </div>
+        <div class="q-opt chosen">
+          <div class="q-opt-label">✓ D — Player-configurable palette</div>
+          <p>An exported <code>color_pool</code> on <code>WorldDirector</code> holds a <code>ColorVariantPool</code> resource. A SPAWN PALETTE section in the debug overlay lets the player enable/disable individual color families. Random pick from the enabled set.</p>
+        </div>
       </div>
-      <div class="q-notes">
-        <label for="q5-note">Notes / thoughts</label>
-        <input type="text" id="q5-note" placeholder="anything worth adding…" />
-      </div>
-      <p class="q-lean"><strong>Lean:</strong> Option B or C — uniform family selection avoids the brown-skew problem and is barely more complex. Rarity tiers (C) add great game feel for the special variants with minimal extra code.</p>
+      <div class="decision-note"><strong>Rationale:</strong> spawn palette in debug overlay; random from enabled variants; space-conscious 2-col checkbox grid + All/None buttons. Gives players direct control over visual variety without requiring code changes. All 24 families enabled by default.</div>
     </div>
 
     <hr />
 
     <!-- IMPLEMENTATION OUTLINE -->
     <h2 id="outline">Implementation Outline</h2>
-    <p>Pending design question answers. Steps below are the likely shape — subject to revision based on Q1–Q5 decisions.</p>
+    <p>All steps complete as of May 2026.</p>
 
     <div class="steps">
 
-      <div class="step blocked">
-        <div class="step-title">Verify sub-resource isolation <span class="pill pill-gold">verify first</span></div>
-        <p>Instantiate two Kitties in a test scene. After both are added, modify the SpriteFrames atlas on the first kitty only. Confirm the second kitty is visually unaffected. If they share the resource, add a <code>sprite_frames = sprite_frames.duplicate(true)</code> call in the kitty's <code>_ready()</code>.</p>
+      <div class="step done">
+        <div class="step-title">Verify sub-resource isolation</div>
+        <p>Confirmed that inline SpriteFrames sub-resources in Godot 4 are shared across instances. The fix — calling <code>sprite_frames.duplicate(true)</code> before any atlas modification — was implemented in <code>_swap_atlas</code>.</p>
       </div>
 
-      <div class="step blocked">
-        <div class="step-title">Build the variant texture registry <span class="pill pill-gold">depends on Q2, Q5</span></div>
-        <p>A data structure (Dictionary or exported Array) mapping color families to their available PNG paths. E.g. <code>{ "orange": ["res://assets/sprites/cats/orange_0.png", …], "ghost": ["res://assets/sprites/cats/ghost_0.png"] }</code>. Lives in WorldDirector (Option A) or a dedicated autoload (Option D).</p>
+      <div class="step done">
+        <div class="step-title">Build <span class="file">ColorVariantPool.gd</span></div>
+        <p>New <code>Resource</code> subclass. Defines 24 color families with all 50 variant PNG paths. Each family has an <code>enabled</code> flag (default true). Exposes a <code>pick_random(rng)</code> method that selects a random enabled family then a random variant within it. Returns a loaded <code>Texture2D</code>.</p>
       </div>
 
-      <div class="step blocked">
-        <div class="step-title">Implement <code>apply_color_variant()</code> <span class="pill pill-gold">depends on Q1</span></div>
-        <p>For Option A: iterate <code>sprite_frames.get_animation_names()</code>, then for each frame call <code>get_frame_texture()</code>, cast to <code>AtlasTexture</code>, and set <code>.atlas = new_texture</code>. Expose as a method on <code>Kitty</code> (or call from WorldDirector directly on the AnimatedSprite2D node).</p>
+      <div class="step done">
+        <div class="step-title">Implement <code>_swap_atlas</code> and <code>apply_color_variant</code> on <span class="file">Character.gd</span></div>
+        <p><code>_swap_atlas(sprite, atlas)</code> deep-duplicates the SpriteFrames then iterates every AtlasTexture frame and replaces <code>.atlas</code>. <code>apply_color_variant(atlas)</code> calls <code>_swap_atlas</code> on <code>anim._player</code>. The <code>duplicate(true)</code> guard ensures no cross-instance resource sharing.</p>
       </div>
 
-      <div class="step blocked">
-        <div class="step-title">Wire into spawning <span class="pill pill-gold">depends on Q2</span></div>
-        <p>After <code>character_scene.instantiate()</code> and <code>world_layer.add_child(kitty)</code>, select a variant from the registry and call <code>apply_color_variant()</code>. This happens before the kitty's first <code>_process()</code> tick, so no frame flicker.</p>
+      <div class="step done">
+        <div class="step-title">Wire into <span class="file">WorldDirector.gd</span></div>
+        <p>Added <code>@export var color_pool: ColorVariantPool</code> and a seeded <code>_rng: RandomNumberGenerator</code>. In <code>initialize_character</code>, the director calls <code>color_pool.pick_random(_rng)</code> and passes the result to <code>character.apply_color_variant()</code> before <code>add_child</code>. This happens before the kitty's first <code>_process</code> tick — no frame flicker.</p>
       </div>
 
-      <div class="step blocked">
-        <div class="step-title">Markings layer <span class="pill pill-gold">depends on Q3 — skip if B or C</span></div>
-        <p>If markings are included: add a second <code>AnimatedSprite2D</code> child node to <code>Kitty.tscn</code> with an initially-empty <code>SpriteFrames</code>. At spawn, optionally select and apply a marking texture using the same atlas-swap approach. The marking sprite plays the same animation name as the base — no extra controller needed.</p>
+      <div class="step done">
+        <div class="step-title">Add SPAWN PALETTE section to <span class="file">DebugOverlay.gd</span></div>
+        <p>A collapsible SPAWN PALETTE section in the debug overlay shows a 2-column checkbox grid of all 24 color families. "All" and "None" buttons toggle the entire palette. Checkboxes write directly to the <code>ColorVariantPool</code> resource on the director — changes take effect immediately for the next spawn.</p>
       </div>
 
-      <div class="step blocked">
-        <div class="step-title">Color → personality wiring <span class="pill pill-gold">depends on Q4 — skip if C</span></div>
-        <p>If personality is tied to color: build a mapping from color family to personality bias values (Option B) or preset resources (Option A). Apply after color is selected and before <code>initialize_character()</code> is called.</p>
-      </div>
+    </div>
 
+    <hr />
+
+    <!-- WHAT SHIPPED -->
+    <h2 id="shipped">What Shipped</h2>
+
+    <div class="shipped">
+      <div class="shipped-head">Delivered — May 2026</div>
+      <ul>
+        <li><strong>ColorVariantPool.gd</strong> — new Resource; 24 families, 50 variants; <code>pick_random(rng)</code> returns a loaded Texture2D from the enabled set.</li>
+        <li><strong>Character.apply_color_variant + _swap_atlas</strong> — iterates every AtlasTexture in the SpriteFrames and replaces the atlas; <code>duplicate(true)</code> guard prevents sub-resource sharing corruption (Godot 4 shares SpriteFrames across instances by default).</li>
+        <li><strong>WorldDirector</strong> — <code>color_pool: ColorVariantPool</code> export + seeded <code>_rng</code>; calls <code>apply_color_variant</code> on each spawned character before <code>add_child</code>.</li>
+        <li><strong>DebugOverlay SPAWN PALETTE section</strong> — 2-column checkbox grid of all 24 color families; All/None toggle buttons; writes directly to the ColorVariantPool resource for immediate effect on next spawn.</li>
+      </ul>
     </div>
 
     <hr />
@@ -563,139 +508,20 @@
     <ul class="checklist">
       <li>Spawn 10 kitties — at least 5 distinct coat colors visible, no two looking identical unless they happen to be the same variant</li>
       <li>Each kitty's color persists through all state changes (Sit → Walk → Run → Lay) without flicker or reset</li>
-      <li>No other kitty's color changes when one kitty is spawned (sub-resource isolation confirmed)</li>
+      <li>No other kitty's color changes when one kitty is spawned (sub-resource isolation confirmed via duplicate(true))</li>
       <li>Kitty behavior (FSM, AI, input control) unchanged — color swap is purely visual</li>
       <li>All existing animations play correctly on the new atlas (frames are correctly cropped — no misaligned pixels)</li>
-      <li>If markings: overlay renders above the base coat, transparent areas show base coat correctly</li>
-      <li>Performance: spawning 20+ kitties adds no noticeable frame time vs the current all-orange baseline</li>
+      <li>Spawn palette checkboxes in debug overlay update the enabled set; unchecked families never spawn</li>
+      <li>All/None buttons correctly toggle all 24 families in one click</li>
+      <li>Performance: spawning 20+ kitties adds no noticeable frame time vs the prior all-orange baseline</li>
       <li>No Godot errors about missing textures or invalid resource paths in the Output log</li>
     </ul>
 
     <hr />
-
-    <!-- COPY SECTION -->
-    <div class="copy-section" id="copy-section">
-      <div>
-        <p style="color:#c0b878;font-weight:700;margin-bottom:0.2rem;">Share your answers</p>
-        <p>Select your options above, add any notes, then copy to paste back into the conversation.</p>
-      </div>
-      <div style="display:flex;align-items:center;gap:0.85rem;">
-        <span class="copy-confirm" id="copy-confirm">Copied!</span>
-        <button class="copy-btn" id="copy-btn" onclick="copyAnswers()">Copy Answers</button>
-      </div>
-    </div>
-
-    <hr />
-    <p style="font-size:0.75rem;color:var(--dim);">Kitty Barrage Wiki · <code>wiki/task-plan-kitty-variants.html</code> · Created May 2026</p>
+    <p style="font-size:0.75rem;color:var(--dim);">Kitty Barrage Wiki · <code>wiki/task-plan-kitty-variants.html</code> · Updated May 2026</p>
 
   </div>
 </div>
-
-<script>
-function copyAnswers() {
-  var questions = [
-    {
-      label: "Q1 — Sprite swap mechanism",
-      name: "q1",
-      opts: {
-        A: "Atlas swap at runtime",
-        B: "Pre-built SpriteFrames per color",
-        C: "Shader palette swap",
-        D: "Prototype first"
-      },
-      noteId: "q1-note"
-    },
-    {
-      label: "Q2 — Where does color selection live?",
-      name: "q2",
-      opts: {
-        A: "WorldDirector picks at spawn",
-        B: "Kitty picks in _ready()",
-        C: "KittyPersonality stores the variant",
-        D: "Dedicated ColorVariantPool"
-      },
-      noteId: "q2-note"
-    },
-    {
-      label: "Q3 — Markings / overlays in v1?",
-      name: "q3",
-      opts: {
-        A: "Yes, second sprite layer",
-        B: "Not yet, color swap first",
-        C: "Bake markings offline",
-        D: "Color-family specific only"
-      },
-      noteId: "q3-note"
-    },
-    {
-      label: "Q4 — Color → personality relationship",
-      name: "q4",
-      opts: {
-        A: "Hard color presets",
-        B: "Soft biases",
-        C: "Fully independent",
-        D: "Personality picks color"
-      },
-      noteId: "q4-note"
-    },
-    {
-      label: "Q5 — Color selection pool",
-      name: "q5",
-      opts: {
-        A: "Uniform across all 52",
-        B: "One per family (24 families)",
-        C: "Rarity tiers",
-        D: "Player-configurable palette"
-      },
-      noteId: "q5-note"
-    }
-  ];
-
-  var lines = ["=== Kitty Variants Task Plan — Design Answers ===", ""];
-
-  questions.forEach(function(q) {
-    var selected = document.querySelector('input[name="' + q.name + '"]:checked');
-    var note = document.getElementById(q.noteId).value.trim();
-    var answer = selected ? selected.value + " — " + q.opts[selected.value] : "(no answer selected)";
-    lines.push(q.label);
-    lines.push("  Answer: " + answer);
-    if (note) lines.push("  Notes:  " + note);
-    lines.push("");
-  });
-
-  lines.push("=== End of answers ===");
-
-  var text = lines.join("\n");
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(function() {
-      showCopied();
-    }).catch(function() {
-      fallbackCopy(text);
-    });
-  } else {
-    fallbackCopy(text);
-  }
-}
-
-function fallbackCopy(text) {
-  var ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.opacity = "0";
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand("copy");
-  document.body.removeChild(ta);
-  showCopied();
-}
-
-function showCopied() {
-  var el = document.getElementById("copy-confirm");
-  el.classList.add("show");
-  setTimeout(function() { el.classList.remove("show"); }, 2500);
-}
-</script>
 
 </body>
 </html>

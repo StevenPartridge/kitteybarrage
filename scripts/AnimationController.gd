@@ -9,8 +9,14 @@ var _is_reverse: bool = false
 var _loop_restored_anim: String = ""
 var _stop_at_frame: int = -1
 
+const _MARKING_SHADER := "res://assets/shaders/MarkingOverlay.gdshader"
+
 func setup(player: AnimatedSprite2D) -> void:
 	_player = player
+	var mat := ShaderMaterial.new()
+	mat.shader = load(_MARKING_SHADER)
+	mat.set_shader_parameter("marking_opacity", 0.0)
+	_player.material = mat
 
 func play_transition(state_name: String, direction: Global.Direction, on_done: Callable, reverse: bool = false) -> void:
 	play_once(state_name, direction, reverse)
@@ -115,6 +121,19 @@ func hold_frame(state_name: String, direction: Global.Direction, frame: int) -> 
 func set_modulate(color: Color) -> void:
 	if _player != null:
 		_player.modulate = color
+
+func set_marking(texture: Texture2D) -> void:
+	var mat := _player.material as ShaderMaterial if _player != null else null
+	if mat == null:
+		return
+	mat.set_shader_parameter("marking_texture", texture)
+	mat.set_shader_parameter("marking_opacity", 1.0)
+
+func clear_marking() -> void:
+	var mat := _player.material as ShaderMaterial if _player != null else null
+	if mat == null:
+		return
+	mat.set_shader_parameter("marking_opacity", 0.0)
 
 func get_playback_progress() -> float:
 	if _current_state_name.is_empty():
