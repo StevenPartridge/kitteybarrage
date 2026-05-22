@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://kl0nckescjpy" path="res://assets/sprites/cats/orange_0.png" id="2_1267x"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_vy5os"]
-radius = 7.559662
+radius = 1.888277
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_blg6r"]
 atlas = ExtResource("2_1267x")
@@ -2441,7 +2441,7 @@ animations = [{
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_bi3oc"]
-radius = 16.573069
+radius = 4.6700754
 
 [node name="Kitty" type="CharacterBody2D" unique_id=1959565255]
 script = ExtResource("1_bocli")
@@ -2454,7 +2454,6 @@ shape = SubResource("CircleShape2D_vy5os")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1722648968]
 texture_filter = 1
 position = Vector2(-1.1920929e-07, 5.722046e-06)
-scale = Vector2(3.1775, 3.1775)
 sprite_frames = SubResource("SpriteFrames_0yyhe")
 animation = &"Walk_West"
 

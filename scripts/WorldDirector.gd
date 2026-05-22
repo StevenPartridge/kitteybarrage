@@ -5,6 +5,7 @@ class_name WorldDirector
 @export var default_personality: CharacterPersonality
 @export var kitty_scene: PackedScene
 @export var world_layer: Node2D
+@export var camera: Camera2D
 @export var color_pool: ColorVariantPool
 @export var marking_pool: MarkingPool
 @export var marking_probability: float = 0.3
@@ -35,6 +36,9 @@ func _ready() -> void:
 	for character in characters:
 		initialize_character(character)
 
+	if not characters.is_empty():
+		_set_controlled(characters[-1])
+
 	input_handler = InputHandler.new(GodotInputSource.new())
 	add_child(input_handler)
 	separation_system = SeparationSystem.new()
@@ -42,6 +46,9 @@ func _ready() -> void:
 	separation_system.setup(characters)
 
 func _physics_process(delta: float) -> void:
+	if camera != null and controlled_character != null:
+		camera.global_position = controlled_character.global_position
+
 	for character in characters:
 		if character == controlled_character:
 			if input_handler.is_moving():
@@ -77,6 +84,13 @@ func initialize_character(character: Character) -> void:
 	if marking_pool != null:
 		character.apply_marking_variant(marking_pool.pick_random(rng, marking_probability))
 
+func _set_controlled(character: Character) -> void:
+	if controlled_character and controlled_character != character:
+		controlled_character.set_highlight(false)
+	controlled_character = character
+	_focus_index = characters.find(character)
+	controlled_character.set_highlight(true)
+
 func WalkToLocation(character: Character, target_position: Vector2) -> void:
 	character.set_target(PositionTarget.new(target_position))
 	character.begin_walk()
@@ -98,17 +112,21 @@ func SpawnKittyAtLocation(position: Vector2, initial_activity: Global.StateName 
 	world_layer.add_child(new_kitty)
 	characters.append(new_kitty)
 	initialize_character(new_kitty)
+	_set_controlled(new_kitty)
+
+func _screen_to_world(screen_pos: Vector2) -> Vector2:
+	return get_viewport().get_canvas_transform().affine_inverse() * screen_pos
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			SpawnKittyAtLocation(event.position)
+			SpawnKittyAtLocation(_screen_to_world(event.position))
 		elif event.button_index == MOUSE_BUTTON_LEFT and controlled_character != null:
 			var cur := controlled_character.state_machine.current_state_name()
 			if event.pressed:
 				if cur == Global.StateName.SIT or cur == Global.StateName.LOOK_TRACK:
 					controlled_character.change_state(LookTrackState.new(
-						func() -> Vector2: return get_viewport().get_mouse_position()
+						func() -> Vector2: return _screen_to_world(get_viewport().get_mouse_position())
 					))
 			else:
 				if cur == Global.StateName.LOOK_TRACK:
@@ -116,12 +134,7 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed("change_focus"):
 		if characters.is_empty():
 			return
-		var prev := controlled_character
-		_focus_index = (_focus_index + 1) % characters.size()
-		controlled_character = characters[_focus_index]
-		if prev and prev != controlled_character:
-			prev.set_highlight(false)
-		controlled_character.set_highlight(true)
+		_set_controlled(characters[(_focus_index + 1) % characters.size()])
 
 func _resolve_nav_map() -> RID:
 	var nav_region := get_tree().get_first_node_in_group("walk_region") as NavigationRegion2D

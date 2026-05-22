@@ -26,3 +26,6 @@ func release(character: CharacterBase) -> void:
 
 func has_available_slot() -> bool:
 	return not knocked and _claimed.size() < slots.size()
+
+func is_slot_claimed(idx: int) -> bool:
+	return _claimed.has(idx)

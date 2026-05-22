@@ -78,6 +78,7 @@ var _char_tab_header: Label
 var _palette_checks: Dictionary = {}
 var _marking_checks: Dictionary = {}
 var _sep_draw: SeparationDebugDraw
+var _furniture_text: TextEdit
 
 func _ready() -> void:
 	layer = 100
@@ -126,6 +127,9 @@ func _process(_delta: float) -> void:
 			_last_kitty = cur
 			_rebind_character_tab()
 
+	if _tab_container != null and _tab_container.current_tab == 4:
+		_refresh_furniture_tab(character)
+
 # ── UI construction ───────────────────────────────────────────────
 
 func _build_ui() -> void:
@@ -160,6 +164,7 @@ func _build_ui() -> void:
 	_tab_container.add_child(_build_character_tab())
 	_tab_container.add_child(_build_spawn_tab())
 	_tab_container.add_child(_build_world_tab())
+	_tab_container.add_child(_build_furniture_tab())
 
 func _build_status_strip() -> HBoxContainer:
 	var row := HBoxContainer.new()
@@ -548,12 +553,70 @@ func _build_spawn_tab() -> HBoxContainer:
 
 	return tab
 
+# ── Furniture tab ────────────────────────────────────────────────
+
+func _build_furniture_tab() -> VBoxContainer:
+	var tab := VBoxContainer.new()
+	tab.name = "Furniture"
+	tab.add_theme_constant_override("separation", 4)
+	tab.add_child(_label("HOTSPOT DETECTION  (focused kitty)", 9, Color(0.5, 0.5, 0.75)))
+	_furniture_text = TextEdit.new()
+	_furniture_text.editable = false
+	_furniture_text.selecting_enabled = true
+	_furniture_text.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	_furniture_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_furniture_text.add_theme_font_size_override("font_size", 11)
+	_furniture_text.add_theme_color_override("font_color", Color(0.65, 0.9, 0.65))
+	tab.add_child(_furniture_text)
+	return tab
+
+func _refresh_furniture_tab(character: Character) -> void:
+	var lines: Array[String] = []
+	var nearby := character.get_nearby_furniture()
+	lines.append("NEARBY FURNITURE (%d)" % nearby.size())
+	lines.append("─────────────────────────────────")
+	if nearby.is_empty():
+		lines.append("  (none — is the DetectionArea collision layer set correctly?)")
+	else:
+		for f: Furniture in nearby:
+			var hotspots := f.get_hotspots()
+			if hotspots.is_empty():
+				lines.append("  [%s]  —  no hotspots  (script missing or _init_hotspots not overridden)" % f.name)
+			else:
+				lines.append("  [%s]" % f.name)
+				for hs: FurnitureHotspot in hotspots:
+					var action: String = FurnitureHotspot.ActionType.keys()[hs.action]
+					var status: String
+					if hs.knocked:
+						status = "KNOCKED"
+					elif hs.has_available_slot():
+						status = "available  (%d slots)" % hs.slots.size()
+					else:
+						status = "FULL"
+					lines.append("    %-10s  %s" % [action, status])
+	lines.append("")
+	lines.append("CLAIMED HOTSPOT")
+	lines.append("─────────────────────────────────")
+	var claimed := character.get_claimed_hotspot()
+	if claimed == null:
+		lines.append("  (none)")
+	else:
+		var action: String = FurnitureHotspot.ActionType.keys()[claimed.action]
+		lines.append("  %s  —  slot held" % action)
+	_furniture_text.text = "\n".join(lines)
+
 # ── World tab ─────────────────────────────────────────────────────
 
 func _build_world_tab() -> VBoxContainer:
 	var tab := VBoxContainer.new()
 	tab.name = "World"
 	tab.add_theme_constant_override("separation", 6)
+
+	var hs_check := CheckBox.new()
+	hs_check.text = "Show hotspots"
+	hs_check.add_theme_font_size_override("font_size", 10)
+	hs_check.toggled.connect(func(on: bool) -> void: Furniture.debug_hotspots = on)
+	tab.add_child(hs_check)
 
 	var sep_check := CheckBox.new()
 	sep_check.text = "Show separation radius"
@@ -693,11 +756,9 @@ func _character() -> Character:
 	return _director.controlled_character if _director != null else null
 
 func _random_pos() -> Vector2:
-	var r := get_viewport().get_visible_rect()
-	return Vector2(
-		randf_range(r.position.x + 80.0, r.end.x - 80.0),
-		randf_range(r.position.y + 80.0, r.end.y - 80.0)
-	)
+	var t := get_viewport().get_canvas_transform().affine_inverse()
+	var sz := get_viewport().get_visible_rect().size
+	return t * Vector2(randf_range(80.0, sz.x - 80.0), randf_range(80.0, sz.y - 80.0))
 
 func _force(label: String, state: State) -> void:
 	var k: Character = _character()

@@ -215,6 +215,12 @@ func release_hotspot() -> void:
 		_claimed_hotspot.release(self)
 		_claimed_hotspot = null
 
+func get_nearby_furniture() -> Array[Furniture]:
+	return _nearby_furniture
+
+func get_claimed_hotspot() -> FurnitureHotspot:
+	return _claimed_hotspot
+
 # ----------------------------------------------------------------
 # Floor type
 # ----------------------------------------------------------------

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Furniture Scene Checklist — Kitty Barrage</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
+      --b:     #2a2a38; --b2:  #1e1e2a;
+      --text:  #d4d0c8; --dim: #6a6570;
+      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
+      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
+      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
+      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
+      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
+      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--b2);
+      padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; font-size: 0.8rem;
+    }
+    .sidebar a { display: block; color: var(--dim); text-decoration: none; padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
+    .sidebar a:hover { color: var(--text); background: #1e1e2a; }
+    .sidebar .s-head { font-size: 0.68rem; font-weight: 700; color: #404055; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.3rem; }
+
+    .main { flex: 1; padding: 2rem 2.5rem; max-width: 860px; }
+    h1   { font-size: 1.45rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
+    h2   { font-size: 0.78rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
+    h3   { font-size: 0.88rem; font-weight: 700; color: #c8c0e0; margin: 1.1rem 0 0.4rem; }
+    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.65rem; }
+    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
+    .sub  { color: var(--dim); font-size: 0.84rem; margin-bottom: 0.25rem; }
+    hr    { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
+    .breadcrumb { font-size: 0.78rem; color: var(--dim); margin-bottom: 1.5rem; }
+    .breadcrumb a { color: var(--dim); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--text); }
+
+    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
+    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
+    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
+    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
+    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
+
+    .note {
+      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
+      padding: 0.75rem 1rem; font-size: 0.83rem; color: #7ab8d0; margin: 1rem 0;
+    }
+    .note strong { color: var(--blue); }
+
+    /* ── Node tree spec box ── */
+    .spec {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
+      padding: 0.85rem 1.1rem; margin: 0.6rem 0 1rem; font-size: 0.8rem;
+    }
+    .spec-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin-bottom: 0.5rem; }
+    .spec ul { list-style: none; padding: 0; margin: 0; }
+    .spec li { padding: 0.15rem 0; color: #a0988a; }
+    .spec li code { font-size: 0.78em; }
+    .spec .tree-root { color: #d0c8f0; font-weight: 700; }
+    .spec .tree-child { padding-left: 1.2rem; }
+    .spec .tree-grandchild { padding-left: 2.4rem; }
+    .spec .tag { font-size: 0.68rem; font-weight: 700; padding: 0.05rem 0.35rem; border-radius: 3px; margin-left: 0.3rem; vertical-align: middle; }
+    .spec .t-req  { background: #1a1408; color: var(--gold);   border: 1px solid var(--gold-b); }
+    .spec .t-skip { background: #141418; color: #505060;       border: 1px solid #282830; }
+    .spec .t-key  { background: #0e1820; color: var(--blue);   border: 1px solid var(--blue-b); }
+
+    /* ── Progress bar ── */
+    .progress-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .progress-bar { flex: 1; height: 6px; background: var(--b); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.25s; }
+    .progress-label { font-size: 0.78rem; color: var(--dim); white-space: nowrap; font-family: monospace; }
+
+    /* ── Copy button ── */
+    .copy-bar {
+      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
+      padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.75rem;
+    }
+    .copy-bar p { margin: 0; font-size: 0.83rem; color: #807880; }
+    .copy-btn {
+      background: var(--gold); color: #1a1000; border: none; border-radius: 6px;
+      padding: 0.5rem 1.1rem; font-size: 0.84rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: opacity 0.15s; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .copy-btn:hover { opacity: 0.88; }
+    .copy-btn:active { opacity: 0.7; }
+    .copy-confirm { font-size: 0.78rem; color: var(--green); display: none; }
+    .copy-confirm.show { display: inline; }
+
+    /* ── Scene table ── */
+    .scene-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 0.5rem 0 1.5rem; }
+    .scene-table th {
+      text-align: left; padding: 0.38rem 0.75rem; color: var(--dim); font-size: 0.7rem;
+      text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--b); background: #131318;
+    }
+    .scene-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--b2); vertical-align: middle; }
+    .scene-table tr:last-child td { border-bottom: none; }
+    .scene-table tr.row-done td { opacity: 0.5; }
+    .scene-table tr.row-done .scene-name { text-decoration: line-through; color: var(--green); opacity: 1; }
+
+    .scene-name { font-family: monospace; color: #8898d0; font-size: 0.82rem; }
+    .scene-path { font-family: monospace; color: #505068; font-size: 0.72rem; display: block; margin-top: 0.1rem; }
+
+    /* Step checkboxes */
+    .steps-cell { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .step-check { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+    .step-check input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--green); cursor: pointer; margin: 0; }
+    .step-label { font-size: 0.6rem; color: var(--dim); text-align: center; line-height: 1.2; white-space: nowrap; }
+    .step-check input[type="checkbox"]:checked + .step-label { color: var(--green); }
+
+    .row-status { width: 28px; text-align: center; font-size: 0.85rem; }
+
+    /* Hotspot tags */
+    .hs { display:inline-block; font-size:0.65rem; font-weight:700; padding:0.06rem 0.38rem; border-radius:4px; white-space:nowrap; margin: 0.05rem; }
+    .hs-sit  { background:#1a1408; color:#d4a840; border:1px solid #3a2e10; }
+    .hs-lay  { background:#1a0e18; color:#d890c0; border:1px solid #3a1e30; }
+    .hs-sniff { background:#0e180e; color:#60c060; border:1px solid #1e3a1e; }
+    .hs-knock { background:#1a0e0e; color:#c06060; border:1px solid #3a1e1e; }
+    .hs-none  { background:#141418; color:#505060; border:1px solid #282830; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div style="font-size:0.85rem;font-weight:700;color:#a090c8;margin-bottom:1rem;">Scene Checklist</div>
+    <div class="s-head">Sections</div>
+    <a href="#blocking">Blocking Furniture</a>
+    <a href="#decorations">Decorations</a>
+    <a href="#markers">Markers</a>
+    <div class="s-head">Related</div>
+    <a href="task-plan-pixel-rooms.html">Pixel Rooms Plan</a>
+    <div class="s-head">Wiki</div>
+    <a href="index.html">← Home</a>
+  </nav>
+
+  <div class="main">
+
+    <div class="breadcrumb"><a href="index.html">Wiki</a> → Furniture Scene Checklist</div>
+
+    <div style="display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.2rem;">
+      <h1>Furniture Scene Checklist</h1>
+      <span class="pill pill-gold">Phase 4</span>
+    </div>
+    <p class="sub">One row per <code>.tscn</code> file to build in the Godot editor. Check off each step as you go. Hit Copy Progress to paste your current state into chat.</p>
+
+    <hr />
+
+    <!-- Overall progress -->
+    <div class="progress-row">
+      <div class="progress-bar"><div class="progress-fill" id="global-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="global-label">0 / 12 scenes complete</div>
+    </div>
+
+    <!-- Copy bar -->
+    <div class="copy-bar">
+      <p>Check off steps as you complete them, then copy your progress to share with Claude.</p>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span class="copy-confirm" id="copy-confirm">Copied!</span>
+        <button class="copy-btn" onclick="copyProgress()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-7A1.5 1.5 0 001 3.5v7A1.5 1.5 0 002.5 12H4" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          Copy Progress
+        </button>
+      </div>
+    </div>
+
+    <!-- ───────────────────── BLOCKING FURNITURE ───────────────────── -->
+    <h2 id="blocking">Blocking Furniture</h2>
+    <p>These pieces need full collision + nav obstacle so kitties path around them. Each one goes in <code>scenes/furniture/</code>.</p>
+
+    <div class="spec">
+      <div class="spec-title">Node tree — blocking furniture</div>
+      <ul>
+        <li class="tree-root">FurnitureType <code>(extends Furniture)</code></li>
+        <li class="tree-child">└ Sprite2D <span class="tag t-req">texture + region_enabled</span></li>
+        <li class="tree-child">└ StaticBody2D <span class="tag t-req">collision layer 1</span></li>
+        <li class="tree-grandchild">└ CollisionShape2D</li>
+        <li class="tree-child">└ NavigationObstacle2D <span class="tag t-req">avoidance enabled</span></li>
+        <li class="tree-child">└ DetectionArea <code>(Area2D)</code> <span class="tag t-key">group: furniture_area</span></li>
+        <li class="tree-grandchild">└ CollisionShape2D <span class="tag t-req">circle ~48px</span></li>
+      </ul>
+    </div>
+
+    <table class="scene-table" id="tbl-blocking">
+      <thead>
+        <tr>
+          <th style="width:28px"></th>
+          <th>Scene</th>
+          <th>Hotspots</th>
+          <th>Steps</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-scene="Bed.tscn" data-section="Blocking Furniture">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">Bed.tscn</span>
+            <span class="scene-path">scenes/furniture/Bed.tscn</span>
+          </td>
+          <td><span class="hs hs-sit">sit ×3</span> <span class="hs hs-lay">lay ×2</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+        <tr data-scene="SofaLarge.tscn" data-section="Blocking Furniture">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">SofaLarge.tscn</span>
+            <span class="scene-path">scenes/furniture/SofaLarge.tscn</span>
+          </td>
+          <td><span class="hs hs-sit">sit ×3</span> <span class="hs hs-lay">lay ×1</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+        <tr data-scene="SofaSmall.tscn" data-section="Blocking Furniture">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">SofaSmall.tscn</span>
+            <span class="scene-path">scenes/furniture/SofaSmall.tscn</span>
+          </td>
+          <td><span class="hs hs-sit">sit ×1</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+        <tr data-scene="Desk.tscn" data-section="Blocking Furniture">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">Desk.tscn</span>
+            <span class="scene-path">scenes/furniture/Desk.tscn</span>
+          </td>
+          <td><span class="hs hs-sniff">sniff ×1</span> <span class="hs hs-knock">knock ×1</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+        <tr data-scene="Drawers.tscn" data-section="Blocking Furniture">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">Drawers.tscn</span>
+            <span class="scene-path">scenes/furniture/Drawers.tscn</span>
+          </td>
+          <td><span class="hs hs-sniff">sniff ×1</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+        <tr data-scene="Bookcase.tscn" data-section="Blocking Furniture">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">Bookcase.tscn</span>
+            <span class="scene-path">scenes/furniture/Bookcase.tscn</span>
+          </td>
+          <td><span class="hs hs-sniff">sniff ×1</span> <span class="hs hs-knock">knock ×1</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+        <tr data-scene="TableRound.tscn" data-section="Blocking Furniture">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">TableRound.tscn</span>
+            <span class="scene-path">scenes/furniture/TableRound.tscn</span>
+          </td>
+          <td><span class="hs hs-sniff">sniff ×1</span> <span class="hs hs-knock">knock ×1</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+        <tr data-scene="Carpet.tscn" data-section="Blocking Furniture">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">Carpet.tscn</span>
+            <span class="scene-path">scenes/furniture/Carpet.tscn</span>
+          </td>
+          <td><span class="hs hs-sit">sit ×1</span> <span class="hs hs-lay">lay ×2</span> <span class="hs hs-sniff">sniff ×1</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>Carpet note:</strong> No StaticBody2D — kitties walk over it. Skip the physics + nav step. Add an <code>Area2D</code> for the rug floor-type sensor (group: <code>rug</code>) in addition to the DetectionArea. Two separate Area2D nodes: one for furniture detection, one for the rug floor-type override.
+    </div>
+
+    <!-- ───────────────────── DECORATIONS ───────────────────── -->
+    <h2 id="decorations">Decorations</h2>
+    <p>No collision, no nav obstacle. Kitties walk through them visually but can sniff if they're close. Goes in <code>scenes/decorations/</code>.</p>
+
+    <div class="spec">
+      <div class="spec-title">Node tree — decoration (non-blocking)</div>
+      <ul>
+        <li class="tree-root">DecorationType <code>(extends Furniture)</code></li>
+        <li class="tree-child">└ Sprite2D <span class="tag t-req">texture + region_enabled</span></li>
+        <li class="tree-child">└ DetectionArea <code>(Area2D)</code> <span class="tag t-key">group: furniture_area</span></li>
+        <li class="tree-grandchild">└ CollisionShape2D <span class="tag t-req">circle ~32px</span></li>
+      </ul>
+      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.5rem;margin-bottom:0;">No StaticBody2D. No NavigationObstacle2D.</p>
+    </div>
+
+    <div class="note" style="margin-bottom:0.75rem;">
+      <strong>Window exception:</strong> Window.tscn has a windowsill sit hotspot — it's still non-blocking (no StaticBody2D) but does need a DetectionArea and the <code>Window.gd</code> script which defines a SIT slot. Place it flush against the wall tile in the editor.
+    </div>
+
+    <table class="scene-table" id="tbl-decorations">
+      <thead>
+        <tr>
+          <th style="width:28px"></th>
+          <th>Scene</th>
+          <th>Hotspots</th>
+          <th>Steps</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-scene="Plant.tscn" data-section="Decorations">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">Plant.tscn</span>
+            <span class="scene-path">scenes/decorations/Plant.tscn</span>
+          </td>
+          <td><span class="hs hs-sniff">sniff ×1</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+        <tr data-scene="Lamp.tscn" data-section="Decorations">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">Lamp.tscn</span>
+            <span class="scene-path">scenes/decorations/Lamp.tscn</span>
+          </td>
+          <td><span class="hs hs-none">no hotspot</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+        <tr data-scene="Window.tscn" data-section="Decorations">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">Window.tscn</span>
+            <span class="scene-path">scenes/decorations/Window.tscn</span>
+          </td>
+          <td><span class="hs hs-sit">sit ×1</span> <span class="hs hs-lay">lay ×1</span></td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ───────────────────── MARKERS ───────────────────── -->
+    <h2 id="markers">Markers</h2>
+    <p>Invisible scenes placed in the editor at the center of each doorway gap. No sprite, no collision — just a small DetectionArea so kitties can sense them from the adjacent room. Goes in <code>scenes/markers/</code>.</p>
+
+    <div class="spec">
+      <div class="spec-title">Node tree — door marker</div>
+      <ul>
+        <li class="tree-root">Door <code>(extends Furniture)</code></li>
+        <li class="tree-child">└ DetectionArea <code>(Area2D)</code> <span class="tag t-key">group: furniture_area</span></li>
+        <li class="tree-grandchild">└ CollisionShape2D <span class="tag t-req">circle ~24px</span></li>
+      </ul>
+      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.5rem;margin-bottom:0;">No Sprite2D. No StaticBody2D. No NavigationObstacle2D. Completely invisible and passthrough at runtime.</p>
+    </div>
+
+    <table class="scene-table" id="tbl-markers">
+      <thead>
+        <tr>
+          <th style="width:28px"></th>
+          <th>Scene</th>
+          <th>Notes</th>
+          <th>Steps</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-scene="Door.tscn" data-section="Markers">
+          <td class="row-status">⬜</td>
+          <td>
+            <span class="scene-name">Door.tscn</span>
+            <span class="scene-path">scenes/markers/Door.tscn</span>
+          </td>
+          <td style="font-size:0.78rem;color:#807880;">Place one instance at every doorway gap in House.tscn. One .tscn file, many instances.</td>
+          <td class="steps-cell">
+            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr />
+
+    <p style="font-size:0.75rem;color:var(--dim);">Kitty Barrage Wiki · <code>wiki/furniture-checklist.html</code> · Phase 4 editor work tracker</p>
+
+  </div>
+</div>
+
+<script>
+  const STEPS = ['scene created', 'sprite set up', 'physics + nav', 'detect area', 'script attached'];
+
+  function getRows() {
+    return document.querySelectorAll('tr[data-scene]');
+  }
+
+  function updateRow(row) {
+    const boxes = row.querySelectorAll('input[type="checkbox"]');
+    const checked = [...boxes].filter(b => b.checked).length;
+    const total = boxes.length;
+    const statusCell = row.querySelector('.row-status');
+    if (checked === 0) {
+      statusCell.textContent = '⬜';
+      row.classList.remove('row-done');
+    } else if (checked === total) {
+      statusCell.textContent = '✅';
+      row.classList.add('row-done');
+    } else {
+      statusCell.textContent = '🔄';
+      row.classList.remove('row-done');
+    }
+  }
+
+  function updateGlobal() {
+    const rows = getRows();
+    let done = 0;
+    rows.forEach(row => {
+      const boxes = row.querySelectorAll('input[type="checkbox"]');
+      const checked = [...boxes].filter(b => b.checked).length;
+      if (checked === boxes.length) done++;
+    });
+    const pct = rows.length > 0 ? Math.round((done / rows.length) * 100) : 0;
+    document.getElementById('global-fill').style.width = pct + '%';
+    document.getElementById('global-label').textContent = done + ' / ' + rows.length + ' scenes complete';
+  }
+
+  function copyProgress() {
+    const sections = {};
+    getRows().forEach(row => {
+      const section = row.dataset.section;
+      if (!sections[section]) sections[section] = [];
+      const scene = row.dataset.scene;
+      const boxes = row.querySelectorAll('input[type="checkbox"]');
+      const checked = [...boxes].filter(b => b.checked).length;
+      const total = boxes.length;
+      let icon = checked === total ? '✅' : checked > 0 ? '🔄' : '⬜';
+      const checkedLabels = [];
+      boxes.forEach((box, i) => { if (box.checked) checkedLabels.push(STEPS[i]); });
+      const detail = checked === total ? 'all done' : checked === 0 ? 'not started' : 'done: ' + checkedLabels.join(', ');
+      sections[section].push(icon + ' ' + scene + ' (' + detail + ')');
+    });
+
+    const lines = ['## Furniture Scene Progress\n'];
+    Object.entries(sections).forEach(([sec, items]) => {
+      lines.push('### ' + sec);
+      items.forEach(l => lines.push(l));
+      lines.push('');
+    });
+
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      const el = document.getElementById('copy-confirm');
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2000);
+    });
+  }
+
+  // Wire up all checkboxes
+  getRows().forEach(row => {
+    row.querySelectorAll('input[type="checkbox"]').forEach(box => {
+      box.addEventListener('change', () => {
+        updateRow(row);
+        updateGlobal();
+      });
+    });
+    updateRow(row);
+  });
+  updateGlobal();
+</script>
+</body>
+</html>
