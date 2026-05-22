@@ -57,14 +57,14 @@ func refresh_personality(p: CharacterPersonality) -> void:
 	_walk_target_chance = p.walk_target_chance
 	_personality = p
 
-func tick(delta: float, walk_bounds: Rect2, floor_type: Global.FloorType = Global.FloorType.NONE) -> ActivityDecision:
+func tick(delta: float, random_walk_point: Callable, floor_type: Global.FloorType = Global.FloorType.NONE) -> ActivityDecision:
 	_activity_timer += delta
 	if _activity_timer < _duration[_current_activity]:
 		return null
 	_activity_timer = 0.0
-	return _decide(walk_bounds, floor_type)
+	return _decide(random_walk_point, floor_type)
 
-func _decide(walk_bounds: Rect2, floor_type: Global.FloorType) -> ActivityDecision:
+func _decide(random_walk_point: Callable, floor_type: Global.FloorType) -> ActivityDecision:
 	if _rest_timer >= _rest_threshold:
 		_current_activity = Global.StateName.LAY
 		_rest_timer = 0.0
@@ -103,14 +103,8 @@ func _decide(walk_bounds: Rect2, floor_type: Global.FloorType) -> ActivityDecisi
 
 	var walk_target: Variant = null
 	if _current_activity == Global.StateName.EXPLORE:
-		walk_target = Vector2(
-			_rng.randf_range(walk_bounds.position.x, walk_bounds.position.x + walk_bounds.size.x),
-			_rng.randf_range(walk_bounds.position.y, walk_bounds.position.y + walk_bounds.size.y)
-		)
+		walk_target = random_walk_point.call()
 	elif _current_activity in [Global.StateName.WALK, Global.StateName.RUN, Global.StateName.SPRINT] and _rng.randf() < _walk_target_chance:
-		walk_target = Vector2(
-			_rng.randf_range(walk_bounds.position.x, walk_bounds.position.x + walk_bounds.size.x),
-			_rng.randf_range(walk_bounds.position.y, walk_bounds.position.y + walk_bounds.size.y)
-		)
+		walk_target = random_walk_point.call()
 
 	return ActivityDecision.new(_current_activity, walk_target)

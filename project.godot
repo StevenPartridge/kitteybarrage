@@ -28,6 +28,10 @@ Global="*res://scripts/Global.gd"
 window/size/viewport_width=1440
 window/size/viewport_height=900
 
+[global_group]
+
+walk_region=""
+
 [input]
 
 ui_left={

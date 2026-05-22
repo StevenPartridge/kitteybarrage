@@ -3,9 +3,9 @@
 [ext_resource type="TileSet" uid="uid://bhb0tvi8hxofq" path="res://resources/rooms/RoomTileSet.tres" id="1_bfmfj"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_bfmfj"]
-vertices = PackedVector2Array(818.6875, 353.39063, 818.8203, 294.64063, 1395, 221.03125, 1395, 527.1328, 818.28125, 545.53125, 1402.7188, 817.9531, 431.34375, 814.03906, 657, 543.89844, 539.21875, 547.53125, 792.3906, 294.22656, 792.28125, 352.45313, 792.02344, 484.77344, 657, 481.78125, 537.7969, 477.89063, 440.64063, 542.5, -169.04688, 485.8828, -171.9375, -7, 792.97656, -7, 818.96875, 222.96094)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3, 4), PackedInt32Array(3, 5, 6, 4), PackedInt32Array(7, 4, 6, 8), PackedInt32Array(9, 10, 11, 12, 13), PackedInt32Array(6, 14, 8), PackedInt32Array(7, 8, 13, 12), PackedInt32Array(13, 15, 16, 17, 9), PackedInt32Array(10, 9, 1, 0), PackedInt32Array(2, 1, 18)])
-outlines = Array[PackedVector2Array]([PackedVector2Array(-182, -17, 803, -17, 802, 495, 667, 492, 667, 534, 808.3014, 535.43036, 809, 213, 1405, 211, 1405, 527, 1413, 828, 421, 824, 431, 532, 529, 537, 528, 488, -179, 496), PackedVector2Array(779, 284, 840, 285, 836, 364, 779, 362)])
+vertices = PackedVector2Array(1395, 221.03125, 1395, 527.1328, 818.28125, 545.14844, 818.6094, 390.28125, 818.7578, 323, 792.2031, 391.6875, 792.02344, 484.53906, 633.7969, 477.53906, 1402.7188, 817.9531, 431.34375, 814.03906, 635.2031, 550.28125, 440.64063, 542.3906, 566.3906, 547.4219, 563.6406, 471.8125, -169.04688, 485.79688, -171.9375, -7, 792.97656, -7, 792.34375, 323, 818.96875, 222.96094)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3, 4), PackedInt32Array(5, 6, 7), PackedInt32Array(1, 8, 9, 2), PackedInt32Array(10, 2, 9), PackedInt32Array(10, 9, 11, 12), PackedInt32Array(7, 10, 12, 13), PackedInt32Array(13, 14, 15, 16, 17), PackedInt32Array(7, 13, 17, 5), PackedInt32Array(3, 5, 17, 4), PackedInt32Array(0, 4, 18)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-182, -17, 803, -17, 802, 495, 644, 488, 645, 540, 808.3014, 535.43036, 809, 213, 1405, 211, 1405, 527, 1413, 828, 421, 824, 431, 532, 556, 537, 554, 482, -179, 496), PackedVector2Array(784, 313, 829, 313, 824, 400, 787, 402)])
 
 [node name="Room" type="Node2D" unique_id=94535373]
 
