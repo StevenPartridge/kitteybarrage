@@ -13,7 +13,10 @@ enum StateName {
     LOOK_AROUND,
     SPRINT,
     LOOK_TRACK,
+	EXPLORE,
 }
+
+enum FloorType { NONE, WOOD, STONE, CHECKER, RUG }
 
 enum Direction {
 	NORTH,

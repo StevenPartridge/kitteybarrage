@@ -20,4 +20,5 @@ func tick(_delta: float) -> State:
 	return null
 
 func _exit_state() -> void:
+	entity.release_hotspot()
 	entity.anim.cancel()

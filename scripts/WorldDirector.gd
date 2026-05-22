@@ -15,9 +15,11 @@ var brains: Dictionary = {}
 var _focus_index: int = 0
 var separation_system: SeparationSystem
 var _rng: RandomNumberGenerator
+var _walk_bounds: Rect2
 
 func _ready() -> void:
 	assert(world_layer != null, "WorldDirector: world_layer must be assigned in the editor")
+	_walk_bounds = _compute_walk_bounds()
 	_rng = RandomNumberGenerator.new()
 	_rng.randomize()
 	if color_pool == null:
@@ -51,7 +53,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			if not brains.has(character):
 				continue
-			var decision: ActivityDecision = brains[character].tick(delta, get_viewport().get_visible_rect())
+			var decision: ActivityDecision = brains[character].tick(delta, _walk_bounds, character.current_floor_type)
 			if decision:
 				character.apply_decision(decision)
 
@@ -120,3 +122,15 @@ func _input(event: InputEvent) -> void:
 		if prev and prev != controlled_character:
 			prev.set_highlight(false)
 		controlled_character.set_highlight(true)
+
+func _compute_walk_bounds() -> Rect2:
+	var nav_region := get_tree().get_first_node_in_group("walk_region") as NavigationRegion2D
+	if nav_region == null or nav_region.navigation_polygon == null:
+		return get_viewport().get_visible_rect()
+	var verts := nav_region.navigation_polygon.get_vertices()
+	if verts.is_empty():
+		return get_viewport().get_visible_rect()
+	var bounds := Rect2(nav_region.to_global(verts[0]), Vector2.ZERO)
+	for v in verts:
+		bounds = bounds.expand(nav_region.to_global(v))
+	return bounds.grow(-8.0)

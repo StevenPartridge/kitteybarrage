@@ -32,6 +32,10 @@ static func randomized(rng: RandomNumberGenerator) -> KittyPersonality:
 	# Curiosity drives look-around
 	p.preference_look_around = lerp(0.05, 0.6, curiosity)
 
+	# Curious kitties explore rooms more; homebodies stay put
+	p.preference_explore = lerp(0.02, 0.25, curiosity)
+	p.duration_explore   = lerp(8.0, 3.0, curiosity)
+
 	# Durations — lazier cats linger longer in each state
 	p.duration_sit         = lerp(6.0, 2.0, energy)
 	p.duration_lay         = lerp(18.0, 6.0, energy)

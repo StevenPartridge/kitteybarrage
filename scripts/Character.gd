@@ -10,6 +10,18 @@ var _transition_table: Dictionary
 @export var initial_activity: Global.StateName = Global.StateName.SIT
 @export var color_variant: Texture2D
 
+const WALL_PHYSICS_LAYER := 1
+
+var current_floor_type: Global.FloorType = Global.FloorType.NONE
+var _floor_check_timer: float = 0.0
+const _FLOOR_CHECK_INTERVAL := 0.5
+
+var _nearby_furniture: Array[Furniture] = []
+var _interest_zone: Area2D = null
+var _claimed_hotspot: FurnitureHotspot = null
+var _floor_layer: TileMapLayer = null
+var nav_agent: NavigationAgent2D = null
+
 func _ready() -> void:
 	state_machine = FiniteStateMachine.new()
 	add_child(state_machine)
@@ -22,6 +34,12 @@ func _ready() -> void:
 	if color_variant != null:
 		_swap_atlas(color_variant)
 	state_machine.change_state(_state_for_activity(initial_activity))
+	_interest_zone = get_node_or_null("InterestZone") as Area2D
+	if _interest_zone:
+		_interest_zone.area_entered.connect(_on_interest_area_entered)
+		_interest_zone.area_exited.connect(_on_interest_area_exited)
+	_floor_layer = get_tree().get_first_node_in_group("floor_layer") as TileMapLayer
+	nav_agent = get_node_or_null("NavigationAgent2D") as NavigationAgent2D
 
 func _build_posture_groups() -> Dictionary:
 	return {
@@ -100,13 +118,126 @@ func _swap_atlas(atlas: Texture2D) -> void:
 				(tex as AtlasTexture).atlas = atlas
 
 # ----------------------------------------------------------------
+# Physics
+# ----------------------------------------------------------------
+
+func _physics_process(delta: float) -> void:
+	_floor_check_timer += delta
+	if _floor_check_timer >= _FLOOR_CHECK_INTERVAL:
+		_floor_check_timer = 0.0
+		_update_floor_type()
+	queue_redraw()
+
+func _draw() -> void:
+	if navigation_target != null and navigation_target.is_valid():
+		draw_circle(to_local(navigation_target.get_position()), 4.0, Color.RED)
+
+# ----------------------------------------------------------------
 # AI decision dispatch
 # ----------------------------------------------------------------
 
 func apply_decision(decision: ActivityDecision) -> void:
-	if decision.walk_target != null:
-		set_target(PositionTarget.new(decision.walk_target))
+	release_hotspot()
+
+	if decision.activity == Global.StateName.EXPLORE:
+		var door_pos := _find_nearby_door()
+		if door_pos != Vector2.INF:
+			set_target(PositionTarget.new(door_pos))
+		elif decision.walk_target != null:
+			set_target(PositionTarget.new(decision.walk_target))
+		begin_walk()
+		return
+
+	if decision.activity == Global.StateName.SIT:
+		var slot := find_nearby_hotspot(FurnitureHotspot.ActionType.SIT)
+		if not slot.is_empty():
+			set_target(PositionTarget.new(slot.world_pos))
+		elif decision.walk_target != null:
+			set_target(PositionTarget.new(decision.walk_target))
+	elif decision.activity == Global.StateName.LAY:
+		var slot := find_nearby_hotspot(FurnitureHotspot.ActionType.LAY)
+		if not slot.is_empty():
+			set_target(PositionTarget.new(slot.world_pos))
+		elif decision.walk_target != null:
+			set_target(PositionTarget.new(decision.walk_target))
+	else:
+		if decision.walk_target != null:
+			set_target(PositionTarget.new(decision.walk_target))
+
 	begin_activity(decision.activity)
+
+# ----------------------------------------------------------------
+# Furniture & hotspot system
+# ----------------------------------------------------------------
+
+func _on_interest_area_entered(area: Area2D) -> void:
+	var f := area.get_parent() as Furniture
+	if f and not _nearby_furniture.has(f):
+		_nearby_furniture.append(f)
+
+func _on_interest_area_exited(area: Area2D) -> void:
+	var f := area.get_parent() as Furniture
+	if f:
+		_nearby_furniture.erase(f)
+
+func _has_line_of_sight(target_pos: Vector2) -> bool:
+	var space := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(
+		global_position, target_pos, WALL_PHYSICS_LAYER
+	)
+	query.exclude = [get_rid()]
+	return space.intersect_ray(query).is_empty()
+
+func find_nearby_hotspot(action: FurnitureHotspot.ActionType) -> Dictionary:
+	for furniture in _nearby_furniture:
+		if furniture is Door:
+			continue
+		for hs: FurnitureHotspot in furniture.get_hotspots():
+			if hs.action != action or not hs.has_available_slot():
+				continue
+			var slot_world := furniture.global_position + hs.slots[0]
+			if not _has_line_of_sight(slot_world):
+				continue
+			var idx := hs.claim(self)
+			if idx >= 0:
+				_claimed_hotspot = hs
+				return {"world_pos": furniture.global_position + hs.slots[idx]}
+	return {}
+
+func _find_nearby_door() -> Vector2:
+	for f in _nearby_furniture:
+		if f is Door and _has_line_of_sight(f.global_position):
+			return f.global_position
+	return Vector2.INF
+
+func release_hotspot() -> void:
+	if _claimed_hotspot:
+		_claimed_hotspot.release(self)
+		_claimed_hotspot = null
+
+# ----------------------------------------------------------------
+# Floor type
+# ----------------------------------------------------------------
+
+func _update_floor_type() -> void:
+	for f in _nearby_furniture:
+		var rect := f.get_footprint_rect()
+		if rect.size != Vector2.ZERO and rect.has_point(global_position):
+			current_floor_type = Global.FloorType.RUG
+			return
+	if _floor_layer == null:
+		current_floor_type = Global.FloorType.NONE
+		return
+	var cell := _floor_layer.local_to_map(_floor_layer.to_local(global_position))
+	var td := _floor_layer.get_cell_tile_data(cell)
+	if td == null:
+		current_floor_type = Global.FloorType.NONE
+		return
+	var raw: String = td.get_custom_data("floor_type")
+	if Global.FloorType.has(raw):
+		current_floor_type = Global.FloorType[raw]
+	else:
+		current_floor_type = Global.FloorType.NONE
 
 # ----------------------------------------------------------------
 # State topology
@@ -139,6 +270,3 @@ func _state_for_activity(activity: Global.StateName) -> State:
 			return MovementState.sprint()
 		_:
 			return SitState.new(true, true)
-
-func _physics_process(_delta: float) -> void:
-	pass

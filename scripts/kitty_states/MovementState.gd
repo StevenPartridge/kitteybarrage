@@ -30,14 +30,23 @@ func _enter_state(_from: Global.StateName) -> void:
 func tick(_delta: float) -> State:
 	if entity.navigation_target != null and entity.navigation_target.is_valid():
 		var target_pos: Vector2 = entity.navigation_target.get_position()
-		var direction: Vector2 = (target_pos - entity.position).normalized()
+		var direction: Vector2
+		if entity.nav_agent != null:
+			entity.nav_agent.target_position = target_pos
+			if entity.nav_agent.is_navigation_finished():
+				entity.clear_target()
+				entity.velocity = Vector2.ZERO
+				return SitState.new()
+			direction = (entity.nav_agent.get_next_path_position() - entity.global_position).normalized()
+		else:
+			direction = (target_pos - entity.position).normalized()
+			if entity.position.distance_to(target_pos) < 5.0:
+				entity.clear_target()
+				entity.velocity = Vector2.ZERO
+				return SitState.new()
 		entity.velocity = direction * entity.speed * _speed_fn.call(entity.personality)
 		_tick_rotation()
 		entity.anim.play_loop(_anim_name, entity.facing_direction)
-		if entity.position.distance_to(target_pos) < 5.0:
-			entity.clear_target()
-			entity.velocity = Vector2.ZERO
-			return SitState.new()
 	else:
 		entity.velocity = Vector2.ZERO
 		entity.anim.pause()

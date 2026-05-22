@@ -3,6 +3,9 @@
 [ext_resource type="Script" uid="uid://dleu7qqt7ok5o" path="res://scripts/Kitty.gd" id="1_bocli"]
 [ext_resource type="Texture2D" uid="uid://kl0nckescjpy" path="res://assets/sprites/cats/orange_0.png" id="2_1267x"]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_vy5os"]
+radius = 7.559662
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_blg6r"]
 atlas = ExtResource("2_1267x")
 region = Rect2(256, 416, 32, 32)
@@ -2437,8 +2440,16 @@ animations = [{
 "speed": 8.0
 }]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_bi3oc"]
+radius = 16.573069
+
 [node name="Kitty" type="CharacterBody2D" unique_id=1959565255]
 script = ExtResource("1_bocli")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=575778516]
+position = Vector2(-1.1920929e-07, 5.722046e-06)
+scale = Vector2(3.1775, 3.1775)
+shape = SubResource("CircleShape2D_vy5os")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1722648968]
 texture_filter = 1
@@ -2446,3 +2457,12 @@ position = Vector2(-1.1920929e-07, 5.722046e-06)
 scale = Vector2(3.1775, 3.1775)
 sprite_frames = SubResource("SpriteFrames_0yyhe")
 animation = &"Walk_West"
+
+[node name="InterestZone" type="Area2D" parent="." unique_id=179433270]
+collision_layer = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InterestZone" unique_id=1971342750]
+scale = Vector2(28.480003, 28.480003)
+shape = SubResource("CircleShape2D_bi3oc")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1676277451]

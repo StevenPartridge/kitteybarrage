@@ -8,6 +8,7 @@ class_name CharacterPersonality
 @export var preference_run: float = 0.0
 @export var preference_look_around: float = 0.3
 @export var preference_sprint: float = 0.0
+@export var preference_explore: float = 0.1
 
 @export_group("Activity Durations (seconds)")
 @export var duration_walk: float = 5.0
@@ -16,6 +17,7 @@ class_name CharacterPersonality
 @export var duration_run: float = 2.0
 @export var duration_look_around: float = 2.0
 @export var duration_sprint: float = 1.5
+@export var duration_explore: float = 6.0
 
 @export_group("Fatigue")
 @export var rest_threshold: float = 10.0
