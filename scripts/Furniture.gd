@@ -13,12 +13,14 @@ const _HS_COLORS: Dictionary = {
 }
 
 @export var variant: int = 0
+@export var definition: FurnitureDefinition
 
 var _hotspots: Array[FurnitureHotspot] = []
 
 func _ready() -> void:
-	_apply_variant()
-	_init_hotspots()
+	if definition != null:
+		_apply_variant()
+		_init_hotspots()
 	_sync_collision_to_sprite()
 
 func _process(_delta: float) -> void:
@@ -41,10 +43,26 @@ func _draw() -> void:
 				draw_circle(pos, 4.0, color)
 
 func _apply_variant() -> void:
-	pass
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+	if sprite == null or sprite.texture == null:
+		return
+	sprite.region_enabled = true
+	if definition.columns == 0:
+		sprite.region_rect = Rect2(variant * definition.sprite_w, 0, definition.sprite_w, definition.sprite_h)
+	else:
+		sprite.region_rect = Rect2(
+			(variant % definition.columns) * definition.sprite_w,
+			(variant / definition.columns) * definition.sprite_h,
+			definition.sprite_w,
+			definition.sprite_h
+		)
 
 func _init_hotspots() -> void:
-	pass
+	for spec: HotspotSpec in definition.hotspot_specs:
+		var hs := FurnitureHotspot.new()
+		hs.action = spec.action
+		hs.slots = spec.slots.duplicate()
+		_hotspots.append(hs)
 
 func _sync_collision_to_sprite() -> void:
 	var sprite := get_node_or_null("Sprite2D") as Sprite2D
@@ -70,4 +88,6 @@ func get_hotspots() -> Array[FurnitureHotspot]:
 	return _hotspots
 
 func get_footprint_rect() -> Rect2:
-	return Rect2()
+	if definition == null or definition.footprint_size == Vector2.ZERO:
+		return Rect2()
+	return Rect2(global_position - definition.footprint_size / 2.0, definition.footprint_size)

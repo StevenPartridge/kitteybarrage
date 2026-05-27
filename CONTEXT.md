@@ -46,6 +46,16 @@
 
 **NavigationTarget** — An abstract `RefCounted` base with two methods: `get_position() -> Vector2` and `is_valid() -> bool`. The seam between "what a character is moving toward" and how that target is represented. Concrete adapters: `PositionTarget` (wraps a fixed `Vector2`, always valid) and `NodeTarget` (wraps a `Node2D`, valid while the node exists in the scene tree). `Character.navigation_target` is null when the character has no target; set via `set_target(target)`, cleared via `clear_target()`.
 
+## Furniture
+
+**Furniture** — Base class for all furniture pieces (`extends Node2D`, `class_name Furniture`, defined in `Furniture.gd`). Reads a `FurnitureDefinition` resource at `_ready()` to apply sprite variant and construct runtime `FurnitureHotspot` instances. Owns `get_hotspots()` and `get_footprint_rect()`. All furniture types share this single script — no subclasses.
+
+**FurnitureDefinition** — A `Resource` holding all static config for a furniture type (`class_name FurnitureDefinition`, defined in `FurnitureDefinition.gd`). Fields: `sprite_w`, `sprite_h`, `columns` (0 = horizontal strip, 1 = vertical strip, N = N-column grid), `footprint_size` (non-zero enables `get_footprint_rect()` for floor detection), and `hotspot_specs`. One `.tres` file per furniture type lives in `resources/furniture/`.
+
+**HotspotSpec** — A `Resource` holding the static definition of one hotspot on a piece of furniture (`class_name HotspotSpec`, defined in `HotspotSpec.gd`). Fields: `action: FurnitureHotspot.ActionType` and `slots: Array[Vector2]`. Stored in `FurnitureDefinition.hotspot_specs`. `Furniture._ready()` reads each spec and constructs a fresh `FurnitureHotspot` instance from it, so runtime state (`_claimed`, `knocked`) is always per-instance and never shared across furniture pieces.
+
+**FurnitureHotspot** — A `Resource` holding the runtime state of one hotspot (`class_name FurnitureHotspot`, defined in `FurnitureHotspot.gd`). Manages slot reservation (`claim`, `release`) and the `knocked` flag. Constructed at runtime by `Furniture._ready()` from `HotspotSpec` data — never shared between furniture instances.
+
 ## Rendering
 
 **WorldLayer** — A `Node2D` with `y_sort_enabled = true` that parents all characters in the scene. Ensures characters lower on screen render in front of those higher up, simulating a top-down oblique perspective. All spawned characters are added here by `WorldDirector`. Future character types automatically get depth sorting by being added to `WorldLayer`.

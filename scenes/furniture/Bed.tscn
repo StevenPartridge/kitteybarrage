@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://dpejbg5vqdwnl"]
 
-[ext_resource type="Script" uid="uid://bilxnyef2chis" path="res://scripts/furniture/Bed.gd" id="1_mxrya"]
+[ext_resource type="Script" uid="uid://qhc6r3yjhle3" path="res://scripts/Furniture.gd" id="1_mxrya"]
 [ext_resource type="Texture2D" uid="uid://b27obw7rghtxv" path="res://assets/rooms/furniture/Beds.png" id="2_mxrya"]
+[ext_resource type="Resource" path="res://resources/furniture/bed.tres" id="3_mxrya"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7a6cs"]
 size = Vector2(44, 60.5)
@@ -11,25 +12,28 @@ radius = 33.0
 
 [node name="Bed" type="Node2D" unique_id=1200132318]
 script = ExtResource("1_mxrya")
-metadata/_custom_type_script = "uid://qhc6r3yjhle3"
+definition = ExtResource("3_mxrya")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2120636251]
-position = Vector2(0, 3.8146973e-06)
+position = Vector2(-4.2499943, 0.29999542)
 scale = Vector2(1.5000004, 1.3999997)
 texture = ExtResource("2_mxrya")
 region_enabled = true
 region_rect = Rect2(17.798141, 7.7619567, 29.63266, 49.069138)
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1642711635]
+position = Vector2(-4.2499943, 0.2999916)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=759136130]
 position = Vector2(0, 4.25)
 shape = SubResource("RectangleShape2D_7a6cs")
 
 [node name="NavigationObstacle2D" type="NavigationObstacle2D" parent="." unique_id=84747079]
+position = Vector2(-4.2499943, 0.2999916)
 radius = 32.0
 
 [node name="DetectionArea" type="Area2D" parent="." unique_id=1179950165 groups=["furniture_area"]]
+position = Vector2(-4.2499943, 0.2999916)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=946925208]
 shape = SubResource("CircleShape2D_mxrya")

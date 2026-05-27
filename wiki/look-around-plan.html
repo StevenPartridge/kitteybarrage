@@ -3,355 +3,374 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LookAround Enhancement Plan</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
-      --b: #2a2a38; --b2: #1e1e2a;
-      --text: #d4d0c8; --dim: #6a6570;
-      --purple: #c9b8f0; --purple2: #7a4a9a;
-      --green: #7ee37e; --green2: #285a28;
-      --blue: #7ec8e3; --blue2: #2a5070;
-      --gold: #d4a840; --gold2: #3a2e10;
-      --orange: #d08030; --orange2: #3a2010;
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); padding: 2rem; line-height: 1.6; max-width: 960px; }
-    h1  { font-size: 1.5rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
-    h2  { font-size: 0.85rem; font-weight: 700; color: var(--purple); margin: 2rem 0 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; }
-    h3  { font-size: 0.92rem; font-weight: 600; color: #f0ece0; margin-bottom: 0.3rem; }
-    p   { font-size: 0.87rem; color: #a0988a; }
-    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
-    .sub  { color: var(--dim); font-size: 0.86rem; margin-bottom: 0.4rem; }
-    .div  { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
-
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media (max-width: 680px) { .grid-2 { grid-template-columns: 1fr; } }
-
-    .card { background: var(--bg1); border: 1px solid var(--b); border-radius: 8px; padding: 0.9rem 1rem; }
-    .card p, .card li { font-size: 0.84rem; color: #9a9088; }
-    .card ul { padding-left: 1rem; margin-top: 0.35rem; }
-    .card li { margin-bottom: 0.25rem; }
-    .card h3 { font-size: 0.88rem; margin-bottom: 0.3rem; }
-
-    /* Use case blocks */
-    .usecase { background: #131020; border: 1px solid #2a1a40; border-left: 3px solid var(--purple2); border-radius: 6px; padding: 0.8rem 1rem; margin-bottom: 0.7rem; }
-    .usecase .uc-name { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #7050a0; margin-bottom: 0.3rem; }
-    .usecase p { font-size: 0.84rem; color: #9080b0; }
-    .usecase .params { margin-top: 0.4rem; font-size: 0.8rem; font-family: monospace; color: #5a6080; }
-
-    /* Phase diagram */
-    .phase-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem; margin: 0.6rem 0; font-size: 0.78rem; }
-    .ph { background: #1a1a2e; border: 1px solid #3a3a58; border-radius: 4px; padding: 0.2rem 0.55rem; font-family: monospace; color: #8888c8; font-size: 0.76rem; }
-    .ph.pause { background: #1a2010; border-color: #2a4020; color: #70a050; }
-    .ph.opt   { border-style: dashed; opacity: 0.6; }
-    .parr     { color: #303050; font-size: 0.75rem; }
-
-    /* Q blocks */
-    .qblock { background: #16121e; border: 1px solid #362550; border-left: 3px solid var(--purple2); border-radius: 6px; padding: 0.9rem 1rem; margin-bottom: 0.85rem; }
-    .qlabel { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9060c0; margin-bottom: 0.3rem; }
-    .qtext  { font-size: 0.88rem; color: #b090d0; font-weight: 500; margin-bottom: 0.65rem; }
-    .radio-list { list-style: none; padding: 0; margin-bottom: 0.6rem; }
-    .radio-list li { margin-bottom: 0.35rem; }
-    .radio-list label { display: flex; align-items: flex-start; gap: 0.5rem; cursor: pointer; padding: 0.4rem 0.6rem; border-radius: 5px; border: 1px solid transparent; color: #8070a0; font-size: 0.84rem; line-height: 1.45; transition: background 0.1s, border-color 0.1s; }
-    .radio-list label:hover { background: #1e1630; border-color: #4a2a70; color: #b090d0; }
-    .radio-list label:has(input:checked) { background: #1e1630; border-color: #7a40b0; }
-    .radio-list input[type="radio"] { accent-color: #9060c0; flex-shrink: 0; margin-top: 0.22rem; }
-    .radio-list input[type="radio"]:checked + span { color: #d0a8f0; }
-    .ok { font-weight: 700; color: #6040a0; margin-right: 0.15rem; }
-    .notes-row { display: flex; align-items: flex-start; gap: 0.5rem; }
-    .notes-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #4a3860; padding-top: 0.42rem; flex-shrink: 0; }
-    textarea.notes { flex: 1; background: #100c18; border: 1px solid #241838; border-radius: 4px; color: #a080c0; font-family: inherit; font-size: 0.82rem; padding: 0.4rem 0.6rem; resize: vertical; min-height: 2.2rem; line-height: 1.5; outline: none; }
-    textarea.notes::placeholder { color: #2e2040; }
-    textarea.notes:focus { border-color: #4a2870; }
-
-    /* Proposed params table */
-    .ptable { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    .ptable th { text-align: left; padding: 0.35rem 0.7rem; color: var(--dim); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid var(--b); }
-    .ptable td { padding: 0.38rem 0.7rem; border-bottom: 1px solid var(--b2); vertical-align: top; }
-    .ptable td:first-child { font-family: monospace; color: #90b0d0; white-space: nowrap; }
-    .ptable td:nth-child(2) { color: #888080; font-size: 0.8rem; }
-    .ptable td:nth-child(3) { color: #506070; font-size: 0.79rem; }
-    .ptable tr:last-child td { border-bottom: none; }
-    .ptable .group td { background: #141018; color: #605870; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 0.3rem 0.7rem; }
-
-    /* Task list */
-    .tasklist { list-style: none; padding: 0; }
-    .tasklist li { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.6rem 0; border-bottom: 1px solid var(--b2); font-size: 0.86rem; }
-    .tasklist li:last-child { border-bottom: none; }
-    .tnum { flex-shrink: 0; width: 1.4rem; height: 1.4rem; background: #222230; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; color: #585068; margin-top: 0.06rem; }
-    .tbody { flex: 1; }
-    .ttitle  { font-size: 0.86rem; font-weight: 500; color: #e0d8cc; }
-    .tdetail { font-size: 0.79rem; color: var(--dim); margin-top: 0.12rem; }
-    .tfiles  { font-family: monospace; font-size: 0.73rem; color: #40405a; margin-top: 0.1rem; }
-    .phase-label { font-size: 0.71rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: #404058; margin: 1.3rem 0 0.4rem; }
-
-    .tag { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 3px; margin-right: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .tag-code { background: #182030; color: var(--blue); border: 1px solid var(--blue2); }
-    .tag-ui   { background: #1a2f1a; color: var(--green); border: 1px solid var(--green2); }
-    .chip-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.35rem; }
-
-    /* Summary */
-    .summary-box { background: var(--bg2); border: 1px solid #2a1e40; border-radius: 10px; padding: 1.2rem 1.4rem; }
-    .summary-hint { font-size: 0.8rem; color: #40304a; margin-bottom: 0.75rem; }
-    #summary-out { width: 100%; background: #0a0810; border: 1px solid #1e1630; border-radius: 5px; color: #b090d0; font-family: "SF Mono","Fira Code",monospace; font-size: 0.8rem; padding: 0.7rem 0.9rem; resize: vertical; min-height: 8rem; line-height: 1.65; outline: none; }
-    .summary-actions { display: flex; align-items: center; gap: 0.7rem; margin-top: 0.6rem; }
-    .btn-copy { background: #2e1850; color: #b890e8; border: 1px solid #4e2888; border-radius: 5px; padding: 0.4rem 0.9rem; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.1s; }
-    .btn-copy:hover { background: #3e2068; }
-    .copied { font-size: 0.78rem; color: #60c060; opacity: 0; transition: opacity 0.2s; }
-    .copied.show { opacity: 1; }
-    .unanswered { font-size: 0.78rem; color: #703838; margin-top: 0.4rem; }
-    .alldone    { font-size: 0.78rem; color: #407840; margin-top: 0.4rem; }
-  </style>
+  <title>LookAround Enhancement Plan — Kitty Barrage Wiki</title>
+  <link rel="stylesheet" href="/shared/wiki.css" />
+  <link rel="stylesheet" media="print" href="/shared/print.css" />
 </head>
 <body>
+<div id="wiki-nav"></div>
+<div class="layout">
 
-  <h1>LookAround Enhancement Plan</h1>
-  <p class="sub">Kitty Barrage · May 2026</p>
+  <nav class="sidebar">
+    <div>LookAround Plan</div>
+    <div class="s-head">Sections</div>
+    <a href="#use-cases">Use Cases</a>
+    <a href="#phase-sequence">Phase Sequence</a>
+    <a href="#design-questions">Design Questions</a>
+    <a href="#proposed-params">Proposed Parameters</a>
+    <a href="#debug-overlay">Debug Overlay</a>
+    <a href="#task-list">Task List</a>
+    <a href="#answers">Your Answers</a>
+    <div class="s-head">Kitty Barrage</div>
+    <a href="/projects/kittybarrage/">← Hub</a>
+    <a href="/projects/kittybarrage/architecture.html">Architecture</a>
+  </nav>
 
-  <hr class="div" />
+  <div class="main">
+    <div class="breadcrumb"><a href="/">Wiki</a> › <a href="/projects/kittybarrage/">Kitty Barrage</a> › LookAround Enhancement Plan</div>
 
-  <h2>Use cases to support</h2>
+    <div id="wiki-meta"
+      data-file-path="/projects/kittybarrage/look-around-plan.html"
+      data-fs-path="/Users/steven/dev/kittybarrage/wiki/look-around-plan.html"
+      data-tags="kittybarrage,look-around,task-plan,animation"
+      data-created="2026-05-16"
+      data-updated="2026-05-25"
+      data-state="polished">
+    </div>
 
-  <div class="usecase">
-    <div class="uc-name">Curious kitty</div>
-    <p>Looks left and right quickly, multiple times. Short pauses. High energy.</p>
-    <div class="params">speed=1.8 · reps=3 · pause_left=0.1 · pause_right=0.1</div>
-  </div>
-
-  <div class="usecase">
-    <div class="uc-name">Cautious kitty</div>
-    <p>Looks left slowly, holds there a long time, then continues on its way without looking right at all.</p>
-    <div class="params">speed=0.6 · reps=1 · left_only=true · pause_left=2.0</div>
-  </div>
-
-  <div class="usecase">
-    <div class="uc-name">Lazy glance</div>
-    <p>One slow look both ways, long pause facing forward at the end before returning to the brain loop.</p>
-    <div class="params">speed=0.7 · reps=1 · pause_center=1.5</div>
-  </div>
-
-  <div class="usecase">
-    <div class="uc-name">Paranoid kitty (loop)</div>
-    <p>Loops continuously looking both ways fast until interrupted by movement.</p>
-    <div class="params">speed=2.0 · loop=true · pause_left=0 · pause_right=0</div>
-  </div>
-
-  <hr class="div" />
-
-  <h2>Current phase sequence</h2>
-  <div class="phase-flow">
-    <span class="ph">center → right</span><span class="parr">→</span>
-    <span class="ph">right → left</span><span class="parr">→</span>
-    <span class="ph">left → center</span>
-  </div>
-  <p>With pauses and direction flags, the full proposed sequence becomes:</p>
-  <div class="phase-flow" style="margin-top:0.5rem">
-    <span class="ph">center → right</span><span class="parr">→</span>
-    <span class="ph pause">pause right</span><span class="parr">→</span>
-    <span class="ph opt">right → left</span><span class="parr">→</span>
-    <span class="ph pause opt">pause left</span><span class="parr">→</span>
-    <span class="ph opt">left → center</span><span class="parr">→</span>
-    <span class="ph pause">pause center</span><span class="parr">→</span>
-    <span class="ph">repeat / exit</span>
-  </div>
-  <p style="margin-top:0.5rem;font-size:0.8rem;color:#4a4060">Dashed = optional (skipped if left_only, right_only, or pause = 0). Pause phases run in <code>tick(delta)</code> — no animation, just a timer counting down before moving to the next phase.</p>
-
-  <hr class="div" />
-
-  <h2>Design questions</h2>
-
-  <!-- Q1 -->
-  <div class="qblock">
-    <div class="qlabel">Q1 · Direction preference</div>
-    <div class="qtext">How should "left only" or "right only" be configured?</div>
-    <ul class="radio-list">
-      <li><label><input type="radio" name="q1" value="flags" onchange="sync()"><span><span class="ok">A</span> <strong>Two booleans</strong> — <code>look_left: bool</code> and <code>look_right: bool</code>. Simple, explicit. Defaults both true.</span></label></li>
-      <li><label><input type="radio" name="q1" value="enum" onchange="sync()"><span><span class="ok">B</span> <strong>Enum / dropdown</strong> — "Both", "Left only", "Right only". Cleaner inspector UI, but less flexible (can't do "skip center pause").</span></label></li>
-      <li><label><input type="radio" name="q1" value="weights" onchange="sync()"><span><span class="ok">C</span> <strong>Weights</strong> — <code>look_left_weight: float</code> and <code>look_right_weight: float</code>. Zero = skip. Consistent with how activity preferences work elsewhere. More future-proof.</span></label></li>
-    </ul>
-    <div class="notes-row"><span class="notes-label">Notes</span><textarea class="notes" id="q1n" rows="1" placeholder="Anything to add…" oninput="sync()"></textarea></div>
-  </div>
-
-  <!-- Q2 -->
-  <div class="qblock">
-    <div class="qlabel">Q2 · Repetitions — fixed or random range?</div>
-    <div class="qtext">How many times does the full look-around cycle repeat before exiting (or before the loop flag takes over)?</div>
-    <ul class="radio-list">
-      <li><label><input type="radio" name="q2" value="fixed" onchange="sync()"><span><span class="ok">A</span> <strong>Fixed count</strong> — <code>repetitions: int = 1</code>. Simple, predictable.</span></label></li>
-      <li><label><input type="radio" name="q2" value="range" onchange="sync()"><span><span class="ok">B</span> <strong>Random range</strong> — <code>min_repetitions: int = 1</code> and <code>max_repetitions: int = 1</code>. Each look-around rolls a count. More lively with no extra logic in the brain.</span></label></li>
-    </ul>
-    <div class="notes-row"><span class="notes-label">Notes</span><textarea class="notes" id="q2n" rows="1" placeholder="Anything to add…" oninput="sync()"></textarea></div>
-  </div>
-
-  <!-- Q3 -->
-  <div class="qblock">
-    <div class="qlabel">Q3 · Speed control — where does it live?</div>
-    <div class="qtext">Playback speed affects how fast the animation frames advance. Godot's <code>AnimatedSprite2D.speed_scale</code> handles this. Where should it be set?</div>
-    <ul class="radio-list">
-      <li><label><input type="radio" name="q3" value="anim_controller" onchange="sync()"><span><span class="ok">A</span> <strong>AnimationController parameter</strong> — add <code>speed: float = 1.0</code> to <code>play_once</code> and <code>play_loop</code>. <code>AnimationController</code> sets/restores <code>speed_scale</code>. Reusable by any state.</span></label></li>
-      <li><label><input type="radio" name="q3" value="state_direct" onchange="sync()"><span><span class="ok">B</span> <strong>LookAroundState sets it directly</strong> — <code>entity.anim._player.speed_scale = speed</code>. Simpler for now but leaks through the AnimationController seam.</span></label></li>
-    </ul>
-    <div class="notes-row"><span class="notes-label">Notes</span><textarea class="notes" id="q3n" rows="1" placeholder="Anything to add…" oninput="sync()"></textarea></div>
-  </div>
-
-  <!-- Q4 -->
-  <div class="qblock">
-    <div class="qlabel">Q4 · Where do all these parameters live?</div>
-    <div class="qtext">There are now ~8 look-around parameters. Where should they be defined?</div>
-    <ul class="radio-list">
-      <li><label><input type="radio" name="q4" value="personality" onchange="sync()"><span><span class="ok">A</span> <strong>KittyPersonality only</strong> — add a "Look Around" export group. <code>LookAroundState</code> reads <code>entity.personality.*</code>. Inspector-editable per kitty, consistent with how run/sprint speeds work.</span></label></li>
-      <li><label><input type="radio" name="q4" value="constructor" onchange="sync()"><span><span class="ok">B</span> <strong>LookAroundState constructor</strong> — pass all params at construction time: <code>LookAroundState.new(speed, pause_left, …)</code>. Flexible for scripted events but cumbersome from <code>apply_decision</code>.</span></label></li>
-      <li><label><input type="radio" name="q4" value="both" onchange="sync()"><span><span class="ok">C</span> <strong>Both</strong> — personality provides defaults; constructor can override. Best of both but more code to thread through.</span></label></li>
-    </ul>
-    <div class="notes-row"><span class="notes-label">Notes</span><textarea class="notes" id="q4n" rows="1" placeholder="Anything to add…" oninput="sync()"></textarea></div>
-  </div>
-
-  <hr class="div" />
-
-  <h2>Proposed parameters (assuming A/B/A/A)</h2>
-
-  <table class="ptable">
-    <thead><tr><th>Field</th><th>Description</th><th>Default</th></tr></thead>
-    <tbody>
-      <tr class="group"><td colspan="3">KittyPersonality — Look Around group</td></tr>
-      <tr><td>look_around_speed</td><td>Animation playback speed multiplier</td><td>1.0</td></tr>
-      <tr><td>look_around_pause_right</td><td>Seconds to hold at the rightmost frame</td><td>0.0</td></tr>
-      <tr><td>look_around_pause_left</td><td>Seconds to hold at the leftmost frame</td><td>0.0</td></tr>
-      <tr><td>look_around_pause_center</td><td>Seconds to hold at center before next rep or exit</td><td>0.0</td></tr>
-      <tr><td>look_around_repetitions</td><td>How many full cycles before exiting (if not looping)</td><td>1</td></tr>
-      <tr><td>look_left</td><td>Whether to include the left-look phase</td><td>true</td></tr>
-      <tr><td>look_right</td><td>Whether to include the right-look phase</td><td>true</td></tr>
-    </tbody>
-  </table>
-
-  <hr class="div" />
-
-  <h2>Debug overlay additions</h2>
-
-  <div class="grid-2">
-    <div class="card">
-      <h3>New controls near Look Around button</h3>
+    <details class="changelog">
+      <summary>Changelog</summary>
       <ul>
-        <li><strong>Speed</strong> — HSlider 0.2–3.0, step 0.1, default 1.0</li>
-        <li><strong>Pause Left</strong> — HSlider 0–3.0s, step 0.1</li>
-        <li><strong>Pause Right</strong> — HSlider 0–3.0s, step 0.1</li>
-        <li><strong>Pause Center</strong> — HSlider 0–3.0s, step 0.1</li>
-        <li><strong>Reps</strong> — SpinBox 1–10</li>
-        <li><strong>Look Left</strong> — CheckBox (already have loop checkbox)</li>
-        <li><strong>Look Right</strong> — CheckBox</li>
+        <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
       </ul>
+    </details>
+
+    <div class="h1-row">
+      <h1>LookAround Enhancement Plan</h1>
+      <span class="pill pill-green">Done</span>
     </div>
-    <div class="card">
-      <h3>Layout idea</h3>
-      <p style="margin-bottom:0.4rem">The button column would expand for Look Around with a collapsible sub-panel, or the controls appear inline below the button row. Sliders show current value as a label.</p>
-      <p>All values read at button-press time — not live-applied. So you can set params, then press Look Around to test that exact configuration.</p>
+    <p class="sub">Kitty Barrage · May 2026</p>
+
+    <hr />
+
+    <h2 id="use-cases">Use Cases to Support</h2>
+
+    <div class="note">
+      <strong>Curious kitty</strong> — Looks left and right quickly, multiple times. Short pauses. High energy.<br/>
+      <code>speed=1.8 · reps=3 · pause_left=0.1 · pause_right=0.1</code>
     </div>
+
+    <div class="note">
+      <strong>Cautious kitty</strong> — Looks left slowly, holds there a long time, then continues on its way without looking right at all.<br/>
+      <code>speed=0.6 · reps=1 · left_only=true · pause_left=2.0</code>
+    </div>
+
+    <div class="note">
+      <strong>Lazy glance</strong> — One slow look both ways, long pause facing forward at the end before returning to the brain loop.<br/>
+      <code>speed=0.7 · reps=1 · pause_center=1.5</code>
+    </div>
+
+    <div class="note">
+      <strong>Paranoid kitty (loop)</strong> — Loops continuously looking both ways fast until interrupted by movement.<br/>
+      <code>speed=2.0 · loop=true · pause_left=0 · pause_right=0</code>
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-use-cases">Notes — Use Cases</label>
+      <textarea id="notes-use-cases" placeholder="Additional use cases, personality ideas…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="phase-sequence">Current Phase Sequence</h2>
+
+    <p>Base sequence: <strong>center → right</strong> → <strong>right → left</strong> → <strong>left → center</strong></p>
+
+    <p>With pauses and direction flags, the full proposed sequence:</p>
+    <p><code>center → right</code> → <em>pause right</em> → <code>right → left</code> (opt) → <em>pause left</em> (opt) → <code>left → center</code> (opt) → <em>pause center</em> → <strong>repeat / exit</strong></p>
+
+    <p style="font-size:0.8rem;color:var(--dim)">Optional phases are skipped if <code>left_only</code>, <code>right_only</code>, or pause = 0. Pause phases run in <code>tick(delta)</code> — no animation, just a timer counting down before moving to the next phase.</p>
+
+    <div class="section-notes">
+      <label for="notes-phase-sequence">Notes — Phase Sequence</label>
+      <textarea id="notes-phase-sequence" placeholder="Thoughts on phase ordering, edge cases…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="design-questions">Design Questions</h2>
+
+    <!-- Q1 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">1</div>
+        <div class="q-title">Direction preference</div>
+      </div>
+      <p>How should "left only" or "right only" be configured?</p>
+      <div style="display:grid;grid-template-columns:1fr;gap:0.5rem;margin:0.75rem 0;">
+        <label class="q-opt-radio">
+          <input type="radio" name="q1" value="flags" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Two booleans</div>
+            <p><code>look_left: bool</code> and <code>look_right: bool</code>. Simple, explicit. Defaults both true.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q1" value="enum" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Enum / dropdown</div>
+            <p>"Both", "Left only", "Right only". Cleaner inspector UI, but less flexible.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q1" value="weights" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Weights</div>
+            <p><code>look_left_weight: float</code> and <code>look_right_weight: float</code>. Zero = skip. Consistent with activity preferences. More future-proof.</p>
+          </div>
+        </label>
+      </div>
+      <div class="section-notes">
+        <label for="q1n">Notes</label>
+        <textarea id="q1n" rows="1" placeholder="Anything to add…" oninput="sync()"></textarea>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">2</div>
+        <div class="q-title">Repetitions — fixed or random range?</div>
+      </div>
+      <p>How many times does the full look-around cycle repeat before exiting?</p>
+      <div style="display:grid;grid-template-columns:1fr;gap:0.5rem;margin:0.75rem 0;">
+        <label class="q-opt-radio">
+          <input type="radio" name="q2" value="fixed" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Fixed count</div>
+            <p><code>repetitions: int = 1</code>. Simple, predictable.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q2" value="range" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Random range</div>
+            <p><code>min_repetitions: int = 1</code> and <code>max_repetitions: int = 1</code>. Each look-around rolls a count. More lively with no extra logic in the brain.</p>
+          </div>
+        </label>
+      </div>
+      <div class="section-notes">
+        <label for="q2n">Notes</label>
+        <textarea id="q2n" rows="1" placeholder="Anything to add…" oninput="sync()"></textarea>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">3</div>
+        <div class="q-title">Speed control — where does it live?</div>
+      </div>
+      <p>Playback speed affects how fast the animation frames advance. Godot's <code>AnimatedSprite2D.speed_scale</code> handles this. Where should it be set?</p>
+      <div style="display:grid;grid-template-columns:1fr;gap:0.5rem;margin:0.75rem 0;">
+        <label class="q-opt-radio">
+          <input type="radio" name="q3" value="anim_controller" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — AnimationController parameter</div>
+            <p>Add <code>speed: float = 1.0</code> to <code>play_once</code> and <code>play_loop</code>. <code>AnimationController</code> sets/restores <code>speed_scale</code>. Reusable by any state.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q3" value="state_direct" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — LookAroundState sets it directly</div>
+            <p><code>entity.anim._player.speed_scale = speed</code>. Simpler for now but leaks through the AnimationController seam.</p>
+          </div>
+        </label>
+      </div>
+      <div class="section-notes">
+        <label for="q3n">Notes</label>
+        <textarea id="q3n" rows="1" placeholder="Anything to add…" oninput="sync()"></textarea>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">4</div>
+        <div class="q-title">Where do all these parameters live?</div>
+      </div>
+      <p>There are now ~8 look-around parameters. Where should they be defined?</p>
+      <div style="display:grid;grid-template-columns:1fr;gap:0.5rem;margin:0.75rem 0;">
+        <label class="q-opt-radio">
+          <input type="radio" name="q4" value="personality" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — KittyPersonality only</div>
+            <p>Add a "Look Around" export group. <code>LookAroundState</code> reads <code>entity.personality.*</code>. Inspector-editable per kitty, consistent with how run/sprint speeds work.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q4" value="constructor" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — LookAroundState constructor</div>
+            <p>Pass all params at construction time: <code>LookAroundState.new(speed, pause_left, …)</code>. Flexible for scripted events but cumbersome from <code>apply_decision</code>.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q4" value="both" onchange="sync()">
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Both</div>
+            <p>Personality provides defaults; constructor can override. Best of both but more code to thread through.</p>
+          </div>
+        </label>
+      </div>
+      <div class="section-notes">
+        <label for="q4n">Notes</label>
+        <textarea id="q4n" rows="1" placeholder="Anything to add…" oninput="sync()"></textarea>
+      </div>
+    </div>
+
+    <hr />
+
+    <h2 id="proposed-params">Proposed Parameters (assuming A/B/A/A)</h2>
+
+    <table class="svc-table">
+      <thead><tr><th>Field</th><th>Description</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td colspan="3" style="background:#141018;color:#605870;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:0.3rem 0.7rem;">KittyPersonality — Look Around group</td></tr>
+        <tr><td class="svc">look_around_speed</td><td>Animation playback speed multiplier</td><td>1.0</td></tr>
+        <tr><td class="svc">look_around_pause_right</td><td>Seconds to hold at the rightmost frame</td><td>0.0</td></tr>
+        <tr><td class="svc">look_around_pause_left</td><td>Seconds to hold at the leftmost frame</td><td>0.0</td></tr>
+        <tr><td class="svc">look_around_pause_center</td><td>Seconds to hold at center before next rep or exit</td><td>0.0</td></tr>
+        <tr><td class="svc">look_around_repetitions</td><td>How many full cycles before exiting (if not looping)</td><td>1</td></tr>
+        <tr><td class="svc">look_left</td><td>Whether to include the left-look phase</td><td>true</td></tr>
+        <tr><td class="svc">look_right</td><td>Whether to include the right-look phase</td><td>true</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-notes">
+      <label for="notes-proposed-params">Notes — Proposed Parameters</label>
+      <textarea id="notes-proposed-params" placeholder="Parameter value thoughts, tuning notes…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="debug-overlay">Debug Overlay Additions</h2>
+
+    <div class="two-col">
+      <div class="col-card">
+        <h3>New controls near Look Around button</h3>
+        <ul>
+          <li><strong>Speed</strong> — HSlider 0.2–3.0, step 0.1, default 1.0</li>
+          <li><strong>Pause Left</strong> — HSlider 0–3.0s, step 0.1</li>
+          <li><strong>Pause Right</strong> — HSlider 0–3.0s, step 0.1</li>
+          <li><strong>Pause Center</strong> — HSlider 0–3.0s, step 0.1</li>
+          <li><strong>Reps</strong> — SpinBox 1–10</li>
+          <li><strong>Look Left</strong> — CheckBox</li>
+          <li><strong>Look Right</strong> — CheckBox</li>
+        </ul>
+      </div>
+      <div class="col-card">
+        <h3>Layout idea</h3>
+        <p style="margin-bottom:0.4rem">The button column would expand for Look Around with a collapsible sub-panel, or the controls appear inline below the button row. Sliders show current value as a label.</p>
+        <p>All values read at button-press time — not live-applied. So you can set params, then press Look Around to test that exact configuration.</p>
+      </div>
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-debug-overlay">Notes — Debug Overlay</label>
+      <textarea id="notes-debug-overlay" placeholder="UI layout thoughts…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="task-list">Task List</h2>
+
+    <h3>Phase 1 · AnimationController speed support</h3>
+    <ol>
+      <li>Add <code>speed</code> parameter to <code>play_once</code> and <code>play_loop</code> — sets <code>_player.speed_scale</code> before playing. <code>_cancel_silent</code> restores it to 1.0. <code>scripts/AnimationController.gd</code></li>
+    </ol>
+
+    <h3>Phase 2 · KittyPersonality + LookAroundState</h3>
+    <ol>
+      <li>Add Look Around export group to <code>KittyPersonality</code> — all 7 fields listed above. <code>scripts/KittyPersonality.gd</code></li>
+      <li>Rewrite <code>LookAroundState</code> with full phase sequence — 7-phase sequence, skips phases when pause=0 or direction disabled. Reads all params from <code>entity.personality</code>. <code>scripts/kitty_states/LookAroundState.gd</code></li>
+    </ol>
+
+    <h3>Phase 3 · Debug overlay UI</h3>
+    <ol>
+      <li>Add Look Around controls to debug overlay — speed slider, pause sliders × 3, reps spinner, look-left/look-right checkboxes. Values passed to <code>LookAroundState</code> at press time. <code>scripts/DebugOverlay.gd</code></li>
+    </ol>
+
+    <div class="section-notes">
+      <label for="notes-task-list">Notes — Task List</label>
+      <textarea id="notes-task-list" placeholder="Task progress…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="answers">Your Answers</h2>
+
+    <p style="font-size:0.8rem;color:var(--dim)">Answer the questions above — updates live. Copy and paste back to Claude when done.</p>
+
+    <textarea id="summary-out" readonly style="width:100%;background:var(--bg2);border:1px solid var(--b);border-radius:5px;color:var(--text);font-family:'SF Mono','Fira Code',monospace;font-size:0.8rem;padding:0.7rem 0.9rem;resize:vertical;min-height:8rem;line-height:1.65;outline:none;"></textarea>
+    <div style="display:flex;align-items:center;gap:0.7rem;margin-top:0.6rem;">
+      <button onclick="copyIt()" style="background:#2e1850;color:#b890e8;border:1px solid #4e2888;border-radius:5px;padding:0.4rem 0.9rem;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;">Copy to clipboard</button>
+      <span id="copied-msg" style="font-size:0.78rem;color:var(--green);opacity:0;transition:opacity 0.2s;">Copied!</span>
+    </div>
+    <p id="status-msg" style="font-size:0.78rem;color:#703838;margin-top:0.4rem;"></p>
+
+    <div id="wiki-copy-bar"></div>
   </div>
+</div>
 
-  <hr class="div" />
+<script src="/shared/wiki.js"></script>
+<script src="/shared/nav.js"></script>
+<script>
+  initWikiPage({
+    sectionNotes: [
+      { id: 'notes-use-cases',       label: 'Use Cases' },
+      { id: 'notes-phase-sequence',  label: 'Phase Sequence' },
+      { id: 'notes-proposed-params', label: 'Proposed Parameters' },
+      { id: 'notes-debug-overlay',   label: 'Debug Overlay' },
+      { id: 'notes-task-list',       label: 'Task List' },
+    ],
+  });
 
-  <h2>Task list</h2>
+  const qs = [
+    { name:'q1', label:'Q1 · Direction preference', opts:{ flags:'A — Two booleans (look_left, look_right)', enum:'B — Enum/dropdown (Both/Left/Right)', weights:'C — Weights (look_left_weight, look_right_weight)' } },
+    { name:'q2', label:'Q2 · Repetitions',          opts:{ fixed:'A — Fixed count (repetitions: int)', range:'B — Random range (min/max_repetitions)' } },
+    { name:'q3', label:'Q3 · Speed control',         opts:{ anim_controller:'A — AnimationController parameter (recommended)', state_direct:'B — LookAroundState sets speed_scale directly' } },
+    { name:'q4', label:'Q4 · Parameter location',    opts:{ personality:'A — KittyPersonality only', constructor:'B — LookAroundState constructor', both:'C — Both (personality defaults, constructor overrides)' } },
+  ];
 
-  <p class="phase-label">Phase 1 · AnimationController speed support</p>
-  <ul class="tasklist">
-    <li>
-      <span class="tnum">1</span>
-      <div class="tbody">
-        <div class="ttitle">Add <code>speed</code> parameter to <code>play_once</code> and <code>play_loop</code></div>
-        <div class="tdetail">Sets <code>_player.speed_scale</code> before playing. <code>_cancel_silent</code> restores it to 1.0.</div>
-        <div class="tfiles">scripts/AnimationController.gd</div>
-        <div class="chip-row"><span class="tag tag-code">Code</span></div>
-      </div>
-    </li>
-  </ul>
-
-  <p class="phase-label">Phase 2 · KittyPersonality + LookAroundState</p>
-  <ul class="tasklist">
-    <li>
-      <span class="tnum">2</span>
-      <div class="tbody">
-        <div class="ttitle">Add Look Around export group to <code>KittyPersonality</code></div>
-        <div class="tdetail"><code>look_around_speed</code>, <code>look_around_pause_right</code>, <code>look_around_pause_left</code>, <code>look_around_pause_center</code>, <code>look_around_repetitions</code>, <code>look_left</code>, <code>look_right</code>.</div>
-        <div class="tfiles">scripts/KittyPersonality.gd</div>
-        <div class="chip-row"><span class="tag tag-code">Code</span></div>
-      </div>
-    </li>
-    <li>
-      <span class="tnum">3</span>
-      <div class="tbody">
-        <div class="ttitle">Rewrite <code>LookAroundState</code> with full phase sequence</div>
-        <div class="tdetail">7-phase sequence: center→right · pause-right · right→left · pause-left · left→center · pause-center · repeat/exit. Skips phases when pause=0 or direction disabled. Reads all params from <code>entity.personality</code>. Repetition counter decrements each full cycle.</div>
-        <div class="tfiles">scripts/kitty_states/LookAroundState.gd</div>
-        <div class="chip-row"><span class="tag tag-code">Code</span></div>
-      </div>
-    </li>
-  </ul>
-
-  <p class="phase-label">Phase 3 · Debug overlay UI</p>
-  <ul class="tasklist">
-    <li>
-      <span class="tnum">4</span>
-      <div class="tbody">
-        <div class="ttitle">Add Look Around controls to debug overlay</div>
-        <div class="tdetail">Speed slider, pause sliders × 3, reps spinner, look-left/look-right checkboxes. Shown as a compact sub-section below the Look Around button. Values passed to <code>LookAroundState</code> at press time (overriding personality).</div>
-        <div class="tfiles">scripts/DebugOverlay.gd</div>
-        <div class="chip-row"><span class="tag tag-code">Code</span><span class="tag tag-ui">UI</span></div>
-      </div>
-    </li>
-  </ul>
-
-  <hr class="div" />
-
-  <div class="summary-box">
-    <h2 style="margin-top:0; color:var(--purple)">Your answers</h2>
-    <p class="summary-hint">Answer the questions above — updates live. Copy and paste back to Claude when done.</p>
-    <textarea id="summary-out" readonly></textarea>
-    <div class="summary-actions">
-      <button class="btn-copy" onclick="copyIt()">Copy to clipboard</button>
-      <span class="copied" id="copied-msg">Copied!</span>
-    </div>
-    <p id="status-msg" class="unanswered"></p>
-  </div>
-
-  <hr class="div" />
-  <p style="font-size:0.76rem;color:#303040">Generated by Claude Code · Kitty Barrage · May 2026</p>
-
-  <script>
-    const qs = [
-      { name:'q1', label:'Q1 · Direction preference', opts:{ flags:'A — Two booleans (look_left, look_right)', enum:'B — Enum/dropdown (Both/Left/Right)', weights:'C — Weights (look_left_weight, look_right_weight)' } },
-      { name:'q2', label:'Q2 · Repetitions',          opts:{ fixed:'A — Fixed count (repetitions: int)', range:'B — Random range (min/max_repetitions)' } },
-      { name:'q3', label:'Q3 · Speed control',         opts:{ anim_controller:'A — AnimationController parameter (recommended)', state_direct:'B — LookAroundState sets speed_scale directly' } },
-      { name:'q4', label:'Q4 · Parameter location',    opts:{ personality:'A — KittyPersonality only', constructor:'B — LookAroundState constructor', both:'C — Both (personality defaults, constructor overrides)' } },
-    ];
-
-    function sync() {
-      const lines = ['LookAround enhancement answers\n'];
-      const missing = [];
-      for (const q of qs) {
-        const val   = document.querySelector(`input[name="${q.name}"]:checked`)?.value;
-        const notes = document.getElementById(q.name + 'n').value.trim();
-        lines.push(q.label);
-        if (val) { lines.push('→ ' + q.opts[val]); }
-        else      { lines.push('→ (not answered)'); missing.push(q.label.split('·')[0].trim()); }
-        if (notes) lines.push('   Notes: ' + notes);
-        lines.push('');
-      }
-      document.getElementById('summary-out').value = lines.join('\n').trimEnd();
-      const msg = document.getElementById('status-msg');
-      if (missing.length) { msg.textContent = 'Still unanswered: ' + missing.join(', '); msg.className = 'unanswered'; }
-      else                 { msg.textContent = 'All answered — ready to copy!'; msg.className = 'alldone'; }
+  function sync() {
+    const lines = ['LookAround enhancement answers\n'];
+    const missing = [];
+    for (const q of qs) {
+      const val   = document.querySelector(`input[name="${q.name}"]:checked`)?.value;
+      const notes = document.getElementById(q.name + 'n').value.trim();
+      lines.push(q.label);
+      if (val) { lines.push('→ ' + q.opts[val]); }
+      else      { lines.push('→ (not answered)'); missing.push(q.label.split('·')[0].trim()); }
+      if (notes) lines.push('   Notes: ' + notes);
+      lines.push('');
     }
+    document.getElementById('summary-out').value = lines.join('\n').trimEnd();
+    const msg = document.getElementById('status-msg');
+    if (missing.length) { msg.textContent = 'Still unanswered: ' + missing.join(', '); msg.style.color = '#703838'; }
+    else                 { msg.textContent = 'All answered — ready to copy!'; msg.style.color = '#407840'; }
+  }
 
-    function copyIt() {
-      navigator.clipboard.writeText(document.getElementById('summary-out').value).then(() => {
-        const el = document.getElementById('copied-msg');
-        el.classList.add('show');
-        setTimeout(() => el.classList.remove('show'), 2000);
-      });
-    }
+  function copyIt() {
+    navigator.clipboard.writeText(document.getElementById('summary-out').value).then(() => {
+      const el = document.getElementById('copied-msg');
+      el.style.opacity = '1';
+      setTimeout(() => { el.style.opacity = '0'; }, 2000);
+    });
+  }
 
-    sync();
-  </script>
+  sync();
+</script>
 </body>
 </html>

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" format=3]
+
+[ext_resource type="Script" path="res://scripts/FurnitureDefinition.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+sprite_w = 32
+sprite_h = 32
+columns = 1
+footprint_size = Vector2(0, 0)
+hotspot_specs = []

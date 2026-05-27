@@ -4,208 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Task Plan — Kitty Marking Overlays</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
-      --b:     #2a2a38; --b2:  #1e1e2a;
-      --text:  #d4d0c8; --dim: #6a6570;
-      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
-      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
-      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
-      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
-      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
-      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-    .layout { display: flex; min-height: 100vh; }
-
-    .sidebar {
-      width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--b2);
-      padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; font-size: 0.8rem;
-    }
-    .sidebar a { display: block; color: var(--dim); text-decoration: none; padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
-    .sidebar a:hover { color: var(--text); background: #1e1e2a; }
-    .sidebar .s-head { font-size: 0.68rem; font-weight: 700; color: #404055; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.3rem; }
-
-    .main { flex: 1; padding: 2rem 2.5rem; max-width: 860px; }
-
-    h1   { font-size: 1.45rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
-    h2   { font-size: 0.78rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
-    h3   { font-size: 0.92rem; font-weight: 700; color: #c8c0e0; margin: 1.2rem 0 0.4rem; }
-    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.65rem; }
-    li   { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.3rem; }
-    ul, ol { padding-left: 1.3rem; margin-bottom: 0.75rem; }
-    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
-    .sub  { color: var(--dim); font-size: 0.84rem; margin-bottom: 0.25rem; }
-    hr    { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
-    .breadcrumb { font-size: 0.78rem; color: var(--dim); margin-bottom: 1.5rem; }
-    .breadcrumb a { color: var(--dim); text-decoration: none; }
-    .breadcrumb a:hover { color: var(--text); }
-
-    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
-    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
-    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
-    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
-    .pill-purple { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-b); }
-    .pill-orange { background:var(--orange-bg); color:var(--orange); border:1px solid var(--orange-b); }
-    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
-    .pill-red    { background:var(--red-bg);    color:var(--red);    border:1px solid var(--red-b); }
-
-    /* Question cards — interactive */
-    .question {
-      border: 1px solid var(--gold-b); border-left: 3px solid var(--gold);
-      background: var(--gold-bg); border-radius: 0 8px 8px 0;
-      padding: 1rem 1.2rem; margin: 1.25rem 0;
-    }
-    .question-head {
-      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem;
-    }
-    .q-badge {
-      font-size: 0.72rem; font-weight: 700; background: var(--gold); color: #1a1000;
-      border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .q-title { font-size: 0.92rem; font-weight: 700; color: #e8c850; }
-    .question > p { color: #b09030; margin-bottom: 0.5rem; }
-    .question > p:last-of-type { margin-bottom: 0.75rem; }
-    .q-lean { font-size: 0.81rem; color: #a08030; font-style: italic; border-top: 1px solid #3a2e10; padding-top: 0.5rem; margin-top: 0.75rem; }
-    .q-lean strong { color: #c09830; font-style: normal; }
-
-    /* Radio options grid */
-    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.75rem 0 0.5rem; }
-    .q-opt-radio {
-      background: #1a1408; border: 1px solid #3a2e10; border-radius: 6px;
-      padding: 0.6rem 0.8rem; cursor: pointer; transition: border-color 0.1s, background 0.1s;
-      display: flex; align-items: flex-start; gap: 0.55rem;
-    }
-    .q-opt-radio:has(input:checked) {
-      border-color: var(--gold); background: #251d08;
-    }
-    .q-opt-radio input[type="radio"] { margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--gold); }
-    .q-opt-body { flex: 1; }
-    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; color: #907020; }
-    .q-opt-radio:has(input:checked) .q-opt-label { color: var(--gold); }
-    .q-opt-body p { font-size: 0.79rem; color: #807030; margin-bottom: 0; line-height: 1.4; }
-    .q-opt-radio:has(input:checked) .q-opt-body p { color: #a08828; }
-
-    /* Text note input */
-    .q-notes { margin-top: 0.65rem; }
-    .q-notes label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #707020; display: block; margin-bottom: 0.3rem; }
-    .q-notes input {
-      width: 100%; background: #12100a; border: 1px solid #3a2e10; border-radius: 5px;
-      padding: 0.4rem 0.65rem; font-size: 0.82rem; color: #c0a840; font-family: inherit;
-      outline: none; transition: border-color 0.15s;
-    }
-    .q-notes input:focus { border-color: var(--gold); }
-    .q-notes input::placeholder { color: #4a3a10; }
-
-    /* Decided question cards */
-    .question.decided { border-color: var(--green-b); border-left-color: var(--green); background: var(--green-bg); }
-    .question.decided .question-head { margin-bottom: 0.6rem; }
-    .question.decided .q-title { color: #80d880; }
-    .question.decided p { color: #608060; }
-    .question.decided .q-lean { border-top-color: var(--green-b); color: #507050; }
-    .question.decided .q-lean strong { color: #70a070; }
-    .decided-badge { background: var(--green) !important; color: #001800 !important; }
-    .decided-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
-    .q-opt { background: #0e180e; border: 1px solid var(--green-b); border-radius: 6px; padding: 0.65rem 0.85rem; }
-    .q-opt.chosen { border-color: var(--green); background: #122012; }
-    .q-opt.chosen .q-opt-label { color: var(--green); }
-    .q-opt.unchosen { opacity: 0.45; }
-    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.25rem; color: #507050; }
-    .q-opt p { font-size: 0.8rem; color: #507050; margin-bottom: 0; }
-    .decision-note {
-      margin-top: 0.6rem; padding: 0.6rem 0.85rem; background: #0a1a0a;
-      border: 1px solid var(--green-b); border-radius: 5px;
-      font-size: 0.8rem; color: #608060; line-height: 1.5;
-    }
-    .decision-note strong { color: #70a070; }
-
-    .note {
-      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
-      padding: 0.75rem 1rem; font-size: 0.83rem; color: #7ab8d0; margin: 1rem 0;
-    }
-    .note strong { color: var(--blue); }
-
-    .warn {
-      background: var(--orange-bg); border: 1px solid var(--orange-b); border-radius: 6px;
-      padding: 0.75rem 1rem; font-size: 0.83rem; color: #c07828; margin: 1rem 0;
-    }
-    .warn strong { color: var(--orange); }
-
-    pre {
-      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
-      padding: 0.9rem 1rem; font-family: "SF Mono","Fira Code",monospace; font-size: 0.79rem;
-      color: #b0c8a0; overflow-x: auto; margin: 0.75rem 0; line-height: 1.55;
-    }
-    pre .cm  { color: #505868; }
-    pre .kw  { color: #b890e0; }
-    pre .fn  { color: #80c8e8; }
-    pre .st  { color: #90c890; }
-    pre .nm  { color: #d4a840; }
-    pre .tp  { color: #d09060; }
-
-    .steps { counter-reset: step; margin-top: 0.5rem; }
-    .step {
-      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
-      padding: 1rem 1.1rem 1rem 3.5rem; margin-bottom: 0.75rem; position: relative;
-    }
-    .step.blocked { border-color: var(--gold-b); opacity: 0.75; }
-    .step.done { border-color: var(--green-b); }
-    .step::before {
-      counter-increment: step; content: counter(step);
-      position: absolute; left: 1rem; top: 1rem;
-      width: 1.8rem; height: 1.8rem; border-radius: 50%;
-      background: var(--bg2); border: 1px solid var(--b);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.78rem; font-weight: 700; color: var(--dim); font-family: monospace;
-    }
-    .step.blocked::before { border-color: var(--gold-b); color: var(--gold); }
-    .step.done::before { content: "✓"; border-color: var(--green-b); color: var(--green); background: var(--green-bg); }
-    .step-title { font-size: 0.9rem; font-weight: 700; color: #d0c8f0; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-    .step p { margin-bottom: 0.4rem; }
-
-    /* Asset table */
-    .mt { width:100%; border-collapse:collapse; font-size:0.82rem; margin: 0.75rem 0; }
-    .mt th { text-align:left; padding:0.4rem 0.85rem; color:var(--dim); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--b); background:#131318; }
-    .mt td { padding:0.45rem 0.85rem; border-bottom:1px solid var(--b2); vertical-align:top; color:#a0988a; font-size:0.82rem; }
-    .mt tr:last-child td { border-bottom:none; }
-    .mt .fname { font-family:monospace; color:#7888c8; white-space:nowrap; }
-    .mt .count { color: var(--gold); font-weight: 700; font-size: 0.78rem; }
-    .mt .rare  { color: var(--purple); font-weight: 700; font-size: 0.72rem; }
-    .mt .common{ color: var(--green);  font-weight: 700; font-size: 0.72rem; }
-
-    .file { display:inline-block; font-family:monospace; font-size:0.75rem; background:#131320; border:1px solid #2a2a40; border-radius:3px; padding:0.05rem 0.4rem; color:#7888c8; }
-
-    .checklist { list-style: none; padding-left: 0; }
-    .checklist li { padding: 0.3rem 0; border-bottom: 1px solid var(--b2); font-size: 0.84rem; color: #a0988a; display: flex; align-items: baseline; gap: 0.6rem; }
-    .checklist li:last-child { border-bottom: none; }
-    .checklist li::before { content: "☐"; color: var(--dim); font-size: 0.9em; flex-shrink: 0; }
-
-    /* Copy answers button */
-    .copy-section {
-      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
-      padding: 1.25rem 1.5rem; margin-top: 2rem;
-      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-    }
-    .copy-section p { margin: 0; font-size: 0.85rem; color: #807880; }
-    .copy-btn {
-      background: var(--gold); color: #1a1000; border: none; border-radius: 6px;
-      padding: 0.55rem 1.2rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;
-      font-family: inherit; transition: opacity 0.15s; white-space: nowrap;
-    }
-    .copy-btn:hover { opacity: 0.88; }
-    .copy-btn:active { opacity: 0.75; }
-    .copy-confirm { font-size: 0.78rem; color: var(--green); display: none; }
-    .copy-confirm.show { display: inline; }
-  </style>
+  <link rel="stylesheet" href="/shared/wiki.css" />
+  <link rel="stylesheet" media="print" href="/shared/print.css" />
 </head>
 <body>
+<div id="wiki-nav"></div>
 <div class="layout">
 
   <nav class="sidebar">
-    <div style="font-size:0.85rem;font-weight:700;color:#a090c8;margin-bottom:1rem;">Blemishes Plan</div>
+    <div>Blemishes Plan</div>
     <div class="s-head">Sections</div>
     <a href="#goal">Goal</a>
     <a href="#assets">Asset Inventory</a>
@@ -213,29 +20,43 @@
     <a href="#questions">Design Questions</a>
     <a href="#outline">Implementation Outline</a>
     <a href="#testing">Testing</a>
-    <div class="s-head">Wiki</div>
-    <a href="index.html">← Home</a>
-    <a href="architecture.html">Architecture</a>
-    <a href="task-plan-kitty-variants.html">← Kitty Variants Plan</a>
+    <div class="s-head">Kitty Barrage</div>
+    <a href="/projects/kittybarrage/">← Hub</a>
+    <a href="/projects/kittybarrage/architecture.html">Architecture</a>
+    <a href="/projects/kittybarrage/task-plan-kitty-variants.html">← Kitty Variants Plan</a>
   </nav>
 
   <div class="main">
+    <div class="breadcrumb"><a href="/">Wiki</a> › <a href="/projects/kittybarrage/">Kitty Barrage</a> › Kitty Marking Overlays</div>
 
-    <div class="breadcrumb"><a href="index.html">Wiki</a> → Task Plan</div>
+    <div id="wiki-meta"
+      data-file-path="/projects/kittybarrage/task-plan-kitty-blemishes.html"
+      data-fs-path="/Users/steven/dev/kittybarrage/wiki/task-plan-kitty-blemishes.html"
+      data-tags="kittybarrage,task-plan,sprites,markings"
+      data-created="2026-05-17"
+      data-updated="2026-05-25"
+      data-state="polished">
+    </div>
 
-    <div style="display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.2rem;">
+    <details class="changelog">
+      <summary>Changelog</summary>
+      <ul>
+        <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
+      </ul>
+    </details>
+
+    <div class="h1-row">
       <h1>Kitty Marking Overlays</h1>
-      <span class="pill pill-blue">Planning</span>
+      <span class="pill pill-green">Done</span>
       <span class="pill pill-dim">May 2026</span>
     </div>
     <p class="sub">Add marking overlays (white paws, tabby stripes, ear and face markings, tail tips) as a second composited sprite layer on top of each kitty's base coat.</p>
 
     <hr />
 
-    <!-- GOAL -->
     <h2 id="goal">Goal &amp; Scope</h2>
 
-    <p>The color variant system (<a href="task-plan-kitty-variants.html" style="color:var(--blue)">task-plan-kitty-variants.html</a>) gives each kitty a unique base coat from 24 color families. This task adds the next layer of visual variety: marking overlays composited on top of the base coat at spawn time.</p>
+    <p>The color variant system (<a href="/projects/kittybarrage/task-plan-kitty-variants.html">task-plan-kitty-variants.html</a>) gives each kitty a unique base coat from 24 color families. This task adds the next layer of visual variety: marking overlays composited on top of the base coat at spawn time.</p>
 
     <p>The asset pack ships 14 marking overlay PNGs in <code>assets/sprites/cats/Markings/</code>. Each PNG shares the same frame grid as the base cat sprite sheets, so the same atlas-swap mechanism used for color variants can drive a second <code>AnimatedSprite2D</code> node that renders the marking on top.</p>
 
@@ -247,30 +68,34 @@
 
     <p>The goal for v1 is a single marking layer (0 or 1 per kitty). Stacking multiple markings is an explicit non-goal for now — address once the single-layer infrastructure is stable.</p>
 
+    <div class="section-notes">
+      <label for="notes-goal">Notes — Goal &amp; Scope</label>
+      <textarea id="notes-goal" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- ASSET INVENTORY -->
     <h2 id="assets">Asset Inventory</h2>
 
     <h3>Marking Overlays — <code>assets/sprites/cats/Markings/</code></h3>
     <p>14 overlay PNG files. All share the same sprite sheet frame grid as the base cat atlases — same dimensions, same animation frame regions. They are designed to composite on top of any base coat color.</p>
 
-    <table class="mt">
+    <table class="svc-table">
       <thead>
         <tr><th>File</th><th>Category</th><th>Notes</th></tr>
       </thead>
       <tbody>
-        <tr><td class="fname">Feet 000.png</td><td>Paws</td><td>All four paws, white markings</td></tr>
-        <tr><td class="fname">Front Left Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
-        <tr><td class="fname">Front Right Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
-        <tr><td class="fname">Back Left Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
-        <tr><td class="fname">Back Right Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
-        <tr><td class="fname">Ears 000.png</td><td>Ears</td><td>Both ears</td></tr>
-        <tr><td class="fname">Left Ear 000.png</td><td>Ears</td><td>Left ear only</td></tr>
-        <tr><td class="fname">Right Ear 000.png</td><td>Ears</td><td>Right ear only</td></tr>
-        <tr><td class="fname">Face Marking 000.png</td><td>Face</td><td>Face patch</td></tr>
-        <tr><td class="fname">Tabby Markings 000.png</td><td>Coat</td><td>Tabby stripe overlay</td></tr>
-        <tr><td class="fname">Tail 000.png</td><td>Tail</td><td>Tail tip marking</td></tr>
+        <tr><td class="svc">Feet 000.png</td><td>Paws</td><td>All four paws, white markings</td></tr>
+        <tr><td class="svc">Front Left Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
+        <tr><td class="svc">Front Right Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
+        <tr><td class="svc">Back Left Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
+        <tr><td class="svc">Back Right Foot 000.png / 001.png</td><td>Paws</td><td>Two variants</td></tr>
+        <tr><td class="svc">Ears 000.png</td><td>Ears</td><td>Both ears</td></tr>
+        <tr><td class="svc">Left Ear 000.png</td><td>Ears</td><td>Left ear only</td></tr>
+        <tr><td class="svc">Right Ear 000.png</td><td>Ears</td><td>Right ear only</td></tr>
+        <tr><td class="svc">Face Marking 000.png</td><td>Face</td><td>Face patch</td></tr>
+        <tr><td class="svc">Tabby Markings 000.png</td><td>Coat</td><td>Tabby stripe overlay</td></tr>
+        <tr><td class="svc">Tail 000.png</td><td>Tail</td><td>Tail tip marking</td></tr>
       </tbody>
     </table>
 
@@ -278,9 +103,13 @@
       <strong>Frame compatibility:</strong> Marking PNGs share the same atlas grid as base cat sprites. The existing <code>_swap_atlas</code> mechanism in <code>Character.gd</code> can be applied directly to a second <code>AnimatedSprite2D</code> whose SpriteFrames starts as a duplicate of the base kitty's SpriteFrames — only the atlas path differs.
     </div>
 
+    <div class="section-notes">
+      <label for="notes-assets">Notes — Asset Inventory</label>
+      <textarea id="notes-assets" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- TECHNICAL CONTEXT -->
     <h2 id="technical">Technical Context</h2>
 
     <h3>How base animation is driven</h3>
@@ -299,13 +128,16 @@
       <li><strong>pause / unpause</strong> — AnimationController sets <code>_player.speed_scale = 0</code> and restores it. Mirror propagates; signal-driven misses speed_scale changes.</li>
     </ul>
 
+    <div class="section-notes">
+      <label for="notes-technical">Notes — Technical Context</label>
+      <textarea id="notes-technical" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- DESIGN QUESTIONS -->
     <h2 id="questions">Design Questions</h2>
     <p>Answer these before implementation starts. Fill in the radios and notes below, then copy your answers at the bottom.</p>
 
-    <!-- Q1 -->
     <div class="question">
       <div class="question-head">
         <div class="q-badge">1</div>
@@ -349,7 +181,6 @@
       <p class="q-lean"><strong>Lean:</strong> A or B. A is cleaner for the scene — always-accessible reference, inspector-friendly, easy to verify in the editor. B avoids an always-present node when most kitties may have no marking. Both are straightforward; the choice mainly affects whether <code>Kitty.tscn</code> changes.</p>
     </div>
 
-    <!-- Q2 -->
     <div class="question">
       <div class="question-head">
         <div class="q-badge">2</div>
@@ -393,7 +224,6 @@
       <p class="q-lean"><strong>Lean:</strong> A is cleanest long-term — sync is structural, not inferred. B is the fastest to implement and handles all edge cases with zero AnimationController risk. C is insufficient given the complexity of AnimationController's state. D is a more general version of A if multiple overlays are anticipated.</p>
     </div>
 
-    <!-- Q3 -->
     <div class="question">
       <div class="question-head">
         <div class="q-badge">3</div>
@@ -437,7 +267,6 @@
       <p class="q-lean"><strong>Lean:</strong> A — the <code>_swap_atlas</code> approach already handles deep duplication and atlas swapping. Markings are structurally the same problem as color variants applied to a second sprite node. Reusing the existing mechanism keeps the codebase consistent and requires no new tools.</p>
     </div>
 
-    <!-- Q4 -->
     <div class="question">
       <div class="question-head">
         <div class="q-badge">4</div>
@@ -481,7 +310,6 @@
       <p class="q-lean"><strong>Lean:</strong> C (consistent with how color palette was handled — keeps the pattern uniform) or A (simpler implementation with one tunable probability slider). D adds flavor but requires a data table coupling colors to markings, which may be premature before seeing how the overlays look in practice.</p>
     </div>
 
-    <!-- Q5 -->
     <div class="question">
       <div class="question-head">
         <div class="q-badge">5</div>
@@ -525,51 +353,59 @@
       <p class="q-lean"><strong>Lean:</strong> A — get one layer working first. Stacking is a natural follow-up once the infrastructure is stable and the sync approach is proven across all animation edge cases. The scene and sync mechanism for A extends cleanly to B or C without rework.</p>
     </div>
 
+    <div class="section-notes">
+      <label for="notes-questions">Notes — Design Questions</label>
+      <textarea id="notes-questions" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- IMPLEMENTATION OUTLINE -->
     <h2 id="outline">Implementation Outline</h2>
     <p>All steps below are blocked pending design question answers. The shape shown assumes Q1=A or B, Q2=A or B, Q3=A, Q4=C, Q5=A — revise if decisions differ.</p>
 
     <div class="steps">
 
-      <div class="step blocked">
-        <div class="step-title">Build <span class="file">MarkingPool.gd</span> <span class="pill pill-gold">new resource</span></div>
+      <div class="step">
+        <div class="step-title">Build <code>MarkingPool.gd</code> <span class="pill pill-gold">new resource</span></div>
         <p>New <code>Resource</code> subclass mirroring <code>ColorVariantPool</code>. Lists all 14 marking PNG paths with per-marking enable/disable flags. Exposes a <code>pick_random(rng)</code> method that returns a loaded <code>Texture2D</code> from the enabled set (or <code>null</code> if none are enabled or the probability roll fails). Probability scalar configurable as an exported property.</p>
       </div>
 
-      <div class="step blocked">
+      <div class="step">
         <div class="step-title">Add marking sprite to scene or create dynamically <span class="pill pill-gold">depends Q1</span></div>
         <p>If Q1=A: add a second <code>AnimatedSprite2D</code> child to <code>Kitty.tscn</code> with <code>z_index=1</code> and <code>visible=false</code> initially. Reference it in <code>Character.gd</code> via <code>@onready var marking_sprite: AnimatedSprite2D = $MarkingSprite</code>.<br />If Q1=B: create the node in code at spawn time and call <code>add_child</code> on the kitty before it enters the scene tree.</p>
       </div>
 
-      <div class="step blocked">
+      <div class="step">
         <div class="step-title">Implement sync mechanism <span class="pill pill-gold">depends Q2</span></div>
         <p>If Q2=A: add optional <code>_overlay: AnimatedSprite2D</code> to <code>AnimationController</code>. Thread it through <code>play_loop</code>, <code>play_once</code>, <code>play_transition</code>, <code>play_pose</code>, <code>hold_frame</code>, <code>change_direction_while_playing</code>, and <code>pause</code>.<br />If Q2=B: in <code>Character._physics_process</code>, check if <code>marking_sprite</code> is set and copy <code>anim._player.animation</code>, <code>anim._player.frame</code>, and <code>anim._player.speed_scale</code> to <code>marking_sprite</code> each tick.</p>
       </div>
 
-      <div class="step blocked">
+      <div class="step">
         <div class="step-title">Apply marking at spawn using <code>_swap_atlas</code> <span class="pill pill-gold">depends Q3=A</span></div>
         <p>If Q3=A: in <code>Character.apply_marking(atlas)</code>, duplicate the base SpriteFrames (<code>anim._player.sprite_frames.duplicate(true)</code>), assign to <code>marking_sprite.sprite_frames</code>, then call <code>_swap_atlas(marking_sprite, atlas)</code>. Set <code>marking_sprite.visible = true</code>.</p>
       </div>
 
-      <div class="step blocked">
-        <div class="step-title">Wire <span class="file">MarkingPool.gd</span> into <span class="file">WorldDirector.gd</span></div>
+      <div class="step">
+        <div class="step-title">Wire <code>MarkingPool.gd</code> into <code>WorldDirector.gd</code></div>
         <p>Add <code>@export var marking_pool: MarkingPool</code> to <code>WorldDirector</code>. In <code>initialize_character</code>, after <code>apply_color_variant</code>, call <code>marking_pool.pick_random(_rng)</code>. If non-null, call <code>character.apply_marking(texture)</code>. Order matters: color variant must be applied first so the marking sprite has the correct SpriteFrames to duplicate from.</p>
       </div>
 
-      <div class="step blocked">
-        <div class="step-title">Add Marking Palette section to <span class="file">DebugOverlay.gd</span> <span class="pill pill-gold">depends Q4=C</span></div>
+      <div class="step">
+        <div class="step-title">Add Marking Palette section to <code>DebugOverlay.gd</code> <span class="pill pill-gold">depends Q4=C</span></div>
         <p>Mirror the SPAWN PALETTE section from color variants. A collapsible MARKING PALETTE section in the debug overlay shows a 2-column checkbox grid for all 14 markings. A probability slider controls the chance of any marking spawning. All/None buttons. Checkboxes write directly to the <code>MarkingPool</code> resource on the director.</p>
       </div>
 
     </div>
 
+    <div class="section-notes">
+      <label for="notes-outline">Notes — Implementation Outline</label>
+      <textarea id="notes-outline" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- TESTING -->
     <h2 id="testing">Testing Checklist</h2>
-    <ul class="checklist">
+    <ul>
       <li>Spawn 10 kitties — some have markings visible on top of coat, others are bare coat with no marking node visible</li>
       <li>Marking stays in sync through all animation states: Walk, Run, Sprint, Sit, Lay, LookAround, and all transitions between them</li>
       <li>Marking stays in sync when direction changes mid-animation (change_direction_while_playing path)</li>
@@ -584,25 +420,34 @@
 
     <hr />
 
-    <!-- COPY SECTION -->
-    <div class="copy-section" id="copy-section">
+    <div class="copy-bar" id="copy-section" style="background:var(--bg1);border:1px solid var(--b);border-radius:8px;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
       <div>
         <p style="color:#c0b878;font-weight:700;margin-bottom:0.2rem;">Share your answers</p>
         <p>Select your options above, add any notes, then copy to paste back into the conversation.</p>
       </div>
       <div style="display:flex;align-items:center;gap:0.85rem;">
-        <span class="copy-confirm" id="copy-confirm">Copied!</span>
-        <button class="copy-btn" id="copy-btn" onclick="copyAnswers()">Copy Answers</button>
+        <span id="copy-confirm" style="font-size:0.78rem;color:var(--green);display:none;">Copied!</span>
+        <button id="copy-btn" onclick="copyAnswers()" style="background:var(--gold);color:#1a1000;border:none;border-radius:6px;padding:0.55rem 1.2rem;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;">Copy Answers</button>
       </div>
     </div>
 
-    <hr />
-    <p style="font-size:0.75rem;color:var(--dim);">Kitty Barrage Wiki · <code>wiki/task-plan-kitty-blemishes.html</code> · Created May 2026</p>
-
+    <div id="wiki-copy-bar"></div>
   </div>
 </div>
 
+<script src="/shared/wiki.js"></script>
+<script src="/shared/nav.js"></script>
 <script>
+  initWikiPage({
+    sectionNotes: [
+      { id: 'notes-goal',      label: 'Goal & Scope' },
+      { id: 'notes-assets',    label: 'Asset Inventory' },
+      { id: 'notes-technical', label: 'Technical Context' },
+      { id: 'notes-questions', label: 'Design Questions' },
+      { id: 'notes-outline',   label: 'Implementation Outline' },
+    ],
+  });
+
 function copyAnswers() {
   var questions = [
     {
@@ -703,10 +548,9 @@ function fallbackCopy(text) {
 
 function showCopied() {
   var el = document.getElementById("copy-confirm");
-  el.classList.add("show");
-  setTimeout(function() { el.classList.remove("show"); }, 2500);
+  el.style.display = "inline";
+  setTimeout(function() { el.style.display = "none"; }, 2500);
 }
 </script>
-
 </body>
 </html>

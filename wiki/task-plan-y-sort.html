@@ -3,138 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Task Plan — Y-Sort Depth Rendering</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
-      --b:     #2a2a38; --b2:  #1e1e2a;
-      --text:  #d4d0c8; --dim: #6a6570;
-      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
-      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
-      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
-      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
-      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
-      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-    .layout { display: flex; min-height: 100vh; }
-
-    /* Sidebar */
-    .sidebar {
-      width: 210px; min-width: 210px; background: var(--bg2); border-right: 1px solid var(--b2);
-      padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto;
-      font-size: 0.8rem;
-    }
-    .sidebar a { display: block; color: var(--dim); text-decoration: none; padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
-    .sidebar a:hover { color: var(--text); background: #1e1e2a; }
-    .sidebar .s-head { font-size: 0.68rem; font-weight: 700; color: #404055; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.3rem; }
-
-    /* Main content */
-    .main { flex: 1; padding: 2rem 2.5rem; max-width: 820px; }
-
-    h1   { font-size: 1.45rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
-    h2   { font-size: 0.78rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
-    h3   { font-size: 0.92rem; font-weight: 700; color: #c8c0e0; margin: 1.2rem 0 0.4rem; }
-    h4   { font-size: 0.84rem; font-weight: 700; color: #a09898; margin: 1rem 0 0.3rem; }
-    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.65rem; }
-    li   { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.3rem; }
-    ul, ol { padding-left: 1.3rem; margin-bottom: 0.75rem; }
-    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
-    .sub  { color: var(--dim); font-size: 0.84rem; margin-bottom: 0.25rem; }
-    hr    { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
-    .breadcrumb { font-size: 0.78rem; color: var(--dim); margin-bottom: 1.5rem; }
-    .breadcrumb a { color: var(--dim); text-decoration: none; }
-    .breadcrumb a:hover { color: var(--text); }
-
-    /* Pills */
-    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
-    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
-    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
-    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
-    .pill-purple { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-b); }
-    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
-
-    /* Aside / concept box */
-    .aside {
-      background: var(--purple-bg); border: 1px solid var(--purple-b); border-left: 3px solid var(--purple);
-      border-radius: 0 6px 6px 0; padding: 1rem 1.2rem; margin: 1.25rem 0;
-    }
-    .aside-head { font-size: 0.72rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
-    .aside p { color: #9888c8; margin-bottom: 0.5rem; }
-    .aside p:last-child { margin-bottom: 0; }
-    .aside strong { color: #c0a8e8; }
-
-    /* Note / tip */
-    .note {
-      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
-      padding: 0.75rem 1rem; font-size: 0.83rem; color: #7ab8d0; margin: 1rem 0;
-    }
-    .note strong { color: var(--blue); }
-    .warn {
-      background: var(--gold-bg); border: 1px solid var(--gold-b); border-radius: 6px;
-      padding: 0.75rem 1rem; font-size: 0.83rem; color: #c09828; margin: 1rem 0;
-    }
-    .warn strong { color: var(--gold); }
-
-    /* Code block */
-    pre {
-      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
-      padding: 0.9rem 1rem; font-family: "SF Mono","Fira Code",monospace; font-size: 0.8rem;
-      color: #b0c8a0; overflow-x: auto; margin: 0.75rem 0; line-height: 1.5;
-    }
-    pre .cm  { color: #505868; }
-    pre .kw  { color: #b890e0; }
-    pre .fn  { color: #80c8e8; }
-    pre .st  { color: #90c890; }
-    pre .nm  { color: #d4a840; }
-    pre .tp  { color: #d09060; }
-
-    /* Step cards */
-    .steps { counter-reset: step; margin-top: 0.5rem; }
-    .step {
-      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
-      padding: 1rem 1.1rem 1rem 3.5rem; margin-bottom: 0.75rem; position: relative;
-    }
-    .step::before {
-      counter-increment: step;
-      content: counter(step);
-      position: absolute; left: 1rem; top: 1rem;
-      width: 1.8rem; height: 1.8rem; border-radius: 50%;
-      background: var(--bg2); border: 1px solid var(--b);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.78rem; font-weight: 700; color: var(--dim);
-      font-family: monospace;
-    }
-    .step-title { font-size: 0.9rem; font-weight: 700; color: #d0c8f0; margin-bottom: 0.35rem; }
-    .step p { margin-bottom: 0.4rem; }
-
-    /* Comparison table */
-    .ct { width:100%; border-collapse:collapse; font-size:0.82rem; margin: 0.5rem 0; }
-    .ct th { text-align:left; padding:0.4rem 0.9rem; color:var(--dim); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--b); background:#131318; }
-    .ct td { padding:0.45rem 0.9rem; border-bottom:1px solid var(--b2); vertical-align:top; color: #a0988a; }
-    .ct tr:last-child td { border-bottom:none; }
-    .ct .label { font-family:monospace; color:#8888c8; white-space:nowrap; }
-    .ct .good  { color: var(--green); }
-    .ct .meh   { color: var(--gold); }
-    .ct .bad   { color: var(--red); }
-
-    /* Checklist */
-    .checklist { list-style: none; padding-left: 0; }
-    .checklist li { padding: 0.3rem 0; border-bottom: 1px solid var(--b2); font-size: 0.84rem; color: #a0988a; display: flex; align-items: baseline; gap: 0.6rem; }
-    .checklist li:last-child { border-bottom: none; }
-    .checklist li::before { content: "☐"; color: var(--dim); font-size: 0.9em; flex-shrink: 0; }
-
-    /* File tag */
-    .file { display:inline-block; font-family:monospace; font-size:0.75rem; background:#131320; border:1px solid #2a2a40; border-radius:3px; padding:0.05rem 0.4rem; color:#7888c8; }
-  </style>
+  <title>Task Plan — Y-Sort Depth Rendering — Kitty Barrage Wiki</title>
+  <link rel="stylesheet" href="/shared/wiki.css" />
+  <link rel="stylesheet" media="print" href="/shared/print.css" />
 </head>
 <body>
+<div id="wiki-nav"></div>
 <div class="layout">
 
-  <!-- Sidebar -->
   <nav class="sidebar">
-    <div style="font-size:0.85rem; font-weight:700; color:#a090c8; margin-bottom:1rem;">Y-Sort Plan</div>
+    <div>Y-Sort Plan</div>
     <div class="s-head">Sections</div>
     <a href="#concepts">Concepts</a>
     <a href="#approach">Approach</a>
@@ -142,67 +20,82 @@
     <a href="#implementation">Implementation</a>
     <a href="#future">Future Characters</a>
     <a href="#testing">Testing</a>
-    <div class="s-head">Wiki</div>
-    <a href="index.html">← Home</a>
-    <a href="architecture.html">Architecture</a>
+    <div class="s-head">Kitty Barrage</div>
+    <a href="/projects/kittybarrage/">← Hub</a>
+    <a href="/projects/kittybarrage/architecture.html">Architecture</a>
   </nav>
 
-  <!-- Main -->
   <div class="main">
+    <div class="breadcrumb"><a href="/">Wiki</a> › <a href="/projects/kittybarrage/">Kitty Barrage</a> › Y-Sort Depth Rendering</div>
 
-    <div class="breadcrumb"><a href="index.html">Wiki</a> → Task Plan</div>
+    <div id="wiki-meta"
+      data-file-path="/projects/kittybarrage/task-plan-y-sort.html"
+      data-fs-path="/Users/steven/dev/kittybarrage/wiki/task-plan-y-sort.html"
+      data-tags="kittybarrage,y-sort,rendering,task-plan"
+      data-created="2026-05-16"
+      data-updated="2026-05-25"
+      data-state="polished">
+    </div>
 
-    <div style="display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.2rem;">
+    <details class="changelog">
+      <summary>Changelog</summary>
+      <ul>
+        <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
+      </ul>
+    </details>
+
+    <div class="h1-row">
       <h1>Y-Sort Depth Rendering</h1>
-      <span class="pill pill-green">Complete</span>
-      <span class="pill pill-dim">May 2026</span>
+      <span class="pill pill-green">Done</span>
     </div>
     <p class="sub">Sort kitties (and future characters) by screen Y so lower = in front. One scene node, minimal code.</p>
 
     <hr />
 
-    <!-- ── CONCEPTS ── -->
     <h2 id="concepts">Concepts &amp; Vocabulary</h2>
 
-    <div class="aside">
-      <div class="aside-head">Game Dev Aside — What You're Describing</div>
-      <p>The effect you want has a few names depending on context:</p>
-      <p><strong>Y-sorting</strong> (the common practical term) — sorting sprites by their Y screen position so that a character lower on screen draws on top of one higher up. It's the universal technique for top-down and isometric 2D games.</p>
-      <p><strong>Painter's algorithm</strong> — the underlying principle: draw things from back to front. Things drawn later appear in front. Y-sorting is just an automatic, continuous application of this.</p>
-      <p><strong>Top-down oblique projection</strong> — the implied camera. The world is viewed from above at an angle, so "down the screen" means "toward the viewer." Your instinct about a stretching horizon is exactly right: imagine a flat ground plane tilting away from you. Objects near the bottom of the screen are closer. Objects near the top are further away.</p>
-      <p><strong>Z-index / draw order</strong> — in 2D engines there's no real 3D Z axis; instead each sprite has an integer <em>z_index</em> that determines what draws on top of what. Higher z_index = drawn later = appears in front. Y-sorting works by dynamically assigning z_index based on Y position each frame.</p>
-      <p><strong>Godot's <code>y_sort_enabled</code></strong> — Godot has this built in as a property on <code>Node2D</code> containers. When <code>true</code>, all direct children are sorted by their Y position automatically, every frame, with zero code. It's the idiomatic Godot way to do this.</p>
+    <div class="note">
+      <strong>Game Dev Aside — What You're Describing</strong><br/><br/>
+      <strong>Y-sorting</strong> (the common practical term) — sorting sprites by their Y screen position so that a character lower on screen draws on top of one higher up. It's the universal technique for top-down and isometric 2D games.<br/><br/>
+      <strong>Painter's algorithm</strong> — the underlying principle: draw things from back to front. Things drawn later appear in front. Y-sorting is just an automatic, continuous application of this.<br/><br/>
+      <strong>Top-down oblique projection</strong> — the implied camera. The world is viewed from above at an angle, so "down the screen" means "toward the viewer." Objects near the bottom of the screen are closer.<br/><br/>
+      <strong>Z-index / draw order</strong> — in 2D engines there's no real 3D Z axis; instead each sprite has an integer <em>z_index</em> that determines what draws on top of what. Higher z_index = drawn later = appears in front. Y-sorting works by dynamically assigning z_index based on Y position each frame.<br/><br/>
+      <strong>Godot's <code>y_sort_enabled</code></strong> — Godot has this built in as a property on <code>Node2D</code> containers. When <code>true</code>, all direct children are sorted by their Y position automatically, every frame, with zero code.
     </div>
 
-    <div class="aside">
-      <div class="aside-head">Why the scene hierarchy matters</div>
-      <p>Godot's <code>y_sort_enabled</code> sorts the <em>direct children</em> of the node it's set on. For it to work, all characters that need to sort against each other must share the same immediate parent. That's the key constraint that shapes the approach below.</p>
-      <p>Right now, spawned kitties are added as children of <code>KittyDirector</code> (a <code>Node</code>, not a <code>Node2D</code>) — so <code>y_sort_enabled</code> can't be used on it directly. The fix is a one-node scene change.</p>
+    <div class="note">
+      <strong>Why the scene hierarchy matters</strong><br/><br/>
+      Godot's <code>y_sort_enabled</code> sorts the <em>direct children</em> of the node it's set on. For it to work, all characters that need to sort against each other must share the same immediate parent.<br/><br/>
+      Right now, spawned kitties are added as children of <code>KittyDirector</code> (a <code>Node</code>, not a <code>Node2D</code>) — so <code>y_sort_enabled</code> can't be used on it directly. The fix is a one-node scene change.
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-concepts">Notes — Concepts</label>
+      <textarea id="notes-concepts" placeholder="Y-sort questions, Godot behavior notes…"></textarea>
     </div>
 
     <hr />
 
-    <!-- ── APPROACH ── -->
     <h2 id="approach">Approach Options</h2>
 
-    <table class="ct">
+    <table class="svc-table">
       <thead>
         <tr><th>Option</th><th>How</th><th>Scene changes</th><th>Code changes</th><th>Future-proof</th></tr>
       </thead>
       <tbody>
         <tr>
-          <td class="label good">A — YSortLayer node</td>
+          <td class="svc" style="color:var(--green)">A — YSortLayer node</td>
           <td>Add a <code>Node2D</code> with <code>y_sort_enabled = true</code> to the scene. Kitties go there.</td>
           <td>Add one node to <code>Main.tscn</code></td>
           <td>1 line in <code>SpawnKittyAtLocation</code></td>
-          <td class="good">All future characters just go under the same node</td>
+          <td style="color:var(--green)">All future characters just go under the same node</td>
         </tr>
         <tr>
-          <td class="label meh">B — Manual z_index</td>
+          <td class="svc" style="color:var(--gold)">B — Manual z_index</td>
           <td>Each frame, set <code>kitty.z_index = int(kitty.position.y)</code> in <code>KittyDirector._physics_process</code>.</td>
           <td>None</td>
           <td>~3 lines added to existing loop</td>
-          <td class="meh">Works, but other character types need to be included manually</td>
+          <td style="color:var(--gold)">Works, but other character types need to be included manually</td>
         </tr>
       </tbody>
     </table>
@@ -213,9 +106,13 @@
       <strong>Note:</strong> Option B has a subtle issue — <code>z_index</code> values are integers and are global across the scene. Kitties at Y=400 would get <code>z_index = 400</code>, which could conflict with other scene elements. <code>y_sort_enabled</code> handles sorting within its subtree cleanly without touching global z_index.
     </div>
 
+    <div class="section-notes">
+      <label for="notes-approach">Notes — Approach</label>
+      <textarea id="notes-approach" placeholder="Approach decision notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- ── SCENE STRUCTURE ── -->
     <h2 id="scene-structure">Scene Structure</h2>
 
     <h3>Current hierarchy</h3>
@@ -226,7 +123,7 @@
     <h3>After this change</h3>
     <pre>Main (Node2D)
   KittyDirector (Node)        ← logic only, no kitty children
-  <span style="color:#60c060">WorldLayer (Node2D)           ← NEW — y_sort_enabled = true</span>
+  WorldLayer (Node2D)           ← NEW — y_sort_enabled = true
     Kitty, Kitty, Kitty...    ← all characters live here
   CanvasLayer                 ← unchanged</pre>
 
@@ -236,38 +133,42 @@
       <strong>Scene pivot note:</strong> <code>WorldLayer</code> should sit at position (0, 0) with no scale or rotation — it's a transparent sorting container, not a transform. Give it a clear name so it's obvious what it does.
     </div>
 
+    <div class="section-notes">
+      <label for="notes-scene-structure">Notes — Scene Structure</label>
+      <textarea id="notes-scene-structure" placeholder="Scene hierarchy notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- ── IMPLEMENTATION ── -->
     <h2 id="implementation">Implementation Steps</h2>
 
     <div class="steps">
 
       <div class="step">
         <div class="step-title">Add <code>WorldLayer</code> to <code>Main.tscn</code></div>
-        <p>In the Godot editor, add a child <code>Node2D</code> to <code>Main</code>. Name it <code>WorldLayer</code>. In the Inspector, enable <strong>Y Sort Enabled</strong>. Position it between <code>KittyDirector</code> and <code>CanvasLayer</code> in the tree (ordering doesn't functionally matter but keeps the tree readable).</p>
+        <p>In the Godot editor, add a child <code>Node2D</code> to <code>Main</code>. Name it <code>WorldLayer</code>. In the Inspector, enable <strong>Y Sort Enabled</strong>. Position it between <code>KittyDirector</code> and <code>CanvasLayer</code> in the tree.</p>
         <p>No script. No other properties to set.</p>
       </div>
 
       <div class="step">
         <div class="step-title">Export a reference to <code>WorldLayer</code> in <code>KittyDirector</code></div>
-        <p>Add one export to <span class="file">KittyDirector.gd</span>:</p>
-        <pre><span class="kw">@export var</span> world_layer: <span class="tp">Node2D</span></pre>
+        <p>Add one export to <code>KittyDirector.gd</code>:</p>
+        <pre>@export var world_layer: Node2D</pre>
         <p>Wire it up in the editor: select <code>KittyDirector</code>, drag <code>WorldLayer</code> into the <code>world_layer</code> slot in the Inspector.</p>
         <p>Add a null guard in <code>_ready()</code> so it fails loudly if unset:</p>
-        <pre><span class="kw">func</span> <span class="fn">_ready</span>() -> <span class="tp">void</span>:
-    <span class="kw">assert</span>(world_layer != <span class="kw">null</span>, <span class="st">"KittyDirector: world_layer must be assigned in the editor"</span>)
-    <span class="cm"># ... rest of _ready</span></pre>
+        <pre>func _ready() -> void:
+    assert(world_layer != null, "KittyDirector: world_layer must be assigned in the editor")
+    # ... rest of _ready</pre>
       </div>
 
       <div class="step">
         <div class="step-title">Spawn kitties into <code>WorldLayer</code></div>
-        <p>In <span class="file">KittyDirector.gd</span>, change one line in <code>SpawnKittyAtLocation</code>:</p>
-        <pre><span class="cm"># Before</span>
-<span class="fn">add_child</span>(new_kitty)
+        <p>In <code>KittyDirector.gd</code>, change one line in <code>SpawnKittyAtLocation</code>:</p>
+        <pre># Before
+add_child(new_kitty)
 
-<span class="cm"># After</span>
-world_layer.<span class="fn">add_child</span>(new_kitty)</pre>
+# After
+world_layer.add_child(new_kitty)</pre>
         <p>That's the only code change. The <code>kitties</code> array holds node references and doesn't care where in the tree they live — <code>initialize_kitty</code>, brain ticking, input handling, all work unchanged.</p>
       </div>
 
@@ -279,9 +180,13 @@ world_layer.<span class="fn">add_child</span>(new_kitty)</pre>
 
     </div>
 
+    <div class="section-notes">
+      <label for="notes-implementation">Notes — Implementation</label>
+      <textarea id="notes-implementation" placeholder="Implementation progress…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- ── FUTURE CHARACTERS ── -->
     <h2 id="future">Future Characters</h2>
 
     <p>Any new character type (dogs, birds, toys, etc.) gets depth sorting for free by being added to <code>WorldLayer</code>. No code changes to the sorting logic ever needed — Godot handles it.</p>
@@ -289,15 +194,19 @@ world_layer.<span class="fn">add_child</span>(new_kitty)</pre>
     <p>If a future character type is not managed by <code>KittyDirector</code>, its own director/spawner just needs a reference to <code>WorldLayer</code> and calls <code>world_layer.add_child(new_character)</code>.</p>
 
     <div class="note">
-      <strong>Origin point matters.</strong> Godot's <code>y_sort_enabled</code> sorts by each node's local Y position within the parent. For a <code>CharacterBody2D</code> like Kitty, the position is at the node's origin — which is ideally the character's feet, not their center. If the sprite is offset vertically in the scene (the sprite center is above the collision point), the sorting will still feel natural as long as the origin is consistently at the feet for all characters.
+      <strong>Origin point matters.</strong> Godot's <code>y_sort_enabled</code> sorts by each node's local Y position within the parent. For a <code>CharacterBody2D</code> like Kitty, the position is at the node's origin — which is ideally the character's feet, not their center. If the sprite is offset vertically in the scene, the sorting will still feel natural as long as the origin is consistently at the feet for all characters.
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-future">Notes — Future Characters</label>
+      <textarea id="notes-future" placeholder="Plans for new character types…"></textarea>
     </div>
 
     <hr />
 
-    <!-- ── TESTING ── -->
     <h2 id="testing">Testing Checklist</h2>
 
-    <ul class="checklist">
+    <ul>
       <li>Spawn 3+ kitties — lower kitties visually appear in front of higher kitties</li>
       <li>Move a kitty (walk/run) so it passes behind then in front of another — z-order updates smoothly</li>
       <li>Spawn a kitty at the very top and very bottom of the screen — ordering is correct at extremes</li>
@@ -309,20 +218,36 @@ world_layer.<span class="fn">add_child</span>(new_kitty)</pre>
       <li>No errors in the Godot output log related to WorldLayer or null references</li>
     </ul>
 
-    <hr />
-
-    <h2>Affected Files</h2>
+    <h3>Affected Files</h3>
     <ul>
-      <li><span class="file">scenes/Main.tscn</span> — add <code>WorldLayer</code> node, wire export</li>
-      <li><span class="file">scripts/KittyDirector.gd</span> — add <code>@export var world_layer</code>, change <code>add_child</code> call</li>
+      <li><code>scenes/Main.tscn</code> — add <code>WorldLayer</code> node, wire export</li>
+      <li><code>scripts/KittyDirector.gd</code> — add <code>@export var world_layer</code>, change <code>add_child</code> call</li>
     </ul>
 
-    <p style="font-size:0.8rem; color:var(--dim); margin-top:0.5rem;">Two files. One new node. One changed line.</p>
+    <p style="font-size:0.8rem;color:var(--dim);margin-top:0.5rem;">Two files. One new node. One changed line.</p>
 
-    <hr />
-    <p style="font-size:0.75rem; color:var(--dim);">Kitty Barrage Wiki · <code>wiki/task-plan-y-sort.html</code> · May 2026</p>
+    <div class="section-notes">
+      <label for="notes-testing">Notes — Testing</label>
+      <textarea id="notes-testing" placeholder="Test results, issues found…"></textarea>
+    </div>
 
+    <div id="wiki-copy-bar"></div>
   </div>
 </div>
+
+<script src="/shared/wiki.js"></script>
+<script src="/shared/nav.js"></script>
+<script>
+  initWikiPage({
+    sectionNotes: [
+      { id: 'notes-concepts',        label: 'Concepts' },
+      { id: 'notes-approach',        label: 'Approach' },
+      { id: 'notes-scene-structure', label: 'Scene Structure' },
+      { id: 'notes-implementation',  label: 'Implementation' },
+      { id: 'notes-future',          label: 'Future Characters' },
+      { id: 'notes-testing',         label: 'Testing' },
+    ],
+  });
+</script>
 </body>
 </html>

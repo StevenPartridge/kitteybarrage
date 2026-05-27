@@ -4,212 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Task Plan — Pixel Rooms Asset Integration</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
-      --b:     #2a2a38; --b2:  #1e1e2a;
-      --text:  #d4d0c8; --dim: #6a6570;
-      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
-      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
-      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
-      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
-      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
-      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-    .layout { display: flex; min-height: 100vh; }
-
-    .sidebar {
-      width: 230px; min-width: 230px; background: var(--bg2); border-right: 1px solid var(--b2);
-      padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; font-size: 0.8rem;
-    }
-    .sidebar a { display: block; color: var(--dim); text-decoration: none; padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
-    .sidebar a:hover { color: var(--text); background: #1e1e2a; }
-    .sidebar .s-head { font-size: 0.68rem; font-weight: 700; color: #404055; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.3rem; }
-
-    .main { flex: 1; padding: 2rem 2.5rem; max-width: 920px; }
-
-    h1   { font-size: 1.45rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
-    h2   { font-size: 0.78rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
-    h3   { font-size: 0.92rem; font-weight: 700; color: #c8c0e0; margin: 1.2rem 0 0.4rem; }
-    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.65rem; }
-    li   { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.3rem; }
-    ul, ol { padding-left: 1.3rem; margin-bottom: 0.75rem; }
-    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
-    .sub  { color: var(--dim); font-size: 0.84rem; margin-bottom: 0.25rem; }
-    hr    { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
-    .breadcrumb { font-size: 0.78rem; color: var(--dim); margin-bottom: 1.5rem; }
-    .breadcrumb a { color: var(--dim); text-decoration: none; }
-    .breadcrumb a:hover { color: var(--text); }
-
-    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
-    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
-    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
-    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
-    .pill-purple { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-b); }
-    .pill-orange { background:var(--orange-bg); color:var(--orange); border:1px solid var(--orange-b); }
-    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
-    .pill-red    { background:var(--red-bg);    color:var(--red);    border:1px solid var(--red-b); }
-
-    /* Question cards */
-    .question {
-      border: 1px solid var(--gold-b); border-left: 3px solid var(--gold);
-      background: var(--gold-bg); border-radius: 0 8px 8px 0;
-      padding: 1rem 1.2rem; margin: 1.25rem 0;
-    }
-    .question-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
-    .q-badge {
-      font-size: 0.72rem; font-weight: 700; background: var(--gold); color: #1a1000;
-      border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .q-title { font-size: 0.92rem; font-weight: 700; color: #e8c850; }
-    .question > p { color: #b09030; margin-bottom: 0.5rem; }
-    .question > p:last-of-type { margin-bottom: 0.75rem; }
-    .q-lean { font-size: 0.81rem; color: #a08030; font-style: italic; border-top: 1px solid #3a2e10; padding-top: 0.5rem; margin-top: 0.75rem; }
-    .q-lean strong { color: #c09830; font-style: normal; }
-
-    .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.75rem 0 0.5rem; }
-    .q-opt-radio {
-      background: #1a1408; border: 1px solid #3a2e10; border-radius: 6px;
-      padding: 0.6rem 0.8rem; cursor: pointer; transition: border-color 0.1s, background 0.1s;
-      display: flex; align-items: flex-start; gap: 0.55rem;
-    }
-    .q-opt-radio:has(input:checked) { border-color: var(--gold); background: #251d08; }
-    .q-opt-radio input[type="radio"] { margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--gold); }
-    .q-opt-body { flex: 1; }
-    .q-opt-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; color: #907020; }
-    .q-opt-radio:has(input:checked) .q-opt-label { color: var(--gold); }
-    .q-opt-body p { font-size: 0.79rem; color: #807030; margin-bottom: 0; line-height: 1.4; }
-    .q-opt-radio:has(input:checked) .q-opt-body p { color: #a08828; }
-
-    .q-notes { margin-top: 0.65rem; }
-    .q-notes label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #707020; display: block; margin-bottom: 0.3rem; }
-    .q-notes input {
-      width: 100%; background: #12100a; border: 1px solid #3a2e10; border-radius: 5px;
-      padding: 0.4rem 0.65rem; font-size: 0.82rem; color: #c0a840; font-family: inherit;
-      outline: none; transition: border-color 0.15s;
-    }
-    .q-notes input:focus { border-color: var(--gold); }
-    .q-notes input::placeholder { color: #4a3a10; }
-
-    .note {
-      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
-      padding: 0.75rem 1rem; font-size: 0.83rem; color: #7ab8d0; margin: 1rem 0;
-    }
-    .note strong { color: var(--blue); }
-
-    .warn {
-      background: var(--orange-bg); border: 1px solid var(--orange-b); border-radius: 6px;
-      padding: 0.75rem 1rem; font-size: 0.83rem; color: #c07828; margin: 1rem 0;
-    }
-    .warn strong { color: var(--orange); }
-
-    .insight {
-      background: var(--purple-bg); border: 1px solid var(--purple-b); border-radius: 6px;
-      padding: 0.75rem 1rem; font-size: 0.83rem; color: #a878d0; margin: 1rem 0;
-    }
-    .insight strong { color: var(--purple); }
-
-    pre {
-      background: var(--bg2); border: 1px solid var(--b); border-radius: 6px;
-      padding: 0.9rem 1rem; font-family: "SF Mono","Fira Code",monospace; font-size: 0.79rem;
-      color: #b0c8a0; overflow-x: auto; margin: 0.75rem 0; line-height: 1.55;
-    }
-    pre .cm  { color: #505868; }
-    pre .kw  { color: #b890e0; }
-    pre .fn  { color: #80c8e8; }
-    pre .st  { color: #90c890; }
-    pre .nm  { color: #d4a840; }
-    pre .tp  { color: #d09060; }
-
-    .steps { counter-reset: step; margin-top: 0.5rem; }
-    .step {
-      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
-      padding: 1rem 1.1rem 1rem 3.5rem; margin-bottom: 0.75rem; position: relative;
-    }
-    .step.done { border-color: var(--green-b); }
-    .step::before {
-      counter-increment: step; content: counter(step);
-      position: absolute; left: 1rem; top: 1rem;
-      width: 1.8rem; height: 1.8rem; border-radius: 50%;
-      background: var(--bg2); border: 1px solid var(--b);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.78rem; font-weight: 700; color: var(--dim); font-family: monospace;
-    }
-    .step.done::before { content: "✓"; border-color: var(--green-b); color: var(--green); background: var(--green-bg); }
-    .step-title { font-size: 0.9rem; font-weight: 700; color: #d0c8f0; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-    .step p { margin-bottom: 0.4rem; }
-
-    /* Asset tables */
-    .mt { width:100%; border-collapse:collapse; font-size:0.82rem; margin: 0.75rem 0; }
-    .mt th { text-align:left; padding:0.4rem 0.85rem; color:var(--dim); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--b); background:#131318; }
-    .mt td { padding:0.45rem 0.85rem; border-bottom:1px solid var(--b2); vertical-align:top; color:#a0988a; font-size:0.82rem; }
-    .mt tr:last-child td { border-bottom:none; }
-    .mt .fname { font-family:monospace; color:#7888c8; white-space:nowrap; }
-    .mt .dim   { font-family:monospace; color:var(--dim); font-size:0.77rem; white-space:nowrap; }
-
-    .tag { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.05rem 0.4rem; border-radius:4px; white-space:nowrap; }
-    .tag-stone  { background:#1a1e28; color:#9ab0c8; border:1px solid #2a3048; }
-    .tag-wood   { background:#1e1608; color:#c8a878; border:1px solid #3a2e18; }
-    .tag-rug    { background:#1e0e1e; color:#b890e0; border:1px solid #3a1e3a; }
-    .tag-nav    { background:#0e180e; color:#60c060; border:1px solid #1e3a1e; }
-    .tag-block  { background:#1a0e0e; color:#c06060; border:1px solid #3a1e1e; }
-    .tag-decor  { background:#141418; color:#808090; border:1px solid #282838; }
-    .tag-tile   { background:#0e1820; color:#7ec8e3; border:1px solid #1e3848; }
-    .tag-sit    { background:#1a1408; color:#d4a840; border:1px solid #3a2e10; }
-    .tag-lay    { background:#1a0e18; color:#d890c0; border:1px solid #3a1e30; }
-    .tag-sniff  { background:#0e180e; color:#60c060; border:1px solid #1e3a1e; }
-    .tag-knock  { background:#1a0e0e; color:#c06060; border:1px solid #3a1e1e; }
-
-    .variants { font-size:0.75rem; color:var(--dim); }
-
-    .file { display:inline-block; font-family:monospace; font-size:0.75rem; background:#131320; border:1px solid #2a2a40; border-radius:3px; padding:0.05rem 0.4rem; color:#7888c8; }
-
-    .checklist { list-style: none; padding-left: 0; }
-    .checklist li { padding: 0.3rem 0; border-bottom: 1px solid var(--b2); font-size: 0.84rem; color: #a0988a; display: flex; align-items: baseline; gap: 0.6rem; }
-    .checklist li:last-child { border-bottom: none; }
-    .checklist li::before { content: "☐"; color: var(--dim); font-size: 0.9em; flex-shrink: 0; }
-
-    .copy-section {
-      background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
-      padding: 1.25rem 1.5rem; margin-top: 2rem;
-      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-    }
-    .copy-section p { margin: 0; font-size: 0.85rem; color: #807880; }
-    .copy-btn {
-      background: var(--gold); color: #1a1000; border: none; border-radius: 6px;
-      padding: 0.55rem 1.2rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;
-      font-family: inherit; transition: opacity 0.15s; white-space: nowrap;
-    }
-    .copy-btn:hover { opacity: 0.88; }
-    .copy-btn:active { opacity: 0.75; }
-    .copy-confirm { font-size: 0.78rem; color: var(--green); display: none; }
-    .copy-confirm.show { display: inline; }
-
-    /* Phase cards */
-    .phase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
-    .phase-card { background: var(--bg1); border: 1px solid var(--b); border-radius: 8px; padding: 0.85rem 1rem; }
-    .phase-card.p1 { border-left: 3px solid var(--blue); }
-    .phase-card.p2 { border-left: 3px solid var(--purple); }
-    .phase-card.p3 { border-left: 3px solid var(--dim); }
-    .phase-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
-    .phase-card.p1 .phase-label { color: var(--blue); }
-    .phase-card.p2 .phase-label { color: var(--purple); }
-    .phase-card.p3 .phase-label { color: var(--dim); }
-    .phase-card h3 { margin-top: 0; font-size: 0.85rem; color: #c8c0e0; }
-    .phase-card p { font-size: 0.8rem; color: #807880; margin-bottom: 0; }
-
-    /* Variant swatch row */
-    .swatch-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin: 0.3rem 0; }
-    .swatch { width: 14px; height: 14px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.12); display: inline-block; }
-  </style>
+  <link rel="stylesheet" href="/shared/wiki.css" />
+  <link rel="stylesheet" media="print" href="/shared/print.css" />
 </head>
 <body>
+<div id="wiki-nav"></div>
 <div class="layout">
 
   <nav class="sidebar">
-    <div style="font-size:0.85rem;font-weight:700;color:#a090c8;margin-bottom:1rem;">Pixel Rooms Plan</div>
+    <div>Pixel Rooms Plan</div>
     <div class="s-head">Sections</div>
     <a href="#goal">Goal</a>
     <a href="#findings">What's In The Pack</a>
@@ -223,25 +26,40 @@
     <a href="#phases">Implementation Phases</a>
     <a href="#layout">House Layout</a>
     <a href="#testing">Testing</a>
-    <div class="s-head">Wiki</div>
-    <a href="index.html">← Home</a>
-    <a href="architecture.html">Architecture</a>
+    <div class="s-head">Kitty Barrage</div>
+    <a href="/projects/kittybarrage/">← Hub</a>
+    <a href="/projects/kittybarrage/architecture.html">Architecture</a>
   </nav>
 
   <div class="main">
+    <div class="breadcrumb"><a href="/">Wiki</a> › <a href="/projects/kittybarrage/">Kitty Barrage</a> › Pixel Rooms</div>
 
-    <div class="breadcrumb"><a href="index.html">Wiki</a> → Task Plan</div>
+    <div id="wiki-meta"
+      data-file-path="/projects/kittybarrage/task-plan-pixel-rooms.html"
+      data-fs-path="/Users/steven/dev/kittybarrage/wiki/task-plan-pixel-rooms.html"
+      data-tags="kittybarrage,task-plan,rooms,tilemap,furniture"
+      data-created="2026-05-21"
+      data-updated="2026-05-25"
+      data-state="planning">
+    </div>
 
-    <div style="display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.2rem;">
+    <details class="changelog">
+      <summary>Changelog</summary>
+      <ul>
+        <li><time>2026-05-25</time> — Phase 4 updated to In Progress; Bed.tscn complete, data-driven architecture done</li>
+        <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
+      </ul>
+    </details>
+
+    <div class="h1-row">
       <h1>Pixel Rooms — Indoor World</h1>
-      <span class="pill pill-green">Decided</span>
+      <span class="pill pill-gold">Decided</span>
       <span class="pill pill-dim">May 2026</span>
     </div>
     <p class="sub">ToffeCraft Pixel Rooms pack — asset survey complete. TileMap world, furniture scenes, hotspot slots, floor-type behavior, and a house layout for kitties to explore.</p>
 
     <hr />
 
-    <!-- GOAL -->
     <h2 id="goal">Goal &amp; Scope</h2>
     <p>Give the kitties a real indoor world: rooms built from a pixel-art tileset, furnished with pieces they can navigate around, sit on, sniff, and knock off surfaces. Three interlocking systems:</p>
     <ul>
@@ -251,12 +69,16 @@
     </ul>
     <p>Deliverable: a complete multi-room house kitties can explore autonomously. Outdoor assets and the Halloween pack are explicitly future scope.</p>
 
+    <div class="section-notes">
+      <label for="notes-goal">Notes — Goal &amp; Scope</label>
+      <textarea id="notes-goal" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- WHAT'S IN THE PACK -->
     <h2 id="findings">What's In The Pack — Survey Complete</h2>
 
-    <div class="insight">
+    <div class="note">
       <strong>Tile size is 16×16 px.</strong> Confirmed by WallandGround.png being 128×128 (8×8 tile grid) and all furniture dimensions being exact multiples of 16: sofas 64×32, armchairs 32×32, beds 64×64, desks 64×32, drawers 32×32.
     </div>
 
@@ -266,32 +88,36 @@
 
     <p>The pack splits cleanly into two categories: <strong>two TileMap tileset files</strong> (floors + walls) and <strong>all furniture as standalone sprite sheets</strong> (one file per piece type, color variants arranged in a grid).</p>
 
+    <div class="section-notes">
+      <label for="notes-findings">Notes — What's In The Pack</label>
+      <textarea id="notes-findings" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- TILESET FILES -->
     <h2 id="tileset">Tileset Files — Go in TileSet Resource</h2>
     <p>Only these two files become TileMap tiles. Everything else is placed as scenes.</p>
 
-    <table class="mt">
+    <table class="svc-table">
       <thead><tr><th>File</th><th>Dimensions</th><th>Contents</th><th>Tile usage</th></tr></thead>
       <tbody>
         <tr>
-          <td class="fname">RoomGenerator/WallandGround.png</td>
-          <td class="dim">128×128</td>
+          <td class="svc">RoomGenerator/WallandGround.png</td>
+          <td>128×128</td>
           <td>8×8 grid of floor + wall tile variants — stone/checker, wood plank, darker wood, wall-face colors</td>
-          <td><span class="tag tag-tile">TileMap</span> <span class="tag tag-nav">floor</span> <span class="tag tag-block">walls</span></td>
+          <td>TileMap, floor, walls</td>
         </tr>
         <tr>
-          <td class="fname">RoomGenerator/WalllMaker.png</td>
-          <td class="dim">128×128</td>
+          <td class="svc">RoomGenerator/WalllMaker.png</td>
+          <td>128×128</td>
           <td>Wall edge connectors — T-junctions, corners, and straight segments for building room boundaries with proper depth/thickness</td>
-          <td><span class="tag tag-tile">TileMap</span> <span class="tag tag-block">walls</span></td>
+          <td>TileMap, walls</td>
         </tr>
         <tr>
-          <td class="fname">RoomGenerator/Doors.png</td>
-          <td class="dim">64×80</td>
+          <td class="svc">RoomGenerator/Doors.png</td>
+          <td>64×80</td>
           <td>4 door variants (2×2 grid), each 32×40 px — different wood colors. Placed in the wall layer where doorways connect rooms.</td>
-          <td><span class="tag tag-tile">TileMap</span> <span class="tag tag-nav">walkable</span></td>
+          <td>TileMap, walkable</td>
         </tr>
       </tbody>
     </table>
@@ -300,111 +126,89 @@
       <strong>Floor tile types visible in WallandGround.png:</strong> The sheet contains at minimum three readable floor styles: a <strong>wood plank</strong> pattern (warm brown), a <strong>stone/tile</strong> pattern (cooler gray-brown), and a <strong>checker</strong> pattern (used in the example bathroom). Each gets a different <code>floor_type</code> custom data value. Walls get no floor_type tag — they're not walkable.
     </div>
 
+    <div class="section-notes">
+      <label for="notes-tileset">Notes — Tileset Files</label>
+      <textarea id="notes-tileset" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- FURNITURE CATALOG -->
     <h2 id="furniture">Furniture Catalog</h2>
     <p>Every furniture file contains one sprite type in multiple color variants, arranged in a grid. Each becomes its own scene (e.g. <code>Bed.tscn</code>) with an exported <code>variant: int</code> that selects which atlas region to display. Hotspot slots are defined as <code>Vector2</code> offsets from the furniture origin.</p>
 
     <h3>Seating &amp; Sleeping</h3>
-    <table class="mt">
+    <table class="svc-table">
       <thead><tr><th>File</th><th>Dims</th><th>Sprite size</th><th>Variants</th><th>Hotspots</th></tr></thead>
       <tbody>
         <tr>
-          <td class="fname">Furnitures/Beds.png</td>
-          <td class="dim">128×128</td>
+          <td class="svc">Furnitures/Beds.png</td>
+          <td>128×128</td>
           <td>64×64 px (4×4 tiles)</td>
-          <td class="variants">4 — white/blue, green, brown, red</td>
-          <td>
-            <span class="tag tag-sit">sit ×3</span>
-            <span class="tag tag-lay">lay ×2</span>
-          </td>
+          <td>4 — white/blue, green, brown, red</td>
+          <td>sit ×3, lay ×2</td>
         </tr>
         <tr>
-          <td class="fname">Furnitures/Sofas/SofaType1.png</td>
-          <td class="dim">64×128</td>
+          <td class="svc">Furnitures/Sofas/SofaType1.png</td>
+          <td>64×128</td>
           <td>64×32 px (4×2 tiles)</td>
-          <td class="variants">4 — tan, blue, beige, red</td>
-          <td>
-            <span class="tag tag-sit">sit ×3</span>
-            <span class="tag tag-lay">lay ×1</span>
-          </td>
+          <td>4 — tan, blue, beige, red</td>
+          <td>sit ×3, lay ×1</td>
         </tr>
         <tr>
-          <td class="fname">Furnitures/Sofas/SofaType2.png</td>
-          <td class="dim">64×128</td>
+          <td class="svc">Furnitures/Sofas/SofaType2.png</td>
+          <td>64×128</td>
           <td>64×32 px (4×2 tiles)</td>
-          <td class="variants">4 — teal, maroon, dark blue, gray</td>
-          <td>
-            <span class="tag tag-sit">sit ×3</span>
-            <span class="tag tag-lay">lay ×1</span>
-          </td>
+          <td>4 — teal, maroon, dark blue, gray</td>
+          <td>sit ×3, lay ×1</td>
         </tr>
         <tr>
-          <td class="fname">Furnitures/Sofas/SofaSmallType1.png</td>
-          <td class="dim">32×128</td>
+          <td class="svc">Furnitures/Sofas/SofaSmallType1.png</td>
+          <td>32×128</td>
           <td>32×32 px (2×2 tiles)</td>
-          <td class="variants">4 — tan, blue, beige, red</td>
-          <td>
-            <span class="tag tag-sit">sit ×1</span>
-          </td>
+          <td>4 — tan, blue, beige, red</td>
+          <td>sit ×1</td>
         </tr>
         <tr>
-          <td class="fname">Furnitures/Sofas/SofaSmallType2.png</td>
-          <td class="dim">32×128</td>
+          <td class="svc">Furnitures/Sofas/SofaSmallType2.png</td>
+          <td>32×128</td>
           <td>32×32 px (2×2 tiles)</td>
-          <td class="variants">4 — teal, maroon, dark blue, gray</td>
-          <td>
-            <span class="tag tag-sit">sit ×1</span>
-          </td>
+          <td>4 — teal, maroon, dark blue, gray</td>
+          <td>sit ×1</td>
         </tr>
         <tr>
-          <td class="fname">Furnitures/Carpets.png</td>
-          <td class="dim">256×256</td>
+          <td class="svc">Furnitures/Carpets.png</td>
+          <td>256×256</td>
           <td>128×42 px (~8×3 tiles)</td>
-          <td class="variants">12 — dark red, tan, green, navy, purple, olive, dark navy, gray, black, teal, mauve, dark teal</td>
-          <td>
-            <span class="tag tag-sit">sit ×1</span>
-            <span class="tag tag-lay">lay ×2</span>
-            <span class="tag tag-sniff">sniff ×1</span>
-            <span style="font-size:0.72rem;color:var(--purple);">+ RUG floor type area</span>
-          </td>
+          <td>12 — dark red, tan, green, navy, purple, olive, dark navy, gray, black, teal, mauve, dark teal</td>
+          <td>sit ×1, lay ×2, sniff ×1 + RUG floor type area</td>
         </tr>
       </tbody>
     </table>
 
     <h3>Storage &amp; Surfaces</h3>
-    <table class="mt">
+    <table class="svc-table">
       <thead><tr><th>File</th><th>Dims</th><th>Sprite size</th><th>Variants</th><th>Hotspots</th></tr></thead>
       <tbody>
         <tr>
-          <td class="fname">Furnitures/Tables.png</td>
-          <td class="dim">48×64</td>
+          <td class="svc">Furnitures/Tables.png</td>
+          <td>48×64</td>
           <td>~16×21 px (round tables)</td>
-          <td class="variants">6 — dark/light wood pairs</td>
-          <td>
-            <span class="tag tag-sniff">sniff ×1</span>
-            <span class="tag tag-knock">knock ×1</span>
-          </td>
+          <td>6 — dark/light wood pairs</td>
+          <td>sniff ×1, knock ×1</td>
         </tr>
         <tr>
-          <td class="fname">Furnitures/Desks.png</td>
-          <td class="dim">64×128</td>
+          <td class="svc">Furnitures/Desks.png</td>
+          <td>64×128</td>
           <td>64×32 px (4×2 tiles)</td>
-          <td class="variants">4 — brown, gray, brown alt, dark blue</td>
-          <td>
-            <span class="tag tag-sniff">sniff ×1</span>
-            <span class="tag tag-knock">knock ×1</span>
-          </td>
+          <td>4 — brown, gray, brown alt, dark blue</td>
+          <td>sniff ×1, knock ×1</td>
         </tr>
         <tr>
-          <td class="fname">Furnitures/drawers.png</td>
-          <td class="dim">64×64</td>
+          <td class="svc">Furnitures/drawers.png</td>
+          <td>64×64</td>
           <td>32×32 px (2×2 tiles)</td>
-          <td class="variants">4 — wood grain, dark gray, light, black</td>
-          <td>
-            <span class="tag tag-sniff">sniff ×1</span>
-          </td>
+          <td>4 — wood grain, dark gray, light, black</td>
+          <td>sniff ×1</td>
         </tr>
       </tbody>
     </table>
@@ -413,132 +217,79 @@
       <strong>Carpets are furniture scenes, not TileMap tiles.</strong> They're standalone sprites placed on top of the floor layer. The floor-type system must check for a rug's Area2D presence first, then fall back to the tile underneath. This means rugs carry their own <code>floor_type = RUG</code> signal independent of the tile beneath them — a kitty on a rug on a stone floor still reads as RUG.
     </div>
 
+    <div class="section-notes">
+      <label for="notes-furniture">Notes — Furniture Catalog</label>
+      <textarea id="notes-furniture" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- DECORATIONS -->
     <h2 id="decorations">Decorations &amp; Wall Items</h2>
     <p>These are placed as Sprite2D scenes (no complex logic, no hotspot registry needed). Some get an <code>Area2D</code> for sniff detection; none block navigation.</p>
 
-    <table class="mt">
+    <table class="svc-table">
       <thead><tr><th>File</th><th>Dims</th><th>Variants</th><th>Role</th></tr></thead>
       <tbody>
-        <tr>
-          <td class="fname">Decorations/Bookcases.png</td>
-          <td class="dim">64×64</td>
-          <td class="variants">2 (brown, dark)</td>
-          <td><span class="tag tag-sniff">sniff ×1</span> <span class="tag tag-knock">knock ×1</span> — tall, 32×64 each (2×4 tiles)</td>
-        </tr>
-        <tr>
-          <td class="fname">Decorations/Plants.png</td>
-          <td class="dim">128×64</td>
-          <td class="variants">8 potted plant variants</td>
-          <td><span class="tag tag-sniff">sniff ×1</span> — no collision, no knock</td>
-        </tr>
-        <tr>
-          <td class="fname">Decorations/Books.png</td>
-          <td class="dim">128×64</td>
-          <td class="variants">8 stacked book variants</td>
-          <td><span class="tag tag-knock">knock ×1</span> — small props on surfaces</td>
-        </tr>
-        <tr>
-          <td class="fname">Decorations/TeddyBears.png</td>
-          <td class="dim">99×61</td>
-          <td class="variants">5 (tan, white, gray, black, + 1)</td>
-          <td><span class="tag tag-sniff">sniff ×1</span> <span class="tag tag-knock">knock ×1</span> — floor prop</td>
-        </tr>
-        <tr>
-          <td class="fname">Decorations/CoffeeCups.png</td>
-          <td class="dim">64×32</td>
-          <td class="variants">4</td>
-          <td><span class="tag tag-knock">knock ×1</span> — surface prop</td>
-        </tr>
-        <tr>
-          <td class="fname">Decorations/Lamp.png</td>
-          <td class="dim">32×64</td>
-          <td class="variants">2</td>
-          <td><span class="tag tag-decor">decor</span> — table lamp, no interaction</td>
-        </tr>
-        <tr>
-          <td class="fname">Decorations/DecorativeLamps.png</td>
-          <td class="dim">128×64</td>
-          <td class="variants">4</td>
-          <td><span class="tag tag-decor">decor</span> — floor lamp, no interaction</td>
-        </tr>
-        <tr>
-          <td class="fname">WallDecorations/Windows.png</td>
-          <td class="dim">128×128</td>
-          <td class="variants">8 large window variants (2×2 grid)</td>
-          <td><span class="tag tag-sit">sit ×1</span> <span class="tag tag-lay">lay ×1</span> — windowsill hotspot; placed on wall layer</td>
-        </tr>
-        <tr>
-          <td class="fname">WallDecorations/WindowsSmall.png</td>
-          <td class="dim">64×64</td>
-          <td class="variants">4 small window variants</td>
-          <td><span class="tag tag-decor">decor</span> — no sill, just visual</td>
-        </tr>
-        <tr>
-          <td class="fname">WallDecorations/PaintingsBig.png</td>
-          <td class="dim">64×64</td>
-          <td class="variants">4 landscape paintings</td>
-          <td><span class="tag tag-decor">decor</span> — wall art</td>
-        </tr>
-        <tr>
-          <td class="fname">WallDecorations/PaintingsBig2.png</td>
-          <td class="dim">64×64</td>
-          <td class="variants">6 gem/crystal paintings</td>
-          <td><span class="tag tag-decor">decor</span> — wall art</td>
-        </tr>
-        <tr>
-          <td class="fname">WallDecorations/Wallwatches.png</td>
-          <td class="dim">64×64</td>
-          <td class="variants">8 wall clock variants</td>
-          <td><span class="tag tag-decor">decor</span> — wall art</td>
-        </tr>
-        <tr>
-          <td class="fname">WallDecorations/Frames.png</td>
-          <td class="dim">32×32</td>
-          <td class="variants">4 small frames</td>
-          <td><span class="tag tag-decor">decor</span> — wall art</td>
-        </tr>
+        <tr><td class="svc">Decorations/Bookcases.png</td><td>64×64</td><td>2 (brown, dark)</td><td>sniff ×1, knock ×1 — tall, 32×64 each (2×4 tiles)</td></tr>
+        <tr><td class="svc">Decorations/Plants.png</td><td>128×64</td><td>8 potted plant variants</td><td>sniff ×1 — no collision, no knock</td></tr>
+        <tr><td class="svc">Decorations/Books.png</td><td>128×64</td><td>8 stacked book variants</td><td>knock ×1 — small props on surfaces</td></tr>
+        <tr><td class="svc">Decorations/TeddyBears.png</td><td>99×61</td><td>5 (tan, white, gray, black, + 1)</td><td>sniff ×1, knock ×1 — floor prop</td></tr>
+        <tr><td class="svc">Decorations/CoffeeCups.png</td><td>64×32</td><td>4</td><td>knock ×1 — surface prop</td></tr>
+        <tr><td class="svc">Decorations/Lamp.png</td><td>32×64</td><td>2</td><td>decor — table lamp, no interaction</td></tr>
+        <tr><td class="svc">Decorations/DecorativeLamps.png</td><td>128×64</td><td>4</td><td>decor — floor lamp, no interaction</td></tr>
+        <tr><td class="svc">WallDecorations/Windows.png</td><td>128×128</td><td>8 large window variants (2×2 grid)</td><td>sit ×1, lay ×1 — windowsill hotspot; placed on wall layer</td></tr>
+        <tr><td class="svc">WallDecorations/WindowsSmall.png</td><td>64×64</td><td>4 small window variants</td><td>decor — no sill, just visual</td></tr>
+        <tr><td class="svc">WallDecorations/PaintingsBig.png</td><td>64×64</td><td>4 landscape paintings</td><td>decor — wall art</td></tr>
+        <tr><td class="svc">WallDecorations/PaintingsBig2.png</td><td>64×64</td><td>6 gem/crystal paintings</td><td>decor — wall art</td></tr>
+        <tr><td class="svc">WallDecorations/Wallwatches.png</td><td>64×64</td><td>8 wall clock variants</td><td>decor — wall art</td></tr>
+        <tr><td class="svc">WallDecorations/Frames.png</td><td>32×32</td><td>4 small frames</td><td>decor — wall art</td></tr>
       </tbody>
     </table>
 
+    <div class="section-notes">
+      <label for="notes-decorations">Notes — Decorations</label>
+      <textarea id="notes-decorations" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- ROOM SETS -->
     <h2 id="rooms">Room-Specific Sets</h2>
     <p>Two bonus rooms with dedicated furniture not found in the main Furnitures folder.</p>
 
-    <table class="mt">
+    <table class="svc-table">
       <thead><tr><th>File</th><th>Dims</th><th>Contents</th><th>Notes</th></tr></thead>
       <tbody>
         <tr>
-          <td class="fname">Kitchen/Kitchen.png</td>
-          <td class="dim">256×128</td>
+          <td class="svc">Kitchen/Kitchen.png</td>
+          <td>256×128</td>
           <td>Counter units (L-shape), range/oven, kitchen table, stools ×2, kettle, fridge (tall), hanging pot rack</td>
           <td>Individual items with spacing — each needs its own atlas region. Fridge and oven block nav. Counter units block nav. Stools are sit hotspots.</td>
         </tr>
         <tr>
-          <td class="fname">Bathroom/Kitchen.png <span class="tag tag-block">mislabeled</span></td>
-          <td class="dim">160×96</td>
+          <td class="svc">Bathroom/Kitchen.png (mislabeled)</td>
+          <td>160×96</td>
           <td>White bathtub, red/maroon bathtub, toilet, pedestal sink, vanity mirror/cabinet, small rug/mat piece</td>
           <td>Rename to <code>Bathroom.png</code> on import. Bathtub = lay ×1. Toilet/sink = sniff ×1. All block nav except the mat.</td>
         </tr>
       </tbody>
     </table>
 
+    <div class="section-notes">
+      <label for="notes-rooms">Notes — Room Sets</label>
+      <textarea id="notes-rooms" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- HALLOWEEN -->
     <h2 id="bonus">Bonus: Halloween Pack</h2>
     <p>A complete seasonal overlay set — its own furniture, props, and floor tiles. Don't integrate now; save for a Halloween event pass.</p>
 
-    <table class="mt">
+    <table class="svc-table">
       <thead><tr><th>File</th><th>Dims</th><th>Contents</th></tr></thead>
       <tbody>
         <tr>
-          <td class="fname">Halloween/Halloween.png</td>
-          <td class="dim">256×256</td>
+          <td class="svc">Halloween/Halloween.png</td>
+          <td>256×256</td>
           <td>Cobweb arch decoration, gray sofa + armchair, teddy bears (Halloween palette), spider prop, broomstick, witch hat, black cat prop, pumpkins (3 sizes), bone props, round table, Halloween-style carpet/floor tiles (dark checker, dark wood variants), small rug</td>
         </tr>
       </tbody>
@@ -548,9 +299,13 @@
       <strong>Seasonal swap potential:</strong> The Halloween pack has its own sofa, armchair, carpet, and floor tiles — a complete room reskin. When the time comes, a seasonal mode could swap the Room TileSet and replace furniture variants without touching any behavior code.
     </div>
 
+    <div class="section-notes">
+      <label for="notes-bonus">Notes — Halloween Pack</label>
+      <textarea id="notes-bonus" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- TECHNICAL CONTEXT -->
     <h2 id="technical">Technical Context</h2>
 
     <h3>Two-tier floor type lookup (new insight from survey)</h3>
@@ -584,107 +339,105 @@
     <p>From the survey: sofas, beds, desks, drawers, bookcases, kitchen counters, oven, fridge, bathtub, toilet, and sink all block navigation. Plants, lamps, and small props do not. Doors in the wall layer must be marked walkable in the TileSet so the navmesh passes through them.</p>
 
     <h3>Existing connection points</h3>
-    <table class="mt">
+    <table class="svc-table">
       <thead><tr><th>System</th><th>File</th><th>What changes</th></tr></thead>
       <tbody>
-        <tr><td>Activity decisions</td><td class="fname">ActivityBrain.gd</td><td>Queries floor type + hotspot availability before picking next activity</td></tr>
-        <tr><td>Personality weights</td><td class="fname">KittyPersonality.gd</td><td>Floor type bias modifiers applied transiently at decision time</td></tr>
-        <tr><td>Movement target</td><td class="fname">MovementState.gd</td><td>Hotspot slot world positions feed in as navigation targets</td></tr>
-        <tr><td>World scene</td><td class="fname">WorldDirector.gd / Main.tscn</td><td>Room scene child; WorldDirector holds furniture registry</td></tr>
-        <tr><td>Rest states</td><td class="fname">kitty_states/SitState.gd, LayState.gd</td><td>Release claimed hotspot slot on any exit</td></tr>
+        <tr><td>Activity decisions</td><td class="svc">ActivityBrain.gd</td><td>Queries floor type + hotspot availability before picking next activity</td></tr>
+        <tr><td>Personality weights</td><td class="svc">KittyPersonality.gd</td><td>Floor type bias modifiers applied transiently at decision time</td></tr>
+        <tr><td>Movement target</td><td class="svc">MovementState.gd</td><td>Hotspot slot world positions feed in as navigation targets</td></tr>
+        <tr><td>World scene</td><td class="svc">WorldDirector.gd / Main.tscn</td><td>Room scene child; WorldDirector holds furniture registry</td></tr>
+        <tr><td>Rest states</td><td class="svc">kitty_states/SitState.gd, LayState.gd</td><td>Release claimed hotspot slot on any exit</td></tr>
       </tbody>
     </table>
 
+    <div class="section-notes">
+      <label for="notes-technical">Notes — Technical Context</label>
+      <textarea id="notes-technical" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- DECISIONS -->
     <h2 id="questions">Decisions — Locked In</h2>
     <p>All five design questions answered. These are the architectural constraints implementation must follow.</p>
 
-    <style>
-      .decision { background: var(--green-bg); border: 1px solid var(--green-b); border-left: 3px solid var(--green); border-radius: 0 8px 8px 0; padding: 0.9rem 1.2rem; margin: 0.85rem 0; display: flex; gap: 1rem; align-items: flex-start; }
-      .d-num { font-size: 0.72rem; font-weight: 700; background: var(--green); color: #001800; border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 0.1rem; }
-      .d-body { flex: 1; }
-      .d-question { font-size: 0.78rem; color: #507050; margin-bottom: 0.25rem; }
-      .d-answer { font-size: 0.9rem; font-weight: 700; color: #80d880; margin-bottom: 0.3rem; }
-      .d-rationale { font-size: 0.82rem; color: #608060; margin: 0; }
-      .d-rationale strong { color: #70a070; }
-    </style>
-
-    <div class="decision">
-      <div class="d-num">1</div>
-      <div class="d-body">
-        <div class="d-question">How many TileMapLayer nodes?</div>
-        <div class="d-answer">A — Two layers: Floor + Walls</div>
-        <p class="d-rationale">Floor layer carries all walkable tiles with <code>floor_type</code> custom data. Wall layer holds wall tiles, WalllMaker connectors, and door tiles. Wall decorations (windows, paintings, clocks) placed as Sprite2D scenes — gives per-item control and makes attaching windowsill hotspots trivial.</p>
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">1</div>
+        <div class="q-title">How many TileMapLayer nodes?</div>
+        <span class="pill pill-green">Decided</span>
       </div>
+      <p>Question: how to structure the layer hierarchy for floors, walls, and decorations.</p>
+      <div class="note"><strong>Chosen:</strong> A — Two layers: Floor + Walls. Floor layer carries all walkable tiles with <code>floor_type</code> custom data. Wall layer holds wall tiles, WalllMaker connectors, and door tiles. Wall decorations (windows, paintings, clocks) placed as Sprite2D scenes — gives per-item control and makes attaching windowsill hotspots trivial.</div>
     </div>
 
-    <div class="decision">
-      <div class="d-num">2</div>
-      <div class="d-body">
-        <div class="d-question">How do furniture color variants get selected?</div>
-        <div class="d-answer">A — Hand-pick per instance in the inspector</div>
-        <p class="d-rationale">Each Furniture scene exports <code>variant: int</code>. Set it in the editor when placing furniture in the room. The room is a designed space — picking the teal sofa for the living room is a creative decision, not a code decision.</p>
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">2</div>
+        <div class="q-title">How do furniture color variants get selected?</div>
+        <span class="pill pill-green">Decided</span>
       </div>
+      <p>Question: runtime random, designer-picked, or resource-driven selection.</p>
+      <div class="note"><strong>Chosen:</strong> A — Hand-pick per instance in the inspector. Each Furniture scene exports <code>variant: int</code>. Set it in the editor when placing furniture in the room. The room is a designed space — picking the teal sofa for the living room is a creative decision, not a code decision.</div>
     </div>
 
-    <div class="decision">
-      <div class="d-num">3</div>
-      <div class="d-body">
-        <div class="d-question">How does hotspot discovery work?</div>
-        <div class="d-answer">C + raycast filter + Door markers — proximity with line-of-sight</div>
-        <p class="d-rationale"><strong>Core principle:</strong> kitties only act on furniture they can actually reach without going through a wall. Three parts working together:<br><br>
-        <strong>1. Interest zone (Area2D, r≈200px):</strong> Character detects all nearby Furniture nodes reactively via signals. Area2D naturally goes through walls — this is intentional. A large zone means a kitty can "sense" the bed in the next room.<br><br>
-        <strong>2. Raycast filter:</strong> Before claiming any hotspot, cast a ray from the character to the hotspot's world position against the walls physics layer only. If the ray hits — wall is in the way — skip that candidate. If the ray is clear, the hotspot is reachable. No room shapes, no topology graph — works automatically as you paint.<br><br>
-        <strong>3. Door markers (EXPLORE hotspot):</strong> A small <code>Door.tscn</code> scene is placed at the center of each doorway gap. It exposes a single EXPLORE-type hotspot slot. The doorway is an open gap (no wall tile), so the raycast to a door marker always passes. When a kitty chooses EXPLORE, it navigates to the door — crossing into the adjacent room — where it then discovers new furniture via its interest zone. Curiosity weight in KittyPersonality drives how often EXPLORE is chosen vs. settling nearby.<br><br>
-        <strong>Future hook:</strong> Food bowls, water dishes, and litter boxes are <em>need-based global overrides</em> — when hunger/thirst/urgency exceeds a threshold, the character bypasses the proximity system entirely and navigates to the nearest global target. This is a separate layer; the proximity + raycast architecture is unaffected.</p>
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">3</div>
+        <div class="q-title">How does hotspot discovery work?</div>
+        <span class="pill pill-green">Decided</span>
       </div>
+      <p>Question: global registry, proximity scan, or line-of-sight filtered approach.</p>
+      <div class="note"><strong>Chosen:</strong> C + raycast filter + Door markers — proximity with line-of-sight. <strong>Core principle:</strong> kitties only act on furniture they can actually reach without going through a wall. Three parts working together:<br><br>
+      <strong>1. Interest zone (Area2D, r≈200px):</strong> Character detects all nearby Furniture nodes reactively via signals. Area2D naturally goes through walls — this is intentional. A large zone means a kitty can "sense" the bed in the next room.<br><br>
+      <strong>2. Raycast filter:</strong> Before claiming any hotspot, cast a ray from the character to the hotspot's world position against the walls physics layer only. If the ray hits — wall is in the way — skip that candidate. If the ray is clear, the hotspot is reachable.<br><br>
+      <strong>3. Door markers (EXPLORE hotspot):</strong> A small <code>Door.tscn</code> scene is placed at the center of each doorway gap. It exposes a single EXPLORE-type hotspot slot. When a kitty chooses EXPLORE, it navigates to the door — crossing into the adjacent room. Curiosity weight in KittyPersonality drives how often EXPLORE is chosen.</div>
     </div>
 
-    <div class="decision">
-      <div class="d-num">4</div>
-      <div class="d-body">
-        <div class="d-question">Where does floor-type behavior live?</div>
-        <div class="d-answer">A — Cached on Character, polled every 0.5s</div>
-        <p class="d-rationale">Character holds <code>current_floor_type</code> updated by a timer. Rug overlap is maintained reactively via <code>area_entered/exited</code> signals — the 0.5s timer only handles the TileMap tile query. ActivityBrain reads the cached value at decision time. No TileMap coupling in Brain or States.</p>
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">4</div>
+        <div class="q-title">Where does floor-type behavior live?</div>
+        <span class="pill pill-green">Decided</span>
       </div>
+      <p>Question: should floor-type query live in the Brain, Character, or a global service.</p>
+      <div class="note"><strong>Chosen:</strong> A — Cached on Character, polled every 0.5s. Character holds <code>current_floor_type</code> updated by a timer. Rug overlap is maintained reactively via <code>area_entered/exited</code> signals — the 0.5s timer only handles the TileMap tile query. ActivityBrain reads the cached value at decision time. No TileMap coupling in Brain or States.</div>
     </div>
 
-    <div class="decision">
-      <div class="d-num">5</div>
-      <div class="d-body">
-        <div class="d-question">How does furniture block navigation?</div>
-        <div class="d-answer">B — TileMap physics bake (walls) + NavigationObstacle2D (furniture)</div>
-        <p class="d-rationale">Walls bake into the NavigationRegion2D via TileSet physics layer — hard navmesh blocks. Furniture scenes each carry a <code>NavigationObstacle2D</code> for dynamic soft avoidance. Agents route around walls at the macro level, then steer around furniture in real time. Idiomatic Godot 4 approach; sets up correctly for outdoor assets later.</p>
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">5</div>
+        <div class="q-title">How does furniture block navigation?</div>
+        <span class="pill pill-green">Decided</span>
       </div>
+      <p>Question: static navmesh bake, dynamic obstacles, or hybrid.</p>
+      <div class="note"><strong>Chosen:</strong> B — TileMap physics bake (walls) + NavigationObstacle2D (furniture). Walls bake into the NavigationRegion2D via TileSet physics layer — hard navmesh blocks. Furniture scenes each carry a <code>NavigationObstacle2D</code> for dynamic soft avoidance. Agents route around walls at the macro level, then steer around furniture in real time. Idiomatic Godot 4 approach; sets up correctly for outdoor assets later.</div>
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-questions">Notes — Decisions</label>
+      <textarea id="notes-questions" placeholder="Add notes…"></textarea>
     </div>
 
     <hr />
 
-    <!-- PHASES -->
     <h2 id="phases">Implementation Phases</h2>
     <p>Seven phases in dependency order. Phases 1–4 are the foundation — no behavior work starts until kitties can physically walk around a room. Resolve design questions before starting Phase 2.</p>
 
-    <div class="phase-grid">
-      <div class="phase-card p1">
-        <div class="phase-label">Phases 1–3 · Foundation <span class="pill pill-green" style="font-size:0.6rem;">Done</span></div>
-        <h3>World exists, kitties navigate it</h3>
+    <div class="two-col">
+      <div class="col-card">
+        <h3>Phases 1–3 · Foundation <span class="pill pill-green">Done</span></h3>
         <p>Assets imported, TileSet configured, House.tscn live with navmesh. Kitties path around walls, walk targets derived from nav polygon bounds.</p>
       </div>
-      <div class="phase-card p1">
-        <div class="phase-label">Phase 4 · Furniture <span class="pill pill-gold" style="font-size:0.6rem;">Up Next</span></div>
-        <h3>Furniture scenes</h3>
-        <p>Base scripts written. Need .tscn files: Bed, Sofa, Carpet, Desk, Drawers, Bookcase, Plant, Lamp, Window, Door with hotspot overrides.</p>
+      <div class="col-card">
+        <h3>Phase 4 · Furniture <span class="pill pill-teal">In Progress</span></h3>
+        <p>Data-driven architecture done: <code>Furniture.gd</code>, <code>FurnitureDefinition.gd</code>, <code>HotspotSpec.gd</code>, all 11 <code>.tres</code> definitions. Building .tscn scenes: Bed done, 11 remaining. Tracked in <a href="/projects/kittybarrage/furniture-checklist.html">Furniture Scene Checklist</a>.</p>
       </div>
-      <div class="phase-card p2">
-        <div class="phase-label">Phases 5–6 · Behavior <span class="pill pill-green" style="font-size:0.6rem;">Done</span></div>
-        <h3>Hotspots + floor types live</h3>
+      <div class="col-card">
+        <h3>Phases 5–6 · Behavior <span class="pill pill-green">Done</span></h3>
         <p>Proximity/raycast hotspot system, slot claiming, EXPLORE activity, two-tier floor query, ActivityBrain bias modifiers — all scripted and working.</p>
       </div>
-      <div class="phase-card p3">
-        <div class="phase-label">Phase 7 · Layout</div>
-        <h3>A real house</h3>
+      <div class="col-card">
+        <h3>Phase 7 · Layout</h3>
         <p>Four rooms painted and furnished. Kitties can explore autonomously for 5+ minutes with varied behavior per room.</p>
       </div>
     </div>
@@ -742,7 +495,7 @@
       </div>
 
       <div class="step">
-        <div class="step-title">Phase 4 — Furniture Scene Architecture <span class="pill pill-gold">Up Next</span></div>
+        <div class="step-title">Phase 4 — Furniture Scene Architecture <span class="pill pill-teal">In Progress</span></div>
         <p>Create the base Furniture scene and all individual furniture variant scenes. Verify navigation avoidance works for at least one piece before building the full catalog.</p>
         <pre><span class="cm"># Furniture.gd — base class</span>
 <span class="kw">class_name</span> <span class="tp">Furniture</span>
@@ -758,22 +511,13 @@
 
 <span class="kw">func</span> <span class="fn">get_hotspots</span>() -> <span class="tp">Array</span>[<span class="tp">FurnitureHotspot</span>]:
     <span class="kw">return</span> []</pre>
-        <p>Scene tree for a blocking furniture piece (e.g. Sofa):</p>
-        <ul>
-          <li><code>Sofa (Furniture)</code> → <code>Sprite2D</code>, <code>StaticBody2D</code> + <code>CollisionShape2D</code>, <code>NavigationObstacle2D</code>, <code>DetectionArea (Area2D)</code> + <code>CollisionShape2D</code></li>
-          <li>Set <code>NavigationObstacle2D.radius</code> to match furniture footprint</li>
-          <li>Set <code>StaticBody2D</code> collision layer/mask to block character movement but not navigation queries</li>
-          <li><code>DetectionArea</code> collision layer should match what the Character's <code>_interest_zone</code> is scanning — keep it separate from walls and characters</li>
-          <li>Non-blocking decorations (plants, lamps): <code>Decoration (Node2D)</code> → <code>Sprite2D</code> + <code>DetectionArea</code> only. No physics collision, no obstacle.</li>
-        </ul>
-        <p>Build scenes for: Bed, SofaLarge, SofaSmall (armchair), Carpet, TableRound, Desk, Drawers, Bookcase, Plant, Lamp, Window (large, with windowsill hotspot), <strong>Door</strong> (marker — see Phase 5)</p>
+        <p>Build scenes for: Bed, SofaLarge, SofaSmall (armchair), Carpet, TableRound, Desk, Drawers, Bookcase, Plant, Lamp, Window (large, with windowsill hotspot), <strong>Door</strong> (marker — see Phase 5). See <a href="/projects/kittybarrage/furniture-checklist.html">furniture-checklist.html</a> for detailed progress tracking.</p>
       </div>
 
       <div class="step done">
-        <div class="step-title">Phase 5 — Hotspot System <span class="pill pill-green">Complete</span> <span class="pill pill-purple">Proximity + Raycast + Doors</span></div>
+        <div class="step-title">Phase 5 — Hotspot System <span class="pill pill-green">Complete</span></div>
         <p>No global registry. Each Character carries an interest zone (detects nearby furniture reactively) and a raycast filter (confirms line of sight before claiming). Door markers expose an EXPLORE hotspot that lets kitties deliberately cross into adjacent rooms.</p>
 
-        <h3>FurnitureHotspot resource — slot ownership</h3>
         <pre><span class="cm"># FurnitureHotspot.gd</span>
 <span class="kw">class_name</span> <span class="tp">FurnitureHotspot</span>
 <span class="kw">extends</span> <span class="tp">Resource</span>
@@ -795,134 +539,30 @@
 <span class="kw">func</span> <span class="fn">release</span>(character) -> <span class="tp">void</span>:
     <span class="kw">for</span> key <span class="kw">in</span> _claimed.keys():
         <span class="kw">if</span> _claimed[key] == character:
-            _claimed.erase(key); <span class="kw">return</span>
+            _claimed.erase(key); <span class="kw">return</span></pre>
 
-<span class="kw">func</span> <span class="fn">has_available_slot</span>() -> <span class="tp">bool</span>:
-    <span class="kw">return not</span> knocked <span class="kw">and</span> _claimed.size() < slots.size()</pre>
-
-        <h3>Character — interest zone, raycast filter, slot ownership</h3>
-        <pre><span class="cm"># In Character.gd</span>
-<span class="kw">@onready var</span> _interest_zone: <span class="tp">Area2D</span> = $InterestZone  <span class="cm"># CircleShape2D, r≈200px</span>
-<span class="kw">var</span> _nearby_furniture: <span class="tp">Array</span>[<span class="tp">Furniture</span>] = []
-<span class="kw">var</span> _claimed_hotspot: <span class="tp">FurnitureHotspot</span> = <span class="nm">null</span>
-<span class="kw">const</span> <span class="nm">WALL_LAYER</span> := <span class="nm">1</span>  <span class="cm"># physics layer bit for wall tiles — match your TileSet config</span>
-
-<span class="kw">func</span> <span class="fn">_ready</span>() -> <span class="tp">void</span>:
-    _interest_zone.area_entered.<span class="fn">connect</span>(_on_furniture_entered)
-    _interest_zone.area_exited.<span class="fn">connect</span>(_on_furniture_exited)
-
-<span class="kw">func</span> <span class="fn">_on_furniture_entered</span>(area: <span class="tp">Area2D</span>) -> <span class="tp">void</span>:
-    <span class="kw">var</span> f := area.<span class="fn">get_parent</span>() <span class="kw">as</span> <span class="tp">Furniture</span>
-    <span class="kw">if</span> f <span class="kw">and not</span> _nearby_furniture.has(f): _nearby_furniture.<span class="fn">append</span>(f)
-
-<span class="kw">func</span> <span class="fn">_on_furniture_exited</span>(area: <span class="tp">Area2D</span>) -> <span class="tp">void</span>:
-    <span class="kw">var</span> f := area.<span class="fn">get_parent</span>() <span class="kw">as</span> <span class="tp">Furniture</span>
-    <span class="kw">if</span> f: _nearby_furniture.<span class="fn">erase</span>(f)
-
-<span class="cm"># Returns true if no wall tile lies on the straight line to target_pos.</span>
-<span class="kw">func</span> <span class="fn">_has_line_of_sight</span>(target_pos: <span class="tp">Vector2</span>) -> <span class="tp">bool</span>:
-    <span class="kw">var</span> space := get_world_2d().direct_space_state
-    <span class="kw">var</span> query := <span class="tp">PhysicsRayQueryParameters2D</span>.<span class="fn">create</span>(
-        global_position, target_pos, <span class="nm">WALL_LAYER</span>
-    )
-    query.exclude = [self]
-    <span class="kw">return</span> space.<span class="fn">intersect_ray</span>(query).is_empty()
-
-<span class="kw">func</span> <span class="fn">find_nearby_hotspot</span>(action: <span class="tp">FurnitureHotspot</span>.<span class="tp">ActionType</span>) -> <span class="tp">Dictionary</span>:
-    <span class="kw">for</span> furniture <span class="kw">in</span> _nearby_furniture:
-        <span class="kw">for</span> hs <span class="kw">in</span> furniture.<span class="fn">get_hotspots</span>():
-            <span class="kw">if</span> hs.action != action <span class="kw">or not</span> hs.<span class="fn">has_available_slot</span>(): <span class="kw">continue</span>
-            <span class="kw">var</span> slot_world := furniture.global_position + hs.slots[<span class="nm">0</span>]
-            <span class="kw">if not</span> <span class="fn">_has_line_of_sight</span>(slot_world): <span class="kw">continue</span>  <span class="cm"># wall in the way</span>
-            <span class="kw">var</span> idx := hs.<span class="fn">claim</span>(self)
-            <span class="kw">if</span> idx >= <span class="nm">0</span>:
-                _claimed_hotspot = hs
-                <span class="kw">return</span> { <span class="st">"world_pos"</span>: furniture.global_position + hs.slots[idx] }
-    <span class="kw">return</span> {}
-
-<span class="kw">func</span> <span class="fn">release_hotspot</span>() -> <span class="tp">void</span>:
-    <span class="kw">if</span> _claimed_hotspot:
-        _claimed_hotspot.<span class="fn">release</span>(self)
-        _claimed_hotspot = <span class="nm">null</span></pre>
-
-        <h3>Door marker scene — the EXPLORE hotspot</h3>
-        <p><code>Door.tscn</code> is a lightweight invisible marker placed at the center of each doorway gap in the editor. It extends <code>Furniture</code>, has no sprite and no collision, and returns a single EXPLORE hotspot at its own origin.</p>
-        <pre><span class="cm"># Door.gd</span>
-<span class="kw">class_name</span> <span class="tp">Door</span>
-<span class="kw">extends</span> <span class="tp">Furniture</span>
-
-<span class="kw">func</span> <span class="fn">get_hotspots</span>() -> <span class="tp">Array</span>[<span class="tp">FurnitureHotspot</span>]:
-    <span class="kw">var</span> hs := <span class="tp">FurnitureHotspot</span>.<span class="fn">new</span>()
-    hs.action = <span class="tp">FurnitureHotspot</span>.<span class="tp">ActionType</span>.EXPLORE
-    hs.slots = [<span class="tp">Vector2</span>.ZERO]  <span class="cm"># slot IS the door position</span>
-    <span class="kw">return</span> [hs]</pre>
-        <ul>
-          <li>Scene tree: <code>Door (Furniture)</code> → <code>DetectionArea (Area2D)</code> + small <code>CircleShape2D</code> — just enough to enter kitty interest zones</li>
-          <li>No <code>Sprite2D</code>, no <code>StaticBody2D</code>, no <code>NavigationObstacle2D</code> — it's invisible and completely passthrough</li>
-          <li>The raycast from a kitty in the same room to the door's world position passes through the open gap — no wall tile there</li>
-          <li>The raycast from a kitty in the opposite room hits the wall — that door is not visible until the kitty approaches the gap from their side</li>
-          <li>Place one <code>Door.tscn</code> instance at each doorway when painting the house in Phase 7</li>
-        </ul>
         <div class="note">
           <strong>EXPLORE slots don't stay claimed.</strong> Once the kitty arrives at the door position, it's crossed into the adjacent room and ActivityBrain fires a new decision cycle. The EXPLORE slot should be released immediately on arrival — no holding. The door is a waypoint, not a seat.
         </div>
-
-        <h3>ActivityBrain — EXPLORE activity</h3>
-        <ul>
-          <li>Add <code>EXPLORE</code> to the set of possible activities in <code>ActivityBrain._pick_activity()</code></li>
-          <li>EXPLORE weight comes from <code>KittyPersonality.curiosity</code> — a new personality field (float 0–1). High curiosity kitties wander frequently; homebodies rarely leave their favourite rug.</li>
-          <li>When EXPLORE is chosen: call <code>character.find_nearby_hotspot(EXPLORE)</code></li>
-          <li>If a door is in range and passes the raycast → navigate to it; on arrival release the slot and re-decide</li>
-          <li>If no door in range → fall back to a random floor position anywhere in the navmesh (existing walk behaviour — kitties can still wander naturally)</li>
-          <li>All other activities (SIT, LAY, SNIFF) already query through <code>find_nearby_hotspot()</code> which applies the raycast filter — no further changes needed</li>
-        </ul>
-
-        <h3>State exit — slot release</h3>
-        <ul>
-          <li>SitState, LayState, future SniffState: call <code>character.release_hotspot()</code> in <code>_exit()</code></li>
-          <li>MovementState interrupted mid-approach: also call <code>release_hotspot()</code> — the slot was pre-claimed at decision time</li>
-          <li>EXPLORE arrivals: release immediately in the movement arrival callback, not in a state's <code>_exit()</code></li>
-          <li>KNOCK: <code>KnockState</code> sets <code>hotspot.knocked = true</code> on animation completion. Slot permanently gone — no release needed.</li>
-        </ul>
       </div>
 
       <div class="step done">
         <div class="step-title">Phase 6 — Floor Type Behavior <span class="pill pill-green">Complete</span></div>
         <p>Two-tier floor query on Character, behavior bias modifiers in ActivityBrain.</p>
-        <pre><span class="cm"># In Character.gd</span>
-<span class="kw">enum</span> <span class="tp">FloorType</span> { NONE, WOOD, STONE, RUG }
-
-<span class="kw">var</span> current_floor_type: <span class="tp">FloorType</span> = <span class="tp">FloorType</span>.NONE
-<span class="kw">var</span> _overlapping_rugs: <span class="tp">Array</span> = []  <span class="cm"># maintained via area_entered/exited on _floor_sensor</span>
-
-<span class="kw">func</span> <span class="fn">_update_floor_type</span>() -> <span class="tp">void</span>:
-    <span class="cm"># Tier 1: rug presence (reactive, maintained by signals)</span>
-    <span class="kw">if not</span> _overlapping_rugs.is_empty():
-        current_floor_type = <span class="tp">FloorType</span>.RUG
-        <span class="kw">return</span>
-    <span class="cm"># Tier 2: tile data</span>
-    <span class="kw">var</span> cell := floor_layer.<span class="fn">local_to_map</span>(floor_layer.<span class="fn">to_local</span>(global_position))
-    <span class="kw">var</span> td := floor_layer.<span class="fn">get_cell_tile_data</span>(cell)
-    <span class="kw">if</span> td:
-        <span class="kw">var</span> raw: <span class="tp">String</span> = td.<span class="fn">get_custom_data</span>(<span class="st">"floor_type"</span>)
-        current_floor_type = <span class="tp">FloorType</span>[raw] <span class="kw">if</span> <span class="tp">FloorType</span>.<span class="fn">has</span>(raw) <span class="kw">else</span> <span class="tp">FloorType</span>.NONE
-    <span class="kw">else</span>:
-        current_floor_type = <span class="tp">FloorType</span>.NONE</pre>
-
-        <table class="mt" style="margin-top:0.75rem;">
+        <table class="svc-table" style="margin-top:0.75rem;">
           <thead><tr><th>FloorType</th><th>Rest/lay bias</th><th>Sit bias</th><th>Play/run bias</th><th>Speed mult</th></tr></thead>
           <tbody>
-            <tr><td><code>STONE</code></td><td>−0.4</td><td>−0.2</td><td>neutral</td><td>1.0×</td></tr>
-            <tr><td><code>WOOD</code></td><td>neutral</td><td>neutral</td><td>+0.2</td><td>1.05×</td></tr>
-            <tr><td><code>RUG</code></td><td>+0.4</td><td>+0.3</td><td>−0.1</td><td>0.9×</td></tr>
-            <tr><td><code>NONE</code></td><td>neutral</td><td>neutral</td><td>neutral</td><td>1.0×</td></tr>
+            <tr><td class="svc">STONE</td><td>−0.4</td><td>−0.2</td><td>neutral</td><td>1.0×</td></tr>
+            <tr><td class="svc">WOOD</td><td>neutral</td><td>neutral</td><td>+0.2</td><td>1.05×</td></tr>
+            <tr><td class="svc">RUG</td><td>+0.4</td><td>+0.3</td><td>−0.1</td><td>0.9×</td></tr>
+            <tr><td class="svc">NONE</td><td>neutral</td><td>neutral</td><td>neutral</td><td>1.0×</td></tr>
           </tbody>
         </table>
         <p>Bias deltas are added transiently in <code>ActivityBrain._pick_activity()</code> — they do not mutate the personality resource. Speed multiplier applied in MovementState each tick via <code>NavigationAgent2D.max_speed * character.current_floor_type_speed_mult()</code>.</p>
       </div>
 
       <div class="step">
-        <div class="step-title">Phase 7 — Paint the House Layout <span class="pill pill-blue">Pending Phase 4</span></div>
+        <div class="step-title" id="layout">Phase 7 — Paint the House Layout <span class="pill pill-blue">Pending Phase 4</span></div>
         <p>Four rooms. Each has a dominant floor type and distinctive furniture that creates a different behavioral magnet for the kitties.</p>
         <pre style="font-size:0.71rem; line-height:1.6;">
  ┌──────────────────────┬──────────────────────┐
@@ -945,7 +585,7 @@
           <li><strong>Kitchen:</strong> Stone/checker floor — kitties pass through but don't settle. Table with stools (sit ×2). Counter and fridge block nav. Plant (sniff). Coffee cup on counter (knock).</li>
           <li><strong>Bathroom:</strong> Checker floor (STONE behavior). Small, tight. Bathtub (lay ×1 — a warm bath feels safe). Toilet (sniff). Sink (sniff).</li>
           <li><strong>Living room:</strong> Wood floor with large rug center-stage. Sofa (sit ×3, lay ×1). Armchair (sit ×1). Rug is the dominant rest attractor. Bookcase (sniff, knock). Round table (knock). Plant (sniff). Wall clock and paintings for atmosphere.</li>
-          <li><strong>Connections:</strong> Doorways on every shared wall. Each doorway wide enough for 2 kitties (≥ 2 tiles). Interior doors are just a gap in the wall tiles — use the door sprite from <code>Doors.png</code> if you want a visual, or leave it open. Either way, place one <code>Door.tscn</code> marker at the center of every doorway gap so kitties have an EXPLORE target to navigate toward.</li>
+          <li><strong>Connections:</strong> Doorways on every shared wall. Each doorway wide enough for 2 kitties (≥ 2 tiles). Place one <code>Door.tscn</code> marker at the center of every doorway gap so kitties have an EXPLORE target to navigate toward.</li>
         </ul>
         <div class="note">
           <strong>Y-sort on furniture:</strong> Set <code>y_sort_origin</code> on each Furniture scene to the bottom-center of the sprite. The existing WorldLayer y-sort will then correctly render kitties behind or in front of furniture based on vertical position.
@@ -954,11 +594,15 @@
 
     </div>
 
+    <div class="section-notes">
+      <label for="notes-phases">Notes — Implementation Phases</label>
+      <textarea id="notes-phases" placeholder="Add notes…"></textarea>
+    </div>
+
     <hr />
 
-    <!-- TESTING -->
     <h2 id="testing">Testing Checklist</h2>
-    <ul class="checklist">
+    <ul>
       <li>Kitty spawns and navigates within the room without clipping through any wall tile</li>
       <li>Kitty routes around a placed sofa — does not walk through it</li>
       <li>Kitty in the living room cannot claim the bedroom bed — raycast hits the wall between them</li>
@@ -982,10 +626,27 @@
       <li>All four rooms reachable by navigation — no isolated dead zones</li>
     </ul>
 
-    <p style="font-size:0.75rem;color:var(--dim);margin-top:2rem;">Kitty Barrage Wiki · <code>wiki/task-plan-pixel-rooms.html</code> · Updated May 2026 — Phases 1–3, 5–6 complete. Phase 4 (furniture scenes) is next; Phase 7 (house layout) follows.</p>
-
+    <div id="wiki-copy-bar"></div>
   </div>
 </div>
 
+<script src="/shared/wiki.js"></script>
+<script src="/shared/nav.js"></script>
+<script>
+  initWikiPage({
+    sectionNotes: [
+      { id: 'notes-goal',        label: 'Goal & Scope' },
+      { id: 'notes-findings',    label: "What's In The Pack" },
+      { id: 'notes-tileset',     label: 'Tileset Files' },
+      { id: 'notes-furniture',   label: 'Furniture Catalog' },
+      { id: 'notes-decorations', label: 'Decorations' },
+      { id: 'notes-rooms',       label: 'Room Sets' },
+      { id: 'notes-bonus',       label: 'Halloween Pack' },
+      { id: 'notes-technical',   label: 'Technical Context' },
+      { id: 'notes-questions',   label: 'Decisions' },
+      { id: 'notes-phases',      label: 'Implementation Phases' },
+    ],
+  });
+</script>
 </body>
 </html>

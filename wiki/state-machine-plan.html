@@ -3,394 +3,361 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>State Machine Plan</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
-      --b:     #2a2a38; --b2:  #1e1e2a;
-      --text:  #d4d0c8; --dim: #6a6570;
-      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
-      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
-      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
-      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
-      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
-      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); padding: 2rem; line-height: 1.6; max-width: 1100px; }
-    h1   { font-size: 1.5rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
-    h2   { font-size: 0.85rem; font-weight: 700; color: var(--purple); margin: 2rem 0 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; }
-    h3   { font-size: 0.9rem; font-weight: 600; color: #e8e0d4; margin-bottom: 0.3rem; }
-    p    { font-size: 0.86rem; color: #a0988a; }
-    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
-    .sub  { color: var(--dim); font-size: 0.86rem; margin-bottom: 0.4rem; }
-    .div  { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
-
-    /* Status pills */
-    .s { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.5rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; }
-    .s-ok   { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
-    .s-test { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
-    .s-warn { background:var(--orange-bg); color:var(--orange); border:1px solid var(--orange-b); }
-    .s-bug  { background:var(--red-bg);    color:var(--red);    border:1px solid var(--red-b); }
-    .s-dead { background:#141414;          color:#505050;       border:1px solid #282828; }
-
-    /* State cards grid */
-    .state-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:0.85rem; }
-    .sc {
-      background:var(--bg1); border:1px solid var(--b); border-radius:8px; padding:0.85rem 1rem;
-      border-top:3px solid var(--b);
-    }
-    .sc.ok     { border-top-color: var(--green); }
-    .sc.test   { border-top-color: var(--gold); }
-    .sc.warn   { border-top-color: var(--orange); }
-    .sc.bug    { border-top-color: var(--red); }
-    .sc.dead   { border-top-color: #303030; opacity:0.6; }
-    .sc-head   { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem; }
-    .sc-name   { font-family:monospace; font-size:0.88rem; font-weight:700; color:#d0c8f0; }
-    .sc-body li { font-size:0.81rem; color:#888080; margin-bottom:0.18rem; }
-    .sc-body ul { padding-left:1rem; margin-top:0.25rem; }
-    .sc-enum   { font-family:monospace; font-size:0.72rem; color:#505068; margin-top:0.4rem; }
-    .sc-anim   { font-size:0.78rem; color:#4a6878; margin-top:0.2rem; }
-
-    /* Transition table */
-    .tt { width:100%; border-collapse:collapse; font-size:0.82rem; }
-    .tt th { text-align:left; padding:0.4rem 0.75rem; color:var(--dim); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--b); background:#131318; }
-    .tt td { padding:0.42rem 0.75rem; border-bottom:1px solid var(--b2); vertical-align:top; }
-    .tt tr:last-child td { border-bottom:none; }
-    .tt .from { font-family:monospace; color:#8888c8; white-space:nowrap; font-size:0.8rem; }
-    .tt .to   { font-family:monospace; color:#88c888; white-space:nowrap; font-size:0.8rem; }
-    .tt .trig { color:#888080; font-size:0.8rem; }
-    .tt .chain { font-family:monospace; font-size:0.76rem; color:#506060; }
-    .tt .sec td { background:#131318; color:var(--dim); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; padding:0.3rem 0.75rem; }
-    .arr { color:#404058; margin:0 0.2rem; }
-
-    /* Issue cards */
-    .issue {
-      border-radius:6px; padding:0.8rem 1rem; margin-bottom:0.75rem;
-      font-size:0.85rem;
-    }
-    .issue.bug  { background:var(--red-bg);    border:1px solid var(--red-b);    border-left:3px solid var(--red); }
-    .issue.warn { background:var(--orange-bg); border:1px solid var(--orange-b); border-left:3px solid var(--orange); }
-    .issue.todo { background:var(--gold-bg);   border:1px solid var(--gold-b);   border-left:3px solid var(--gold); }
-    .issue-title { font-weight:700; margin-bottom:0.3rem; }
-    .issue.bug  .issue-title { color:var(--red); }
-    .issue.warn .issue-title { color:var(--orange); }
-    .issue.todo .issue-title { color:var(--gold); }
-    .issue p { font-size:0.82rem; color:#808078; }
-    .issue .fix { margin-top:0.4rem; font-size:0.8rem; font-family:monospace; color:#506060; background:#0a0a10; border:1px solid #1e1e2a; border-radius:4px; padding:0.4rem 0.6rem; }
-
-    /* Legend */
-    .legend { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.5rem; font-size:0.78rem; align-items:center; color:var(--dim); }
-    .legend-item { display:flex; align-items:center; gap:0.35rem; }
-
-    /* Flow diagram */
-    .flow { display:flex; align-items:center; flex-wrap:wrap; gap:0.35rem; margin:0.5rem 0; font-size:0.8rem; }
-    .fbox { background:#1a1a28; border:1px solid #3a3a58; border-radius:4px; padding:0.2rem 0.55rem; font-family:monospace; font-size:0.78rem; }
-    .fbox.ok   { color:#80c080; border-color:#284028; background:#0e180e; }
-    .fbox.test { color:#c0a040; border-color:#382e10; background:#181408; }
-    .fbox.bug  { color:#c06060; border-color:#3a1e1e; background:#180e0e; }
-    .farr { color:#303048; }
-
-    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-    @media(max-width:700px){ .grid-2{grid-template-columns:1fr;} }
-    .card { background:var(--bg1); border:1px solid var(--b); border-radius:8px; padding:0.9rem 1rem; }
-    .card li { font-size:0.83rem; color:#888080; margin-bottom:0.25rem; padding-left:0.1rem; }
-    .card ul  { padding-left:1rem; margin-top:0.35rem; }
-  </style>
+  <title>State Machine Plan — Kitty Barrage Wiki</title>
+  <link rel="stylesheet" href="/shared/wiki.css" />
+  <link rel="stylesheet" media="print" href="/shared/print.css" />
 </head>
 <body>
+<div id="wiki-nav"></div>
+<div class="layout">
 
-  <h1>State Machine Plan</h1>
-  <p class="sub">Kitty Barrage · Full animation integration status · May 2026</p>
+  <nav class="sidebar">
+    <div>State Machine Plan</div>
+    <div class="s-head">Sections</div>
+    <a href="#state-inventory">State Inventory</a>
+    <a href="#transition-matrix">Transition Matrix</a>
+    <a href="#issues">Issues</a>
+    <a href="#state-flows">State Flows</a>
+    <a href="#fix-order">Fix Order</a>
+    <div class="s-head">Kitty Barrage</div>
+    <a href="/projects/kittybarrage/">← Hub</a>
+    <a href="/projects/kittybarrage/architecture.html">Architecture</a>
+  </nav>
 
-  <div class="legend">
-    <span>Status:</span>
-    <span class="legend-item"><span class="s s-ok">Working</span> confirmed in game</span>
-    <span class="legend-item"><span class="s s-test">Untested</span> implemented, not yet verified</span>
-    <span class="legend-item"><span class="s s-warn">Issue</span> works but with known gap</span>
-    <span class="legend-item"><span class="s s-bug">Bug</span> broken or incorrect</span>
-    <span class="legend-item"><span class="s s-dead">Unused</span> dead code</span>
-  </div>
+  <div class="main">
+    <div class="breadcrumb"><a href="/">Wiki</a> › <a href="/projects/kittybarrage/">Kitty Barrage</a> › State Machine Plan</div>
 
-  <!-- STATES -->
-  <h2>State inventory</h2>
-  <div class="state-grid">
+    <div id="wiki-meta"
+      data-file-path="/projects/kittybarrage/state-machine-plan.html"
+      data-fs-path="/Users/steven/dev/kittybarrage/wiki/state-machine-plan.html"
+      data-tags="kittybarrage,state-machine,task-plan,animation"
+      data-created="2026-05-16"
+      data-updated="2026-05-25"
+      data-state="polished">
+    </div>
 
-    <div class="sc ok">
-      <div class="sc-head"><span class="sc-name">SitState</span><span class="s s-ok">Working</span></div>
-      <div class="sc-anim">▶ Sit_Direction (forward = sit down, reverse = stand up pose)</div>
-      <div class="sc-body">
-        <ul>
+    <details class="changelog">
+      <summary>Changelog</summary>
+      <ul>
+        <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
+      </ul>
+    </details>
+
+    <div class="h1-row">
+      <h1>State Machine Plan</h1>
+      <span class="pill pill-green">Done</span>
+    </div>
+    <p class="sub">Kitty Barrage · Full animation integration status · May 2026</p>
+
+    <p>
+      Status legend:
+      <span class="pill pill-green">Working</span> confirmed in game ·
+      <span class="pill pill-gold">Untested</span> implemented, not yet verified ·
+      <span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:0.1rem 0.55rem;border-radius:10px;text-transform:uppercase;letter-spacing:0.05em;background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-b);">Issue</span> works but with known gap ·
+      <span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:0.1rem 0.55rem;border-radius:10px;text-transform:uppercase;letter-spacing:0.05em;background:var(--red-bg);color:var(--red);border:1px solid var(--red-b);">Bug</span> broken ·
+      <span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:0.1rem 0.55rem;border-radius:10px;text-transform:uppercase;letter-spacing:0.05em;background:#141414;color:#505050;border:1px solid #282828;">Unused</span> dead code
+    </p>
+
+    <hr />
+
+    <h2 id="state-inventory">State Inventory</h2>
+
+    <div class="two-col">
+      <div class="col-card" style="border-top:3px solid var(--green)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">SitState</span>
+          <span class="pill pill-green">Working</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim);margin-bottom:0.4rem">▶ Sit_Direction (forward = sit down, reverse = stand up pose)</p>
+        <ul style="font-size:0.81rem;color:var(--dim)">
           <li>Spawn pose: <code>SitState.new(true, true)</code> — holds last frame, paused</li>
           <li>Normal entry: <code>SitState.new()</code> — plays full sit-down animation</li>
           <li>Holds after animation completes. No auto-transition.</li>
           <li>Exit cancels animation gate</li>
         </ul>
+        <p style="font-family:monospace;font-size:0.72rem;color:#505068;margin-top:0.4rem">StateName.SIT</p>
       </div>
-      <div class="sc-enum">StateName.SIT</div>
-    </div>
 
-    <div class="sc ok">
-      <div class="sc-head"><span class="sc-name">StandUpState</span><span class="s s-ok">Working</span></div>
-      <div class="sc-anim">◀ Sit_Direction reversed</div>
-      <div class="sc-body">
-        <ul>
+      <div class="col-card" style="border-top:3px solid var(--green)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">StandUpState</span>
+          <span class="pill pill-green">Working</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim);margin-bottom:0.4rem">◀ Sit_Direction reversed</p>
+        <ul style="font-size:0.81rem;color:var(--dim)">
           <li>Transitional — always chains to <code>_next_state</code></li>
           <li>Eases forward toward <code>navigation_target</code> during animation</li>
           <li>Constructed: <code>StandUpState.new(WalkState.new())</code></li>
         </ul>
+        <p style="font-family:monospace;font-size:0.72rem;color:#505068;margin-top:0.4rem">StateName.STANDUP</p>
       </div>
-      <div class="sc-enum">StateName.STANDUP</div>
-    </div>
 
-    <div class="sc ok">
-      <div class="sc-head"><span class="sc-name">WalkState</span><span class="s s-ok">Working</span></div>
-      <div class="sc-anim">↻ Walk_Direction (loop)</div>
-      <div class="sc-body">
-        <ul>
+      <div class="col-card" style="border-top:3px solid var(--green)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">WalkState</span>
+          <span class="pill pill-green">Working</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim);margin-bottom:0.4rem">↻ Walk_Direction (loop)</p>
+        <ul style="font-size:0.81rem;color:var(--dim)">
           <li>Moves toward <code>navigation_target</code> at <code>speed</code></li>
           <li>Updates <code>facing_direction</code> each frame</li>
           <li>→ <code>SitState.new()</code> on arrival (distance &lt; 5px)</li>
           <li>Pauses animation when no target</li>
         </ul>
+        <p style="font-family:monospace;font-size:0.72rem;color:#505068;margin-top:0.4rem">StateName.WALK</p>
       </div>
-      <div class="sc-enum">StateName.WALK</div>
-    </div>
 
-    <div class="sc test">
-      <div class="sc-head"><span class="sc-name">RunState</span><span class="s s-test">Untested</span></div>
-      <div class="sc-anim">↻ Run_Direction (loop)</div>
-      <div class="sc-body">
-        <ul>
+      <div class="col-card" style="border-top:3px solid var(--gold)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">RunState</span>
+          <span class="pill pill-gold">Untested</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim);margin-bottom:0.4rem">↻ Run_Direction (loop)</p>
+        <ul style="font-size:0.81rem;color:var(--dim)">
           <li>Like WalkState × <code>personality.run_speed_multiplier</code> (1.6×)</li>
           <li>→ <code>SitState.new()</code> on arrival</li>
           <li>Player: hold <strong>Shift</strong> while moving</li>
           <li>AI: raise <code>preference_run</code> above 0</li>
         </ul>
+        <p style="font-family:monospace;font-size:0.72rem;color:#505068;margin-top:0.4rem">StateName.RUN</p>
       </div>
-      <div class="sc-enum">StateName.RUN</div>
-    </div>
 
-    <div class="sc test">
-      <div class="sc-head"><span class="sc-name">SprintState</span><span class="s s-test">Untested</span></div>
-      <div class="sc-anim">↻ Sprint_Direction (loop)</div>
-      <div class="sc-body">
-        <ul>
+      <div class="col-card" style="border-top:3px solid var(--gold)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">SprintState</span>
+          <span class="pill pill-gold">Untested</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim);margin-bottom:0.4rem">↻ Sprint_Direction (loop)</p>
+        <ul style="font-size:0.81rem;color:var(--dim)">
           <li>Like WalkState × <code>personality.sprint_speed_multiplier</code> (2.4×)</li>
           <li>→ <code>SitState.new()</code> on arrival</li>
           <li>AI only by default; raise <code>preference_sprint</code> above 0</li>
         </ul>
+        <p style="font-family:monospace;font-size:0.72rem;color:#505068;margin-top:0.4rem">StateName.SPRINT</p>
       </div>
-      <div class="sc-enum">StateName.SPRINT</div>
-    </div>
 
-    <div class="sc test">
-      <div class="sc-head"><span class="sc-name">LayDownState</span><span class="s s-test">Untested</span></div>
-      <div class="sc-anim">▶ Lay_Direction (forward = lie down)</div>
-      <div class="sc-body">
-        <ul>
+      <div class="col-card" style="border-top:3px solid var(--gold)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">LayDownState</span>
+          <span class="pill pill-gold">Untested</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim);margin-bottom:0.4rem">▶ Lay_Direction (forward = lie down)</p>
+        <ul style="font-size:0.81rem;color:var(--dim)">
           <li>Transitional — chains to <code>LayState</code></li>
           <li>Plays Lay animation, waits for <code>animation_finished</code></li>
           <li>⚠ Currently unreachable: <code>preference_lay = 0.0</code> in default personality</li>
         </ul>
+        <p style="font-family:monospace;font-size:0.72rem;color:#505068;margin-top:0.4rem">StateName.LAY_DOWN</p>
       </div>
-      <div class="sc-enum">StateName.LAY_DOWN</div>
-    </div>
 
-    <div class="sc test">
-      <div class="sc-head"><span class="sc-name">LayState</span><span class="s s-test">Untested</span></div>
-      <div class="sc-anim">⏸ Lay_Direction (last frame, paused)</div>
-      <div class="sc-body">
-        <ul>
+      <div class="col-card" style="border-top:3px solid var(--gold)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">LayState</span>
+          <span class="pill pill-gold">Untested</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim);margin-bottom:0.4rem">⏸ Lay_Direction (last frame, paused)</p>
+        <ul style="font-size:0.81rem;color:var(--dim)">
           <li>Holds lying pose. No auto-transition.</li>
           <li>Escaped only by begin_walk/run/sprint triggering SitUpState chain</li>
           <li>Mirrors SitState's held-pose pattern</li>
         </ul>
+        <p style="font-family:monospace;font-size:0.72rem;color:#505068;margin-top:0.4rem">StateName.LAY</p>
       </div>
-      <div class="sc-enum">StateName.LAY</div>
-    </div>
 
-    <div class="sc test">
-      <div class="sc-head"><span class="sc-name">SitUpState</span><span class="s s-test">Untested</span></div>
-      <div class="sc-anim">◀ Lay_Direction reversed</div>
-      <div class="sc-body">
-        <ul>
+      <div class="col-card" style="border-top:3px solid var(--gold)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">SitUpState</span>
+          <span class="pill pill-gold">Untested</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim);margin-bottom:0.4rem">◀ Lay_Direction reversed</p>
+        <ul style="font-size:0.81rem;color:var(--dim)">
           <li>Transitional — chains to <code>_next_state</code></li>
           <li>Plays Lay animation backwards (sitting up)</li>
           <li>Uses long-awaited <code>SITUP</code> enum entry</li>
         </ul>
+        <p style="font-family:monospace;font-size:0.72rem;color:#505068;margin-top:0.4rem">StateName.SITUP</p>
       </div>
-      <div class="sc-enum">StateName.SITUP</div>
-    </div>
 
-    <div class="sc test">
-      <div class="sc-head"><span class="sc-name">LookAroundState</span><span class="s s-test">Untested</span></div>
-      <div class="sc-anim">▶ LookAround_Direction (one-shot)</div>
-      <div class="sc-body">
-        <ul>
+      <div class="col-card" style="border-top:3px solid var(--gold)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">LookAroundState</span>
+          <span class="pill pill-gold">Untested</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim);margin-bottom:0.4rem">▶ LookAround_Direction (one-shot)</p>
+        <ul style="font-size:0.81rem;color:var(--dim)">
           <li>→ <code>SitState.new(true, true)</code> when done</li>
           <li>AI: <code>preference_look_around = 0.3</code> — should trigger automatically</li>
           <li>⚠ No guard: can be called from non-SIT states</li>
         </ul>
+        <p style="font-family:monospace;font-size:0.72rem;color:#505068;margin-top:0.4rem">StateName.LOOK_AROUND</p>
       </div>
-      <div class="sc-enum">StateName.LOOK_AROUND</div>
-    </div>
 
-    <div class="sc dead" style="opacity:0.35">
-      <div class="sc-head"><span class="sc-name">IdleState</span><span class="s s-dead">Deleted</span></div>
-      <div class="sc-anim">Removed — never instantiated, no animation, no name() override</div>
-      <div class="sc-enum">—</div>
-    </div>
-
-  </div>
-
-  <hr class="div" />
-
-  <!-- TRANSITIONS -->
-  <h2>Transition matrix</h2>
-
-  <table class="tt">
-    <thead><tr><th>From</th><th>Trigger</th><th>Chain</th><th>Status</th></tr></thead>
-    <tbody>
-
-      <tr class="sec"><td colspan="4">From SIT (settled sitting)</td></tr>
-      <tr><td class="from">SIT</td><td class="trig">begin_walk()</td><td class="chain">SIT <span class="arr">→</span> STANDUP <span class="arr">→</span> WALK</td><td><span class="s s-ok">Working</span></td></tr>
-      <tr><td class="from">SIT</td><td class="trig">begin_run()</td><td class="chain">SIT <span class="arr">→</span> STANDUP <span class="arr">→</span> RUN</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">SIT</td><td class="trig">begin_sprint()</td><td class="chain">SIT <span class="arr">→</span> STANDUP <span class="arr">→</span> SPRINT</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">SIT</td><td class="trig">apply_decision(LAY)</td><td class="chain">SIT <span class="arr">→</span> LAY_DOWN <span class="arr">→</span> LAY</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">SIT</td><td class="trig">apply_decision(LOOK_AROUND)</td><td class="chain">SIT <span class="arr">→</span> LOOK_AROUND <span class="arr">→</span> SIT</td><td><span class="s s-test">Untested</span></td></tr>
-
-      <tr class="sec"><td colspan="4">From WALK / RUN / SPRINT (moving)</td></tr>
-      <tr><td class="from">WALK</td><td class="trig">arrive at target</td><td class="chain">WALK <span class="arr">→</span> SIT (plays sit-down anim)</td><td><span class="s s-ok">Working</span></td></tr>
-      <tr><td class="from">WALK</td><td class="trig">begin_run()</td><td class="chain">WALK <span class="arr">→</span> RUN (direct swap)</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">WALK</td><td class="trig">begin_sprint()</td><td class="chain">WALK <span class="arr">→</span> SPRINT (direct swap)</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">RUN</td><td class="trig">arrive at target</td><td class="chain">RUN <span class="arr">→</span> SIT</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">RUN</td><td class="trig">begin_walk()</td><td class="chain">RUN <span class="arr">→</span> WALK (direct swap)</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">SPRINT</td><td class="trig">arrive at target</td><td class="chain">SPRINT <span class="arr">→</span> SIT</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">SPRINT</td><td class="trig">begin_walk() / begin_run()</td><td class="chain">SPRINT <span class="arr">→</span> WALK / RUN (direct swap)</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">WALK/RUN/SPRINT</td><td class="trig">apply_decision(LAY)</td><td class="chain">ignored — LAY only fires from SIT</td><td><span class="s s-ok">Fixed</span></td></tr>
-      <tr><td class="from">WALK/RUN/SPRINT</td><td class="trig">apply_decision(LOOK_AROUND)</td><td class="chain">ignored — LOOK_AROUND only fires from SIT</td><td><span class="s s-ok">Fixed</span></td></tr>
-
-      <tr class="sec"><td colspan="4">From LAY_DOWN (transition: lying down)</td></tr>
-      <tr><td class="from">LAY_DOWN</td><td class="trig">animation_finished</td><td class="chain">LAY_DOWN <span class="arr">→</span> LAY</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">LAY_DOWN</td><td class="trig">begin_walk/run/sprint()</td><td class="chain">LAY_DOWN <span class="arr">→</span> SITUP <span class="arr">→</span> STANDUP <span class="arr">→</span> WALK/RUN/SPRINT</td><td><span class="s s-test">Untested</span></td></tr>
-
-      <tr class="sec"><td colspan="4">From LAY (settled lying)</td></tr>
-      <tr><td class="from">LAY</td><td class="trig">begin_walk()</td><td class="chain">LAY <span class="arr">→</span> SITUP <span class="arr">→</span> STANDUP <span class="arr">→</span> WALK</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">LAY</td><td class="trig">begin_run()</td><td class="chain">LAY <span class="arr">→</span> SITUP <span class="arr">→</span> STANDUP <span class="arr">→</span> RUN</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">LAY</td><td class="trig">begin_sprint()</td><td class="chain">LAY <span class="arr">→</span> SITUP <span class="arr">→</span> STANDUP <span class="arr">→</span> SPRINT</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">LAY</td><td class="trig">apply_decision(SIT)</td><td class="chain">LAY <span class="arr">→</span> SITUP <span class="arr">→</span> SIT (via SitUpState chain)</td><td><span class="s s-ok">Fixed</span></td></tr>
-      <tr><td class="from">LAY</td><td class="trig">apply_decision(LAY)</td><td class="chain">no-op — already lying</td><td><span class="s s-ok">Fixed</span></td></tr>
-      <tr><td class="from">LAY</td><td class="trig">apply_decision(LOOK_AROUND)</td><td class="chain">ignored — LOOK_AROUND only fires from SIT</td><td><span class="s s-ok">Fixed</span></td></tr>
-
-      <tr class="sec"><td colspan="4">From SITUP / STANDUP (transitional)</td></tr>
-      <tr><td class="from">SITUP</td><td class="trig">animation_finished</td><td class="chain">SITUP <span class="arr">→</span> [next_state]</td><td><span class="s s-test">Untested</span></td></tr>
-      <tr><td class="from">SITUP</td><td class="trig">begin_walk/run/sprint()</td><td class="chain">no-op (early return — let animation finish)</td><td><span class="s s-ok">Working</span></td></tr>
-      <tr><td class="from">STANDUP</td><td class="trig">animation_finished</td><td class="chain">STANDUP <span class="arr">→</span> [next_state]</td><td><span class="s s-ok">Working</span></td></tr>
-
-      <tr class="sec"><td colspan="4">From LOOK_AROUND</td></tr>
-      <tr><td class="from">LOOK_AROUND</td><td class="trig">animation_finished</td><td class="chain">LOOK_AROUND <span class="arr">→</span> SIT (sitting pose, paused)</td><td><span class="s s-test">Untested</span></td></tr>
-
-    </tbody>
-  </table>
-
-  <hr class="div" />
-
-  <!-- ISSUES -->
-  <h2>Issues to fix</h2>
-
-  <div class="issue bug" style="opacity:0.5">
-    <div class="issue-title">✓ FIXED — apply_decision is not state-aware for LAY and LOOK_AROUND</div>
-    <p>LAY now only fires from SIT; if already in LAY/LAY_DOWN it's a no-op. LOOK_AROUND now guarded to SIT only. SIT from LAY/LAY_DOWN now chains through SitUpState.</p>
-  </div>
-
-  <div class="issue bug" style="opacity:0.5">
-    <div class="issue-title">✓ FIXED — apply_decision(SIT) from LAY skips SitUp animation</div>
-    <p>Now chains <code>SitUpState.new(SitState.new(true, true))</code> when current state is LAY or LAY_DOWN.</p>
-  </div>
-
-  <div class="issue bug" style="opacity:0.5">
-    <div class="issue-title">✓ FIXED — apply_decision(LAY) when already in LAY re-plays LayDownState</div>
-    <p>Now a no-op when current == LAY or LAY_DOWN.</p>
-  </div>
-
-  <div class="issue todo">
-    <div class="issue-title">⚠ TODO (you) — raise preference_lay to test the lay chain</div>
-    <p>The default personality resource has <code>preference_lay = 0.0</code>, so the brain never decides to lay down. The entire LAY → LAY_DOWN → LAY → SITUP chain has never fired.</p>
-    <div class="fix">In Godot inspector: open your KittyPersonality .tres resource,
-set preference_lay to 0.3 and rest_threshold to 5.0 to see it trigger faster.</div>
-  </div>
-
-  <div class="issue todo" style="opacity:0.5">
-    <div class="issue-title">✓ FIXED — IdleState deleted</div>
-    <p><code>IdleState.gd</code> removed. Was never instantiated, had no <code>name()</code> override, and referenced a non-existent animation.</p>
-  </div>
-
-  <hr class="div" />
-
-  <!-- FULL FLOW DIAGRAMS -->
-  <h2>Full state flows</h2>
-
-  <div class="grid-2">
-    <div class="card">
-      <h3>Sit ↔ Walk (player)</h3>
-      <div class="flow">
-        <span class="fbox ok">SIT</span><span class="farr">→</span>
-        <span class="fbox ok">STANDUP</span><span class="farr">→</span>
-        <span class="fbox ok">WALK</span><span class="farr">→</span>
-        <span class="fbox ok">SIT</span>
+      <div class="col-card" style="opacity:0.35;border-top:3px solid #303030">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <span style="font-family:monospace;font-size:0.88rem;font-weight:700;color:#d0c8f0">IdleState</span>
+          <span style="display:inline-block;font-size:0.68rem;font-weight:700;padding:0.1rem 0.55rem;border-radius:10px;text-transform:uppercase;letter-spacing:0.05em;background:#141414;color:#505050;border:1px solid #282828;">Deleted</span>
+        </div>
+        <p style="font-size:0.78rem;color:var(--dim)">Removed — never instantiated, no animation, no name() override</p>
       </div>
-      <p style="margin-top:0.4rem;font-size:0.8rem;color:#505858">Fully working. The most-tested path.</p>
     </div>
-    <div class="card">
-      <h3>Sit ↔ Run (Shift key)</h3>
-      <div class="flow">
-        <span class="fbox ok">SIT</span><span class="farr">→</span>
-        <span class="fbox ok">STANDUP</span><span class="farr">→</span>
-        <span class="fbox test">RUN</span><span class="farr">→</span>
-        <span class="fbox ok">SIT</span>
-      </div>
-      <p style="margin-top:0.4rem;font-size:0.8rem;color:#505858">Chain correct, needs animation verification.</p>
-    </div>
-    <div class="card">
-      <h3>Lay down and back up</h3>
-      <div class="flow">
-        <span class="fbox ok">SIT</span><span class="farr">→</span>
-        <span class="fbox test">LAY_DOWN</span><span class="farr">→</span>
-        <span class="fbox test">LAY</span><span class="farr">→</span>
-        <span class="fbox test">SITUP</span><span class="farr">→</span>
-        <span class="fbox ok">STANDUP</span><span class="farr">→</span>
-        <span class="fbox ok">WALK</span>
-      </div>
-      <p style="margin-top:0.4rem;font-size:0.8rem;color:#505858">Full chain implemented. Needs preference_lay &gt; 0 to trigger.</p>
-    </div>
-    <div class="card">
-      <h3>Look around while sitting</h3>
-      <div class="flow">
-        <span class="fbox ok">SIT</span><span class="farr">→</span>
-        <span class="fbox test">LOOK_AROUND</span><span class="farr">→</span>
-        <span class="fbox ok">SIT</span>
-      </div>
-      <p style="margin-top:0.4rem;font-size:0.8rem;color:#505858">preference_look_around = 0.3 so AI should trigger. Needs state-awareness fix first.</p>
-    </div>
-  </div>
 
-  <hr class="div" />
+    <div class="section-notes">
+      <label for="notes-state-inventory">Notes — State Inventory</label>
+      <textarea id="notes-state-inventory" placeholder="State implementation notes, bugs found…"></textarea>
+    </div>
 
-  <!-- WHAT TO DO NEXT -->
-  <h2>Recommended fix order</h2>
-  <div class="card">
+    <hr />
+
+    <h2 id="transition-matrix">Transition Matrix</h2>
+
+    <table class="svc-table">
+      <thead><tr><th>From</th><th>Trigger</th><th>Chain</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td colspan="4" style="background:#131318;color:var(--dim);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:0.3rem 0.75rem;">From SIT (settled sitting)</td></tr>
+        <tr><td class="svc">SIT</td><td>begin_walk()</td><td>SIT → STANDUP → WALK</td><td><span class="pill pill-green">Working</span></td></tr>
+        <tr><td class="svc">SIT</td><td>begin_run()</td><td>SIT → STANDUP → RUN</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">SIT</td><td>begin_sprint()</td><td>SIT → STANDUP → SPRINT</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">SIT</td><td>apply_decision(LAY)</td><td>SIT → LAY_DOWN → LAY</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">SIT</td><td>apply_decision(LOOK_AROUND)</td><td>SIT → LOOK_AROUND → SIT</td><td><span class="pill pill-gold">Untested</span></td></tr>
+
+        <tr><td colspan="4" style="background:#131318;color:var(--dim);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:0.3rem 0.75rem;">From WALK / RUN / SPRINT (moving)</td></tr>
+        <tr><td class="svc">WALK</td><td>arrive at target</td><td>WALK → SIT (plays sit-down anim)</td><td><span class="pill pill-green">Working</span></td></tr>
+        <tr><td class="svc">WALK</td><td>begin_run()</td><td>WALK → RUN (direct swap)</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">WALK</td><td>begin_sprint()</td><td>WALK → SPRINT (direct swap)</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">RUN</td><td>arrive at target</td><td>RUN → SIT</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">RUN</td><td>begin_walk()</td><td>RUN → WALK (direct swap)</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">SPRINT</td><td>arrive at target</td><td>SPRINT → SIT</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">SPRINT</td><td>begin_walk() / begin_run()</td><td>SPRINT → WALK / RUN (direct swap)</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">WALK/RUN/SPRINT</td><td>apply_decision(LAY)</td><td>ignored — LAY only fires from SIT</td><td><span class="pill pill-green">Fixed</span></td></tr>
+        <tr><td class="svc">WALK/RUN/SPRINT</td><td>apply_decision(LOOK_AROUND)</td><td>ignored — LOOK_AROUND only fires from SIT</td><td><span class="pill pill-green">Fixed</span></td></tr>
+
+        <tr><td colspan="4" style="background:#131318;color:var(--dim);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:0.3rem 0.75rem;">From LAY_DOWN (transition: lying down)</td></tr>
+        <tr><td class="svc">LAY_DOWN</td><td>animation_finished</td><td>LAY_DOWN → LAY</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">LAY_DOWN</td><td>begin_walk/run/sprint()</td><td>LAY_DOWN → SITUP → STANDUP → WALK/RUN/SPRINT</td><td><span class="pill pill-gold">Untested</span></td></tr>
+
+        <tr><td colspan="4" style="background:#131318;color:var(--dim);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:0.3rem 0.75rem;">From LAY (settled lying)</td></tr>
+        <tr><td class="svc">LAY</td><td>begin_walk()</td><td>LAY → SITUP → STANDUP → WALK</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">LAY</td><td>begin_run()</td><td>LAY → SITUP → STANDUP → RUN</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">LAY</td><td>begin_sprint()</td><td>LAY → SITUP → STANDUP → SPRINT</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">LAY</td><td>apply_decision(SIT)</td><td>LAY → SITUP → SIT (via SitUpState chain)</td><td><span class="pill pill-green">Fixed</span></td></tr>
+        <tr><td class="svc">LAY</td><td>apply_decision(LAY)</td><td>no-op — already lying</td><td><span class="pill pill-green">Fixed</span></td></tr>
+        <tr><td class="svc">LAY</td><td>apply_decision(LOOK_AROUND)</td><td>ignored — LOOK_AROUND only fires from SIT</td><td><span class="pill pill-green">Fixed</span></td></tr>
+
+        <tr><td colspan="4" style="background:#131318;color:var(--dim);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:0.3rem 0.75rem;">From SITUP / STANDUP (transitional)</td></tr>
+        <tr><td class="svc">SITUP</td><td>animation_finished</td><td>SITUP → [next_state]</td><td><span class="pill pill-gold">Untested</span></td></tr>
+        <tr><td class="svc">SITUP</td><td>begin_walk/run/sprint()</td><td>no-op (early return — let animation finish)</td><td><span class="pill pill-green">Working</span></td></tr>
+        <tr><td class="svc">STANDUP</td><td>animation_finished</td><td>STANDUP → [next_state]</td><td><span class="pill pill-green">Working</span></td></tr>
+
+        <tr><td colspan="4" style="background:#131318;color:var(--dim);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:0.3rem 0.75rem;">From LOOK_AROUND</td></tr>
+        <tr><td class="svc">LOOK_AROUND</td><td>animation_finished</td><td>LOOK_AROUND → SIT (sitting pose, paused)</td><td><span class="pill pill-gold">Untested</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-notes">
+      <label for="notes-transition-matrix">Notes — Transition Matrix</label>
+      <textarea id="notes-transition-matrix" placeholder="Transitions verified, bugs found…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="issues">Issues to Fix</h2>
+
+    <div class="note" style="opacity:0.5">
+      <strong>✓ FIXED — apply_decision is not state-aware for LAY and LOOK_AROUND</strong><br/>
+      LAY now only fires from SIT; if already in LAY/LAY_DOWN it's a no-op. LOOK_AROUND now guarded to SIT only. SIT from LAY/LAY_DOWN now chains through SitUpState.
+    </div>
+
+    <div class="note" style="opacity:0.5">
+      <strong>✓ FIXED — apply_decision(SIT) from LAY skips SitUp animation</strong><br/>
+      Now chains <code>SitUpState.new(SitState.new(true, true))</code> when current state is LAY or LAY_DOWN.
+    </div>
+
+    <div class="note" style="opacity:0.5">
+      <strong>✓ FIXED — apply_decision(LAY) when already in LAY re-plays LayDownState</strong><br/>
+      Now a no-op when current == LAY or LAY_DOWN.
+    </div>
+
+    <div class="warn">
+      <strong>⚠ TODO (you) — raise preference_lay to test the lay chain</strong><br/>
+      The default personality resource has <code>preference_lay = 0.0</code>, so the brain never decides to lay down. The entire LAY → LAY_DOWN → LAY → SITUP chain has never fired.<br/>
+      <code>In Godot inspector: open your KittyPersonality .tres resource, set preference_lay to 0.3 and rest_threshold to 5.0 to see it trigger faster.</code>
+    </div>
+
+    <div class="note" style="opacity:0.5">
+      <strong>✓ FIXED — IdleState deleted</strong><br/>
+      <code>IdleState.gd</code> removed. Was never instantiated, had no <code>name()</code> override, and referenced a non-existent animation.
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-issues">Notes — Issues</label>
+      <textarea id="notes-issues" placeholder="New issues found, fix progress…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="state-flows">Full State Flows</h2>
+
+    <div class="two-col">
+      <div class="col-card">
+        <h3>Sit ↔ Walk (player)</h3>
+        <p style="font-family:monospace;font-size:0.82rem;margin-bottom:0.35rem">SIT → STANDUP → WALK → SIT</p>
+        <p style="font-size:0.8rem;color:var(--dim)">Fully working. The most-tested path.</p>
+      </div>
+      <div class="col-card">
+        <h3>Sit ↔ Run (Shift key)</h3>
+        <p style="font-family:monospace;font-size:0.82rem;margin-bottom:0.35rem">SIT → STANDUP → RUN → SIT</p>
+        <p style="font-size:0.8rem;color:var(--dim)">Chain correct, needs animation verification.</p>
+      </div>
+      <div class="col-card">
+        <h3>Lay down and back up</h3>
+        <p style="font-family:monospace;font-size:0.82rem;margin-bottom:0.35rem">SIT → LAY_DOWN → LAY → SITUP → STANDUP → WALK</p>
+        <p style="font-size:0.8rem;color:var(--dim)">Full chain implemented. Needs preference_lay &gt; 0 to trigger.</p>
+      </div>
+      <div class="col-card">
+        <h3>Look around while sitting</h3>
+        <p style="font-family:monospace;font-size:0.82rem;margin-bottom:0.35rem">SIT → LOOK_AROUND → SIT</p>
+        <p style="font-size:0.8rem;color:var(--dim)">preference_look_around = 0.3 so AI should trigger. Needs state-awareness fix first.</p>
+      </div>
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-state-flows">Notes — State Flows</label>
+      <textarea id="notes-state-flows" placeholder="Flow verification notes…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="fix-order">Recommended Fix Order</h2>
+
     <ul>
-      <li><strong style="color:#60c060">✓ 1.</strong> <del>Fix <code>apply_decision</code> to be state-aware</del> — done.</li>
-      <li><strong style="color:#60c060">✓ 2.</strong> <del>Delete <code>IdleState.gd</code></del> — done.</li>
-      <li><strong style="color:#d09040">→ 3. (you)</strong> Raise <code>preference_lay</code> to 0.3 and <code>rest_threshold</code> to 5.0 in the personality .tres — lets the full lay/situp chain trigger so you can verify animations.</li>
-      <li><strong style="color:#d09040">→ 4.</strong> Test each untested chain in-game and mark Working below: run/sprint speeds, lay/situp animation, look-around timing.</li>
-      <li><strong style="color:#808078">5.</strong> Tune <code>KittyPersonality</code> weights: balance so kitties feel alive (walk, sit, look around, occasional lay).</li>
+      <li><strong style="color:var(--green)">✓ 1.</strong> <del>Fix <code>apply_decision</code> to be state-aware</del> — done.</li>
+      <li><strong style="color:var(--green)">✓ 2.</strong> <del>Delete <code>IdleState.gd</code></del> — done.</li>
+      <li><strong style="color:var(--gold)">→ 3. (you)</strong> Raise <code>preference_lay</code> to 0.3 and <code>rest_threshold</code> to 5.0 in the personality .tres — lets the full lay/situp chain trigger so you can verify animations.</li>
+      <li><strong style="color:var(--gold)">→ 4.</strong> Test each untested chain in-game and mark Working: run/sprint speeds, lay/situp animation, look-around timing.</li>
+      <li><strong>5.</strong> Tune <code>KittyPersonality</code> weights: balance so kitties feel alive (walk, sit, look around, occasional lay).</li>
     </ul>
+
+    <div class="section-notes">
+      <label for="notes-fix-order">Notes — Fix Order</label>
+      <textarea id="notes-fix-order" placeholder="Progress on each step…"></textarea>
+    </div>
+
+    <div id="wiki-copy-bar"></div>
   </div>
+</div>
 
-  <hr class="div" />
-  <p style="font-size:0.76rem;color:#303040">Generated by Claude Code · Kitty Barrage · May 2026</p>
-
+<script src="/shared/wiki.js"></script>
+<script src="/shared/nav.js"></script>
+<script>
+  initWikiPage({
+    sectionNotes: [
+      { id: 'notes-state-inventory',   label: 'State Inventory' },
+      { id: 'notes-transition-matrix', label: 'Transition Matrix' },
+      { id: 'notes-issues',            label: 'Issues' },
+      { id: 'notes-state-flows',       label: 'State Flows' },
+      { id: 'notes-fix-order',         label: 'Fix Order' },
+    ],
+  });
+</script>
 </body>
 </html>

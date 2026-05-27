@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wiki Migration — Kitty Barrage — Wiki</title>
+  <link rel="stylesheet" href="/shared/wiki.css" />
+  <link rel="stylesheet" media="print" href="/shared/print.css" />
+</head>
+<body>
+<div id="wiki-nav"></div>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div>Wiki Migration</div>
+    <div class="s-head">Sections</div>
+    <a href="#overview">Overview</a>
+    <a href="#phase-1">Phase 1 — Wiring</a>
+    <a href="#phase-2">Phase 2 — Content Review</a>
+    <a href="#phase-3">Phase 3 — Index Page</a>
+    <a href="#decisions">Key Decisions</a>
+    <div class="s-head">Kitty Barrage</div>
+    <a href="/projects/kittybarrage/">← Hub</a>
+  </nav>
+
+  <div class="main">
+    <div class="breadcrumb"><a href="/">Wiki</a> › <a href="/projects/kittybarrage/">Kitty Barrage</a> › Wiki Migration</div>
+
+    <div id="wiki-meta"
+      data-file-path="/projects/kittybarrage/task-plan-wiki-migration.html"
+      data-fs-path="/Users/steven/dev/kittybarrage/wiki/task-plan-wiki-migration.html"
+      data-tags="kittybarrage,wiki,migration,task-plan"
+      data-created="2026-05-25"
+      data-updated="2026-05-25"
+      data-state="planning">
+    </div>
+
+    <details class="changelog">
+      <summary>Changelog</summary>
+      <ul>
+        <li><time>2026-05-25</time> — Resolved all 5 Q-cards; added decisions summary table; linked checklist page names; added link-stability note</li>
+        <li><time>2026-05-25</time> — Replaced Open Questions table with Q-card components (Q1–Q5); added Side-Quest collapsible for skill improvement prompt</li>
+        <li><time>2026-05-25</time> — Rewrote Phase 3 with design-language analysis; added Open Questions section (Q1–Q5)</li>
+        <li><time>2026-05-25</time> — Initial creation</li>
+      </ul>
+    </details>
+
+    <div class="h1-row">
+      <h1>Wiki Migration Task Plan</h1>
+      <span class="pill pill-teal">Decided</span>
+    </div>
+    <p class="sub">Migrate all kittybarrage wiki pages from duplicated inline <code>&lt;style&gt;</code> blocks to the shared wiki system (<code>/shared/wiki.css</code>, <code>wiki-nav</code>, <code>initWikiPage</code>, section-notes). Also covers the one remaining mediastack page.</p>
+
+    <hr />
+
+    <h2 id="overview">Overview</h2>
+
+    <p>The kittybarrage wiki predates the shared wiki system. Every page carries a full inline <code>&lt;style&gt;</code> block (~80 lines of duplicated CSS) instead of linking <code>/shared/wiki.css</code>. None of them have: the global nav, wiki-meta, changelog, sidebar section links, section-notes textareas, or <code>initWikiPage()</code>. One mediastack page (<code>task-plan-tailscale.html</code>) has the same issue.</p>
+
+    <table class="svc-table">
+      <thead><tr><th>Scope</th><th>Pages</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>kittybarrage</td><td>15 pages</td><td>0 migrated — all inline styles</td></tr>
+        <tr><td>mediastack</td><td>1 page (<code>task-plan-tailscale.html</code>)</td><td>Not migrated</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">The mediastack reference: <code>index.html</code>, <code>arrstack.html</code>, <code>pihole.html</code>, and <code>tailscale.html</code> are already migrated and can be used as style guides for the shared system.</div>
+
+    <h3>Per-page migration checklist (Phases 1 &amp; 2)</h3>
+    <p>For each page, complete Phase 1 first, then Phase 2. Phase 3 applies only to <code>index.html</code>.</p>
+
+    <div class="tip">Page names link to current locations. Links stay valid throughout this migration — file paths are not changing, only the HTML/CSS inside each file. A 404 risk would only arise if a future migration also restructures the folder layout; that would warrant a fresh task plan.</div>
+
+    <table class="svc-table">
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th>Type</th>
+          <th>Phase 1</th>
+          <th>Phase 2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><a href="/projects/kittybarrage/index.html"><code>index.html</code></a></td><td>Hub / index</td><td>☐</td><td>☐ + Phase 3</td></tr>
+        <tr><td><a href="/projects/kittybarrage/architecture.html"><code>architecture.html</code></a></td><td>Core reference</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/animation-plan.html"><code>animation-plan.html</code></a></td><td>Planning doc</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/circle-state-plan.html"><code>circle-state-plan.html</code></a></td><td>Planning doc</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/look-around-plan.html"><code>look-around-plan.html</code></a></td><td>Planning doc</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/state-machine-plan.html"><code>state-machine-plan.html</code></a></td><td>Planning doc</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/task-plan-character-generalization.html"><code>task-plan-character-generalization.html</code></a></td><td>Task plan — Done</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/task-plan-kitty-blemishes.html"><code>task-plan-kitty-blemishes.html</code></a></td><td>Task plan — Done</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/task-plan-kitty-variants.html"><code>task-plan-kitty-variants.html</code></a></td><td>Task plan — Done</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/task-plan-pixel-rooms.html"><code>task-plan-pixel-rooms.html</code></a></td><td>Task plan — Decided</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/task-plan-separation.html"><code>task-plan-separation.html</code></a></td><td>Task plan — Done</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/task-plan-state-topology.html"><code>task-plan-state-topology.html</code></a></td><td>Task plan — Done</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/task-plan-y-sort.html"><code>task-plan-y-sort.html</code></a></td><td>Task plan — Done</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/furniture-checklist.html"><code>furniture-checklist.html</code></a></td><td>Checklist</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/kittybarrage/wiki-grooming-prompts.html"><code>wiki-grooming-prompts.html</code></a></td><td>Meta / reference</td><td>☐</td><td>☐</td></tr>
+        <tr><td><a href="/projects/mediastack/task-plan-tailscale.html"><code>mediastack/task-plan-tailscale.html</code></a></td><td>Task plan</td><td>☐</td><td>☐</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-notes">
+      <label for="notes-overview">Notes — Overview</label>
+      <textarea id="notes-overview" placeholder="Scope notes, decisions, blockers…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="phase-1">Phase 1 — Shared System Wiring</h2>
+
+    <p>Mechanical changes only — no content edits. Apply to every page in the checklist.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-title">Replace inline <code>&lt;style&gt;</code> with shared CSS link</div>
+        <p>Remove the entire <code>&lt;style&gt;…&lt;/style&gt;</code> block from <code>&lt;head&gt;</code>. Replace with:</p>
+        <pre>&lt;link rel="stylesheet" href="/shared/wiki.css" /&gt;</pre>
+      </div>
+      <div class="step">
+        <div class="step-title">Add <code>wiki-nav</code> div</div>
+        <p>First child of <code>&lt;body&gt;</code>, before <code>.layout</code>:</p>
+        <pre>&lt;div id="wiki-nav"&gt;&lt;/div&gt;</pre>
+      </div>
+      <div class="step">
+        <div class="step-title">Wrap content in <code>.layout</code> / <code>.sidebar</code> / <code>.main</code></div>
+        <p>Move the page body into <code>&lt;div class="layout"&gt;</code> with a <code>&lt;nav class="sidebar"&gt;</code> and <code>&lt;div class="main"&gt;</code>. Add a breadcrumb at the top of <code>.main</code> using the <code>breadcrumb</code> class. The existing page title, content, and nav links move inside <code>.main</code>.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Add <code>wiki-meta</code> div</div>
+        <p>Immediately after the breadcrumb. All five <code>data-*</code> attributes are required. Use the <code>/projects/kittybarrage/</code> prefix for <code>data-file-path</code>. Set <code>data-state</code> based on the page content: <code>polished</code> for completed task plans, <code>ongoing</code> for living reference pages, <code>planning</code> for open plans.</p>
+        <pre>&lt;div id="wiki-meta"
+  data-file-path="/projects/kittybarrage/PAGENAME.html"
+  data-tags="kittybarrage,TAG"
+  data-created="2026-05-25"
+  data-updated="2026-05-25"
+  data-state="polished"&gt;
+&lt;/div&gt;</pre>
+      </div>
+      <div class="step">
+        <div class="step-title">Add <code>changelog</code> block</div>
+        <p>After <code>wiki-meta</code>, before the title <code>&lt;h1&gt;</code>. Use "Migrated to shared wiki system" as the first entry with today's date. Add a second entry if there's a meaningful original creation date to preserve.</p>
+        <pre>&lt;details class="changelog"&gt;
+  &lt;summary&gt;Changelog&lt;/summary&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;time&gt;2026-05-25&lt;/time&gt; — Migrated to shared wiki system&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/details&gt;</pre>
+      </div>
+      <div class="step">
+        <div class="step-title">Update title row to use <code>h1-row</code> class</div>
+        <p>Replace any <code>header-row</code> or inline-flex title wrapper with <code>&lt;div class="h1-row"&gt;</code>. Keep existing pill badges.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Add script block and <code>initWikiPage()</code></div>
+        <p>At the bottom of <code>&lt;body&gt;</code>, before <code>&lt;/body&gt;</code>. Include all three scripts in order:</p>
+        <pre>&lt;script src="/shared/wiki.js"&gt;&lt;/script&gt;
+&lt;script src="/shared/nav.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  initWikiPage({ sectionNotes: [] });
+&lt;/script&gt;</pre>
+        <p>The <code>sectionNotes</code> array gets populated in Phase 2.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Add <code>wiki-copy-bar</code> div</div>
+        <p>Last element inside <code>.main</code>, after all content:</p>
+        <pre>&lt;div id="wiki-copy-bar"&gt;&lt;/div&gt;</pre>
+      </div>
+      <div class="step">
+        <div class="step-title">Verify HTTP 200</div>
+        <pre>curl -s -o /dev/null -w "%{http_code}" http://localhost:8090/projects/kittybarrage/PAGENAME.html</pre>
+      </div>
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-phase-1">Notes — Phase 1</label>
+      <textarea id="notes-phase-1" placeholder="Progress notes, pages completed, issues found…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="phase-2">Phase 2 — Content Review</h2>
+
+    <p>After Phase 1, review each page's content structure and add missing wiki system elements.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-title">Add sidebar section links for every <code>&lt;h2&gt;</code></div>
+        <p>Each <code>&lt;h2 id="…"&gt;</code> in the page must have a matching <code>&lt;a href="#id"&gt;</code> in the sidebar nav, under an appropriate <code>&lt;div class="s-head"&gt;</code>. Scan the full page content — don't guess from memory.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Add <code>section-notes</code> textarea after every <code>&lt;h2&gt;</code> section</div>
+        <p>Every <code>&lt;h2&gt;</code> section ends with:</p>
+        <pre>&lt;div class="section-notes"&gt;
+  &lt;label for="notes-SECTIONID"&gt;Notes — Section Name&lt;/label&gt;
+  &lt;textarea id="notes-SECTIONID" placeholder="…"&gt;&lt;/textarea&gt;
+&lt;/div&gt;</pre>
+      </div>
+      <div class="step">
+        <div class="step-title">Register all section-notes textareas in <code>initWikiPage()</code></div>
+        <p>Add an entry for each textarea added in the previous step:</p>
+        <pre>initWikiPage({
+  sectionNotes: [
+    { id: 'notes-sectionid', label: 'Section Name' },
+  ],
+});</pre>
+      </div>
+      <div class="step">
+        <div class="step-title">Scan for cross-link opportunities</div>
+        <p>Every reference to another wiki page by name is a candidate for a link. At minimum, link between pages that are referenced in the same section (e.g., a task plan referencing its architecture page).</p>
+      </div>
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-phase-2">Notes — Phase 2</label>
+      <textarea id="notes-phase-2" placeholder="Content issues found, cross-links added…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="phase-3">Phase 3 — Index Page Redesign</h2>
+
+    <p>The kittybarrage <code>index.html</code> is a hub page. It currently uses custom <code>.grid</code> / <code>.card</code> classes that exist only in its inline styles. The correct target is the established wiki hub pattern — <code>project-grid</code> / <code>project-card</code> / <code>card-footer</code> — already used by every other hub in the wiki (<code>/life/index.html</code>, root <code>/index.html</code>, etc.). No CSS additions to <code>shared/wiki.css</code> are needed or wanted.</p>
+
+    <h3>Content analysis</h3>
+
+    <p>The index currently presents five content groups. Each maps to a wiki-native pattern:</p>
+
+    <table class="svc-table">
+      <thead><tr><th>Current section</th><th>Content</th><th>Target pattern</th></tr></thead>
+      <tbody>
+        <tr><td>Core Reference</td><td>Architecture overview, wiki grooming prompts (2 pages)</td><td><code>project-grid</code> — active reference, always visible</td></tr>
+        <tr><td>Planning Documents</td><td>4 design/planning docs (state machine, animation, circle state, look-around)</td><td><code>project-grid</code> — active reference, always visible</td></tr>
+        <tr><td>Task Plans — active</td><td>In-progress or decided plans (pixel rooms, furniture checklist)</td><td><code>project-grid</code> — active, always visible</td></tr>
+        <tr><td>Task Plans — done</td><td>7 completed plans (no longer relevant to planning decisions)</td><td><code>&lt;details&gt;</code> accordion wrapping a <code>svc-table</code> — collapsed by default</td></tr>
+        <tr><td>Recent Changes log</td><td>Manually maintained feature/fix log (~13 entries)</td><td>See open question Q2 below</td></tr>
+        <tr><td>Issue Notes</td><td>Empty placeholder</td><td>Keep as stub section; no custom markup</td></tr>
+      </tbody>
+    </table>
+
+    <div class="tip">The <code>&lt;details&gt;</code> / <code>&lt;summary&gt;</code> accordion is already a first-class wiki pattern (used for changelogs on every page). Collapsing Done task plans behind one keeps the hub focused on active work without losing the archive.</div>
+
+    <h3>Migration steps</h3>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-title">Replace all <code>.grid</code> / <code>.card</code> markup with <code>project-grid</code> / <code>project-card</code></div>
+        <p>Each card becomes a <code>&lt;a class="project-card" href="…"&gt;</code> with an <code>&lt;h3&gt;</code> title, <code>&lt;p&gt;</code> description, and <code>&lt;div class="card-footer"&gt;</code> containing status pills. The existing card content (title, description, meta date) maps directly.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Separate active from done task plans</div>
+        <p>Active / Decided plans stay in a <code>project-grid</code> visible by default. The 7 Done plans move into a <code>&lt;details&gt;&lt;summary&gt;Completed (7)&lt;/summary&gt;</code> accordion containing a <code>svc-table</code> with columns: Plan | Status | Date. Collapsed by default.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Resolve the Recent Changes log (answer Q2 first)</div>
+        <p>Pending the answer to Q2, either replace with a <code>svc-table</code> using <code>pill-green</code> / <code>pill-red</code> / <code>pill-blue</code> type badges, or remove the section entirely.</p>
+      </div>
+      <div class="step">
+        <div class="step-title">Verify hub structure matches wiki design language</div>
+        <p>Load <code>http://localhost:8090/projects/kittybarrage/</code> alongside <code>http://localhost:8090/life/</code> and confirm visual consistency — same card shape, same type scale, same sidebar structure.</p>
+      </div>
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-phase-3">Notes — Phase 3</label>
+      <textarea id="notes-phase-3" placeholder="Decisions made, accordion pattern outcome, log resolution…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="decisions">Key Decisions</h2>
+    <p>All five decisions resolved 2026-05-25. Checklist and Phase 3 updated accordingly.</p>
+
+    <table class="svc-table">
+      <thead><tr><th>Q</th><th>Topic</th><th>Decision</th><th>Impact</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Done task plans</td><td><span class="pill pill-green">A — accordion</span></td><td>Wrap 7 Done plans in <code>&lt;details&gt;</code> accordion on the hub; hub stays focused on active work</td></tr>
+        <tr><td>2</td><td>Recent Changes log</td><td><span class="pill pill-green">A — svc-table with pills</span></td><td>Replace <code>.log</code> component with <code>svc-table</code> + <code>pill-green</code>/<code>pill-red</code>/<code>pill-blue</code> type badges</td></tr>
+        <tr><td>3</td><td><code>data-created</code> dates</td><td><span class="pill pill-green">B — git history</span></td><td>Run <code>git log --diff-filter=A -- wiki/FILENAME</code> per page to set an accurate creation date</td></tr>
+        <tr><td>4</td><td>Content freshness</td><td><span class="pill pill-green">A — fix in-place</span></td><td>Update stale status markers (pills, data-state) during Phase 2 rather than deferring</td></tr>
+        <tr><td>5</td><td>Architecture prominence</td><td><span class="pill pill-green">A — first card + badge</span></td><td>First position in <code>project-grid</code> with <code>pill-teal</code> "Start Here" badge; no new CSS needed</td></tr>
+      </tbody>
+    </table>
+
+    <p>Q-cards below are kept for reference. Decisions are final.</p>
+
+    <!-- Q1 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">1</div>
+        <div class="q-title">Completed task plans — accordion or archived section?</div>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text);margin-bottom:0.8rem">Seven of the 13 task plans are marked Done and have no active planning value. The index hub currently shows them in the same grid as active items. A collapsed <code>&lt;details&gt;</code> accordion keeps the hub focused; a separate "Archived" section keeps them visible but de-emphasised.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-done-plans" value="accordion" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — <code>&lt;details&gt;</code> accordion, collapsed by default</div>
+            <p>Wrap all Done plans in <code>&lt;details&gt;&lt;summary&gt;Completed (7)&lt;/summary&gt;</code> containing a <code>svc-table</code>. Hub stays focused on active work. Uses an existing wiki pattern (changelog uses the same element).</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-done-plans" value="archived" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Separate "Archived Plans" section</div>
+            <p>Done plans move to a second <code>project-grid</code> under an "Archived" H2. Cards stay visible but can use <code>pill-dim</code> treatment to signal low priority. Simpler but makes the hub longer.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q1-notes">Notes</label>
+        <input type="text" id="q1-notes" placeholder="Recommendation: A — accordion keeps the hub signal-to-noise high" />
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">2</div>
+        <div class="q-title">Recent Changes log — replace with svc-table or remove?</div>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text);margin-bottom:0.8rem">The index has a custom <code>.log</code> / <code>.log-entry</code> component showing ~13 feature/fix entries. It's manually maintained and largely duplicates <code>git log</code>. The question is whether the log serves a purpose that git history doesn't — e.g. as a human-readable "what's new" for someone who doesn't read git output.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-recent-log" value="replace" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Replace with <code>svc-table</code> using type pills</div>
+            <p>Reformat the entries as a <code>svc-table</code> with date, a <code>pill-green</code>/<code>pill-red</code>/<code>pill-blue</code> type badge, and description. Keeps the human-readable log; drops the custom CSS.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-recent-log" value="remove" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Remove; git history is the source of truth</div>
+            <p>The changelog on each individual page already captures change history where it matters. A hub-level log that needs manual updating will drift. Remove the section entirely.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q2-notes">Notes</label>
+        <input type="text" id="q2-notes" placeholder="No strong recommendation — depends on how often you reference this log" />
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">3</div>
+        <div class="q-title"><code>data-created</code> for pre-wiki pages — migration date or git history?</div>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text);margin-bottom:0.8rem">All 15 kittybarrage pages predate the wiki system and have no known <code>data-created</code> value. The wiki-meta component displays and filters on this date, so it matters for wiki consistency. Options are to use the migration date for all (uniform, simple) or to infer per-page from git history (more accurate, more work).</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-created-date" value="migration" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Use migration date (2026-05-25) for all pages</div>
+            <p>Simple, consistent, honest — the pages are new to the wiki even if the content is older. No git archaeology needed.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-created-date" value="git" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Infer per page from git history</div>
+            <p>Run <code>git log --diff-filter=A -- wiki/FILENAME.html</code> for each page to get its original commit date. More accurate for long-lived pages like architecture.html.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q3-notes">Notes</label>
+        <input type="text" id="q3-notes" placeholder="Recommendation: A — migration date is fine; content age is shown implicitly by state and pills" />
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">4</div>
+        <div class="q-title">Content freshness — fix stale markers in Phase 2 or flag separately?</div>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text);margin-bottom:0.8rem">Several planning docs describe features that are now fully implemented. Their status markers (pills, data-state) may say "Planning" when the implementation is done. Fixing them during Phase 2 is efficient but risks scope creep; flagging with <code>data-state="needs-work"</code> defers the content review cleanly.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-content-freshness" value="inline" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Update stale markers in-place during Phase 2</div>
+            <p>When a page with a wrong status is encountered, fix the pill and <code>data-state</code> immediately. No second pass needed. Risk: turns a structural migration into a content review.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-content-freshness" value="flag" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Flag with <code>data-state="needs-work"</code> and address in a follow-up</div>
+            <p>Phase 2 stays structural. Any page with a suspected stale status gets <code>needs-work</code> and a changelog note. Content review is a separate task after migration is complete.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q4-notes">Notes</label>
+        <input type="text" id="q4-notes" placeholder="Recommendation: B — keep migration scope clean; content review is its own task" />
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">5</div>
+        <div class="q-title">architecture.html hub prominence — first card + badge, or evaluate featured layout?</div>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text);margin-bottom:0.8rem">The current index labels architecture.html "Start here." On the redesigned hub, it will be a <code>project-card</code> like all others. The question is whether first position with a "Start Here" pill badge is sufficient, or whether a full-width featured card above the grid would better serve the "read this first" intent — especially for an agent navigating the wiki.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-architecture" value="first" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — First card position with <code>pill-teal</code> "Start Here" badge</div>
+            <p>Stays within the established <code>project-grid</code> pattern. Visual priority comes from grid position and the badge color. No new layout patterns needed.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-architecture" value="featured" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Full-width featured card above the grid</div>
+            <p>A single wide card above the <code>project-grid</code> makes the entry point unmissable. Requires adding a new CSS pattern (e.g. <code>featured-card</code>) — only worth it if other project wikis would also benefit.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q5-notes">Notes</label>
+        <input type="text" id="q5-notes" placeholder="Recommendation: A — grid position + badge is clear enough; avoid new CSS without broader need" />
+      </div>
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-decisions">Notes — Key Decisions</label>
+      <textarea id="notes-decisions" placeholder="Any additional decisions or follow-ups…"></textarea>
+    </div>
+
+    <hr />
+
+    <div class="aside">
+      <details>
+        <summary><strong>Side-Quest — Improve the <code>/wiki</code> skill</strong></summary>
+        <p>Prompt to paste into a separate chat. Two things were missed back-to-back when creating this task plan, and the skill should be updated to prevent it.</p>
+        <p><strong>What was missed:</strong></p>
+        <p><strong>1. Q-card decisions section.</strong> Task plan pages must include a "Key Decisions" section using the interactive Q-card component pattern (radio options, tradeoff descriptions, notes inputs — as seen in <code>task-plan-phase8-migration.html</code>). Decisions that block execution should gate the relevant phase. This was omitted twice and is not mentioned anywhere in SKILL.md.</p>
+        <p><strong>2. Design language check before writing.</strong> Before writing any task plan that touches or describes wiki pages, the skill should require reading 2–3 polished pages of a similar type to understand established patterns. This prevents proposing options already ruled out by existing design language (e.g. keeping custom CSS when <code>project-grid</code>/<code>project-card</code> already exists). The goal is a cohesive wiki — any page type (hub, task plan, reference, checklist) should visually and structurally match its counterparts. This applies to all page types, not just hubs.</p>
+        <p><strong>Prompt:</strong></p>
+        <pre>Read ~/.claude/skills/wiki/SKILL.md and ~/dev/wiki/shared/wiki-skill-reference.html.
+
+Two things were missed back-to-back when creating task plan pages and I need
+the skill to enforce them.
+
+1. Key Decisions section with Q-cards. Every task plan must include a
+   "Key Decisions" H2 section using the Q-card interactive component pattern
+   (div.question, q-badge, q-opt-radio inputs, q-notes — as seen in
+   /task-plan-phase8-migration.html). Each unresolved decision that blocks a
+   phase should be a Q-card. A resolved-decisions svc-table sits above the
+   Q-cards once decisions are answered. Execution is gated: no code is written
+   for a phase until the decisions that block it are resolved.
+
+2. Design language check before writing. Before writing any task plan that
+   touches or describes existing wiki pages, the skill must read 2-3 polished
+   pages of a similar type to understand established patterns. This applies to
+   ALL page types (hubs, task plans, reference pages, checklists) — not a
+   specific subset. The wiki should have a universal, cohesive experience.
+   Proposals that duplicate or contradict existing patterns are not valid options.
+
+Please propose concrete additions to SKILL.md that enforce both, including:
+- A "Task Plan checklist" in the Create workflow listing required sections
+  (scope table, step plan, Key Decisions with Q-cards, section-notes)
+- A "Design language check" step in the Create workflow: scan polished pages
+  of the same type before proposing any layout or component choices
+- A note that Q-card decisions gate execution of the phases that depend on them</pre>
+      </details>
+    </div>
+
+    <div id="wiki-copy-bar"></div>
+  </div>
+</div>
+
+<script src="/shared/wiki.js"></script>
+<script src="/shared/nav.js"></script>
+<script>
+  initWikiPage({
+    qLabels: {
+      'q-done-plans':        { accordion: 'A — accordion', archived: 'B — archived section' },
+      'q-recent-log':        { replace: 'A — svc-table with pills', remove: 'B — remove' },
+      'q-created-date':      { migration: 'A — migration date', git: 'B — git history' },
+      'q-content-freshness': { inline: 'A — fix in-place', flag: 'B — flag and defer' },
+      'q-architecture':      { first: 'A — first card + badge', featured: 'B — featured layout' },
+    },
+    sectionNotes: [
+      { id: 'notes-overview',   label: 'Overview' },
+      { id: 'notes-phase-1',    label: 'Phase 1 — Wiring' },
+      { id: 'notes-phase-2',    label: 'Phase 2 — Content Review' },
+      { id: 'notes-phase-3',    label: 'Phase 3 — Index Page' },
+      { id: 'notes-decisions',  label: 'Key Decisions' },
+    ],
+  });
+</script>
+</body>
+</html>

@@ -4,55 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Furniture Scene Checklist — Kitty Barrage</title>
+  <link rel="stylesheet" href="/shared/wiki.css" />
+  <link rel="stylesheet" media="print" href="/shared/print.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:    #0f0f13; --bg1: #1a1a22; --bg2: #12101a;
-      --b:     #2a2a38; --b2:  #1e1e2a;
-      --text:  #d4d0c8; --dim: #6a6570;
-      --green: #60c060; --green-bg: #0e1a0e; --green-b: #1e3a1e;
-      --gold:  #d4a840; --gold-bg:  #1a1408; --gold-b:  #3a2e10;
-      --orange:#d08030; --orange-bg:#1a1008; --orange-b:#3a2010;
-      --red:   #c06060; --red-bg:   #1a0e0e; --red-b:   #3a1e1e;
-      --blue:  #7ec8e3; --blue-bg:  #0e1820; --blue-b:  #1e3848;
-      --purple:#b890e0; --purple-bg:#140e1e; --purple-b:#2e1e48;
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-    .layout { display: flex; min-height: 100vh; }
-
-    .sidebar {
-      width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--b2);
-      padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; font-size: 0.8rem;
-    }
-    .sidebar a { display: block; color: var(--dim); text-decoration: none; padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; }
-    .sidebar a:hover { color: var(--text); background: #1e1e2a; }
-    .sidebar .s-head { font-size: 0.68rem; font-weight: 700; color: #404055; text-transform: uppercase; letter-spacing: 0.1em; margin: 1rem 0 0.3rem; }
-
-    .main { flex: 1; padding: 2rem 2.5rem; max-width: 860px; }
-    h1   { font-size: 1.45rem; font-weight: 700; color: #f5f0e8; margin-bottom: 0.2rem; }
-    h2   { font-size: 0.78rem; font-weight: 700; color: var(--purple); margin: 2.5rem 0 0.9rem; text-transform: uppercase; letter-spacing: 0.12em; }
-    h3   { font-size: 0.88rem; font-weight: 700; color: #c8c0e0; margin: 1.1rem 0 0.4rem; }
-    p    { font-size: 0.85rem; color: #a0988a; margin-bottom: 0.65rem; }
-    code { font-family: "SF Mono","Fira Code",monospace; font-size: 0.8em; background: #1a1a28; border: 1px solid #2a2a40; border-radius: 3px; padding: 0.05em 0.35em; color: #a0c0e0; }
-    .sub  { color: var(--dim); font-size: 0.84rem; margin-bottom: 0.25rem; }
-    hr    { border: none; border-top: 1px solid var(--b2); margin: 2rem 0; }
-    .breadcrumb { font-size: 0.78rem; color: var(--dim); margin-bottom: 1.5rem; }
-    .breadcrumb a { color: var(--dim); text-decoration: none; }
-    .breadcrumb a:hover { color: var(--text); }
-
-    .pill { display:inline-block; font-size:0.68rem; font-weight:700; padding:0.1rem 0.55rem; border-radius:10px; text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap; vertical-align:middle; }
-    .pill-green  { background:var(--green-bg);  color:var(--green);  border:1px solid var(--green-b); }
-    .pill-gold   { background:var(--gold-bg);   color:var(--gold);   border:1px solid var(--gold-b); }
-    .pill-blue   { background:var(--blue-bg);   color:var(--blue);   border:1px solid var(--blue-b); }
-    .pill-dim    { background:#141418;          color:#505060;       border:1px solid #282830; }
-
-    .note {
-      background: var(--blue-bg); border: 1px solid var(--blue-b); border-radius: 6px;
-      padding: 0.75rem 1rem; font-size: 0.83rem; color: #7ab8d0; margin: 1rem 0;
-    }
-    .note strong { color: var(--blue); }
-
-    /* ── Node tree spec box ── */
+    /* ── Checklist-specific styles not in shared wiki.css ── */
     .spec {
       background: var(--bg1); border: 1px solid var(--b); border-radius: 8px;
       padding: 0.85rem 1.1rem; margin: 0.6rem 0 1rem; font-size: 0.8rem;
@@ -116,33 +71,51 @@
 
     /* Hotspot tags */
     .hs { display:inline-block; font-size:0.65rem; font-weight:700; padding:0.06rem 0.38rem; border-radius:4px; white-space:nowrap; margin: 0.05rem; }
-    .hs-sit  { background:#1a1408; color:#d4a840; border:1px solid #3a2e10; }
-    .hs-lay  { background:#1a0e18; color:#d890c0; border:1px solid #3a1e30; }
+    .hs-sit   { background:#1a1408; color:#d4a840; border:1px solid #3a2e10; }
+    .hs-lay   { background:#1a0e18; color:#d890c0; border:1px solid #3a1e30; }
     .hs-sniff { background:#0e180e; color:#60c060; border:1px solid #1e3a1e; }
     .hs-knock { background:#1a0e0e; color:#c06060; border:1px solid #3a1e1e; }
     .hs-none  { background:#141418; color:#505060; border:1px solid #282830; }
   </style>
 </head>
 <body>
+<div id="wiki-nav"></div>
 <div class="layout">
 
   <nav class="sidebar">
-    <div style="font-size:0.85rem;font-weight:700;color:#a090c8;margin-bottom:1rem;">Scene Checklist</div>
+    <div>Scene Checklist</div>
     <div class="s-head">Sections</div>
     <a href="#blocking">Blocking Furniture</a>
     <a href="#decorations">Decorations</a>
     <a href="#markers">Markers</a>
     <div class="s-head">Related</div>
-    <a href="task-plan-pixel-rooms.html">Pixel Rooms Plan</a>
+    <a href="/projects/kittybarrage/task-plan-pixel-rooms.html">Pixel Rooms Plan</a>
     <div class="s-head">Wiki</div>
-    <a href="index.html">← Home</a>
+    <a href="/projects/kittybarrage/">← Home</a>
   </nav>
 
   <div class="main">
 
-    <div class="breadcrumb"><a href="index.html">Wiki</a> → Furniture Scene Checklist</div>
+    <div class="breadcrumb"><a href="/">Wiki</a> › <a href="/projects/kittybarrage/">Kitty Barrage</a> › Furniture Scene Checklist</div>
 
-    <div style="display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.2rem;">
+    <div id="wiki-meta"
+      data-file-path="/projects/kittybarrage/furniture-checklist.html"
+      data-fs-path="/Users/steven/dev/kittybarrage/wiki/furniture-checklist.html"
+      data-tags="kittybarrage,checklist,furniture,godot"
+      data-created="2026-05-21"
+      data-updated="2026-05-25"
+      data-state="ongoing">
+    </div>
+
+    <details class="changelog">
+      <summary>Changelog</summary>
+      <ul>
+        <li><time>2026-05-25</time> — Fix malformed data-file-path (was missing leading slash and used wrong path format)</li>
+        <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
+      </ul>
+    </details>
+
+    <div class="h1-row">
       <h1>Furniture Scene Checklist</h1>
       <span class="pill pill-gold">Phase 4</span>
     </div>
@@ -178,14 +151,15 @@
     <div class="spec">
       <div class="spec-title">Node tree — blocking furniture</div>
       <ul>
-        <li class="tree-root">FurnitureType <code>(extends Furniture)</code></li>
-        <li class="tree-child">└ Sprite2D <span class="tag t-req">texture + region_enabled</span></li>
+        <li class="tree-root">Node2D <span class="tag t-req">script: Furniture.gd</span> <span class="tag t-key">definition: resources/furniture/[type].tres</span></li>
+        <li class="tree-child">└ Sprite2D <span class="tag t-req">texture only — region set by code</span></li>
         <li class="tree-child">└ StaticBody2D <span class="tag t-req">collision layer 1</span></li>
         <li class="tree-grandchild">└ CollisionShape2D</li>
         <li class="tree-child">└ NavigationObstacle2D <span class="tag t-req">avoidance enabled</span></li>
         <li class="tree-child">└ DetectionArea <code>(Area2D)</code> <span class="tag t-key">group: furniture_area</span></li>
         <li class="tree-grandchild">└ CollisionShape2D <span class="tag t-req">circle ~48px</span></li>
       </ul>
+      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.5rem;margin-bottom:0;">No subclass script — every piece uses <code>Furniture.gd</code>. Hotspot data and sprite region come from the <code>definition</code> resource set in the inspector. The <code>variant</code> property (default 0) selects which spritesheet cell to show.</p>
     </div>
 
     <table class="scene-table" id="tbl-blocking">
@@ -199,18 +173,18 @@
       </thead>
       <tbody>
         <tr data-scene="Bed.tscn" data-section="Blocking Furniture">
-          <td class="row-status">⬜</td>
+          <td class="row-status">✅</td>
           <td>
             <span class="scene-name">Bed.tscn</span>
             <span class="scene-path">scenes/furniture/Bed.tscn</span>
           </td>
           <td><span class="hs hs-sit">sit ×3</span> <span class="hs hs-lay">lay ×2</span></td>
           <td class="steps-cell">
-            <div class="step-check"><input type="checkbox" /><span class="step-label">scene<br>created</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" checked /><span class="step-label">scene<br>created</span></div>
+            <div class="step-check"><input type="checkbox" checked /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" checked /><span class="step-label">physics<br>+ nav</span></div>
+            <div class="step-check"><input type="checkbox" checked /><span class="step-label">detect<br>area</span></div>
+            <div class="step-check"><input type="checkbox" checked /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
         <tr data-scene="SofaLarge.tscn" data-section="Blocking Furniture">
@@ -225,7 +199,7 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
         <tr data-scene="SofaSmall.tscn" data-section="Blocking Furniture">
@@ -240,7 +214,7 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
         <tr data-scene="Desk.tscn" data-section="Blocking Furniture">
@@ -255,7 +229,7 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
         <tr data-scene="Drawers.tscn" data-section="Blocking Furniture">
@@ -270,7 +244,7 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
         <tr data-scene="Bookcase.tscn" data-section="Blocking Furniture">
@@ -285,7 +259,7 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
         <tr data-scene="TableRound.tscn" data-section="Blocking Furniture">
@@ -300,7 +274,7 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
         <tr data-scene="Carpet.tscn" data-section="Blocking Furniture">
@@ -315,14 +289,19 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
       </tbody>
     </table>
 
     <div class="note">
-      <strong>Carpet note:</strong> No StaticBody2D — kitties walk over it. Skip the physics + nav step. Add an <code>Area2D</code> for the rug floor-type sensor (group: <code>rug</code>) in addition to the DetectionArea. Two separate Area2D nodes: one for furniture detection, one for the rug floor-type override.
+      <strong>Carpet note:</strong> No StaticBody2D — kitties walk over it. Skip the physics + nav step. Rug floor-type detection is handled automatically via <code>definition.footprint_size</code> in <code>carpet.tres</code> — no extra Area2D needed. Just the standard DetectionArea (group: <code>furniture_area</code>).
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-blocking">Notes — Blocking Furniture</label>
+      <textarea id="notes-blocking" placeholder="Add notes…"></textarea>
     </div>
 
     <!-- ───────────────────── DECORATIONS ───────────────────── -->
@@ -332,16 +311,16 @@
     <div class="spec">
       <div class="spec-title">Node tree — decoration (non-blocking)</div>
       <ul>
-        <li class="tree-root">DecorationType <code>(extends Furniture)</code></li>
-        <li class="tree-child">└ Sprite2D <span class="tag t-req">texture + region_enabled</span></li>
+        <li class="tree-root">Node2D <span class="tag t-req">script: Furniture.gd</span> <span class="tag t-key">definition: resources/furniture/[type].tres</span></li>
+        <li class="tree-child">└ Sprite2D <span class="tag t-req">texture only — region set by code</span></li>
         <li class="tree-child">└ DetectionArea <code>(Area2D)</code> <span class="tag t-key">group: furniture_area</span></li>
         <li class="tree-grandchild">└ CollisionShape2D <span class="tag t-req">circle ~32px</span></li>
       </ul>
-      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.5rem;margin-bottom:0;">No StaticBody2D. No NavigationObstacle2D.</p>
+      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.5rem;margin-bottom:0;">No StaticBody2D. No NavigationObstacle2D. Same <code>Furniture.gd</code> script — the missing physics nodes are simply absent.</p>
     </div>
 
     <div class="note" style="margin-bottom:0.75rem;">
-      <strong>Window exception:</strong> Window.tscn has a windowsill sit hotspot — it's still non-blocking (no StaticBody2D) but does need a DetectionArea and the <code>Window.gd</code> script which defines a SIT slot. Place it flush against the wall tile in the editor.
+      <strong>Window exception:</strong> Window.tscn has a windowsill sit + lay hotspot — still non-blocking (no StaticBody2D) but does need a DetectionArea. Use <code>Furniture.gd</code> with <code>resources/furniture/window.tres</code> as the definition. Place it flush against the wall tile in the editor.
     </div>
 
     <table class="scene-table" id="tbl-decorations">
@@ -366,7 +345,7 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
         <tr data-scene="Lamp.tscn" data-section="Decorations">
@@ -381,7 +360,7 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
         <tr data-scene="Window.tscn" data-section="Decorations">
@@ -396,11 +375,16 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <div class="section-notes">
+      <label for="notes-decorations">Notes — Decorations</label>
+      <textarea id="notes-decorations" placeholder="Add notes…"></textarea>
+    </div>
 
     <!-- ───────────────────── MARKERS ───────────────────── -->
     <h2 id="markers">Markers</h2>
@@ -438,18 +422,32 @@
             <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label" style="color:#282838;">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" /><span class="step-label">detect<br>area</span></div>
-            <div class="step-check"><input type="checkbox" /><span class="step-label">script<br>attached</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">script +<br>definition</span></div>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <hr />
+    <div class="section-notes">
+      <label for="notes-markers">Notes — Markers</label>
+      <textarea id="notes-markers" placeholder="Add notes…"></textarea>
+    </div>
 
-    <p style="font-size:0.75rem;color:var(--dim);">Kitty Barrage Wiki · <code>wiki/furniture-checklist.html</code> · Phase 4 editor work tracker</p>
-
+    <div id="wiki-copy-bar"></div>
   </div>
 </div>
+
+<script src="/shared/wiki.js"></script>
+<script src="/shared/nav.js"></script>
+<script>
+  initWikiPage({
+    sectionNotes: [
+      { id: 'notes-blocking',    label: 'Blocking Furniture' },
+      { id: 'notes-decorations', label: 'Decorations' },
+      { id: 'notes-markers',     label: 'Markers' },
+    ]
+  });
+</script>
 
 <script>
   const STEPS = ['scene created', 'sprite set up', 'physics + nav', 'detect area', 'script attached'];
