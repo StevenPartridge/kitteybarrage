@@ -103,13 +103,14 @@
       data-fs-path="/Users/steven/dev/kittybarrage/wiki/furniture-checklist.html"
       data-tags="kittybarrage,checklist,furniture,godot"
       data-created="2026-05-21"
-      data-updated="2026-05-25"
+      data-updated="2026-05-26"
       data-state="ongoing">
     </div>
 
     <details class="changelog">
       <summary>Changelog</summary>
       <ul>
+        <li><time>2026-05-26</time> — Node tree spec corrected: StaticBody2D must be collision layer 2, not layer 1. Added pre-build warnings about sprite cell stride and approach navigation gap. Bed status downgraded from ✅ to 🔄 — structurally built but pending infrastructure fixes and approach navigation.</li>
         <li><time>2026-05-25</time> — Fix malformed data-file-path (was missing leading slash and used wrong path format)</li>
         <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
       </ul>
@@ -153,13 +154,25 @@
       <ul>
         <li class="tree-root">Node2D <span class="tag t-req">script: Furniture.gd</span> <span class="tag t-key">definition: resources/furniture/[type].tres</span></li>
         <li class="tree-child">└ Sprite2D <span class="tag t-req">texture only — region set by code</span></li>
-        <li class="tree-child">└ StaticBody2D <span class="tag t-req">collision layer 1</span></li>
+        <li class="tree-child">└ StaticBody2D <span class="tag t-req">collision layer 2</span></li>
         <li class="tree-grandchild">└ CollisionShape2D</li>
         <li class="tree-child">└ NavigationObstacle2D <span class="tag t-req">avoidance enabled</span></li>
         <li class="tree-child">└ DetectionArea <code>(Area2D)</code> <span class="tag t-key">group: furniture_area</span></li>
         <li class="tree-grandchild">└ CollisionShape2D <span class="tag t-req">circle ~48px</span></li>
       </ul>
       <p style="font-size:0.76rem;color:var(--dim);margin-top:0.5rem;margin-bottom:0;">No subclass script — every piece uses <code>Furniture.gd</code>. Hotspot data and sprite region come from the <code>definition</code> resource set in the inspector. The <code>variant</code> property (default 0) selects which spritesheet cell to show.</p>
+      <p style="font-size:0.76rem;color:var(--gold);margin-top:0.4rem;margin-bottom:0;"><strong>⚠ StaticBody2D must be layer 2, not layer 1.</strong> Layer 1 is the wall physics layer. The hotspot line-of-sight raycast scans layer 1 only — if furniture is also on layer 1, the raycast hits the furniture's own body and wrongly reports "no line of sight", silently blocking every hotspot. Kitties claim slots (dot turns red) but never walk to them.</p>
+      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.4rem;margin-bottom:0;"><strong>Sprite setup gotchas:</strong> The <code>sprite_w</code> and <code>sprite_h</code> in the <code>.tres</code> definition are the <em>atlas cell stride</em> — i.e. the full width/height of one cell in the spritesheet grid, including any transparent padding around the visible graphic. Set them to <em>sheet_width / columns</em>, not to the size of the visible art. Also set <code>y_sort_origin</code> on the root Node2D to align with the bottom-center of the sprite — this makes the y-sort (kitty behind vs. in front of furniture) render correctly.</p>
+    </div>
+
+    <div class="warn" style="margin-bottom:1rem;">
+      <strong>Before building any scene, confirm:</strong>
+      <ol style="margin:0.5rem 0 0;padding-left:1.25rem;font-size:0.82rem;">
+        <li>The <code>.tres</code> definition has <code>sprite_w/sprite_h</code> equal to <em>sheet_width ÷ columns</em> (cell stride, not graphic size).</li>
+        <li>The <code>StaticBody2D</code> is on collision layer 2 — not the default layer 1.</li>
+        <li>The <code>y_sort_origin</code> property on the root Node2D is set to the Y distance from the node origin to the bottom of the sprite.</li>
+      </ol>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;"><strong>Known platform gap (Phase 5):</strong> Kitties will claim hotspot slots correctly but will not yet walk to them — the approach navigation feature is not implemented. Hotspot dots will turn red but no kitty will move to the spot. This is expected until the approach navigation fix lands. It does not mean your scene is built wrong.</p>
     </div>
 
     <table class="scene-table" id="tbl-blocking">
@@ -173,15 +186,16 @@
       </thead>
       <tbody>
         <tr data-scene="Bed.tscn" data-section="Blocking Furniture">
-          <td class="row-status">✅</td>
+          <td class="row-status">🔄</td>
           <td>
             <span class="scene-name">Bed.tscn</span>
             <span class="scene-path">scenes/furniture/Bed.tscn</span>
+            <span class="scene-path" style="color:var(--gold);">⚠ bed.tres: fix sprite_w=64 sprite_h=64 · verify hotspot slot positions · confirm StaticBody2D layer=2</span>
           </td>
           <td><span class="hs hs-sit">sit ×3</span> <span class="hs hs-lay">lay ×2</span></td>
           <td class="steps-cell">
             <div class="step-check"><input type="checkbox" checked /><span class="step-label">scene<br>created</span></div>
-            <div class="step-check"><input type="checkbox" checked /><span class="step-label">sprite<br>set up</span></div>
+            <div class="step-check"><input type="checkbox" /><span class="step-label">sprite<br>set up</span></div>
             <div class="step-check"><input type="checkbox" checked /><span class="step-label">physics<br>+ nav</span></div>
             <div class="step-check"><input type="checkbox" checked /><span class="step-label">detect<br>area</span></div>
             <div class="step-check"><input type="checkbox" checked /><span class="step-label">script +<br>definition</span></div>

@@ -74,15 +74,26 @@ func _sync_collision_to_sprite() -> void:
 	var shape_node := body.get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if shape_node == null:
 		return
-	var size: Vector2
-	if sprite.region_enabled and sprite.region_rect.size != Vector2.ZERO:
-		size = sprite.region_rect.size
-	else:
-		size = Vector2(sprite.texture.get_width(), sprite.texture.get_height())
 	var rect_shape := shape_node.shape as RectangleShape2D
 	if rect_shape == null:
 		return
-	rect_shape.size = size
+	var region_size: Vector2
+	if sprite.region_enabled and sprite.region_rect.size != Vector2.ZERO:
+		region_size = sprite.region_rect.size
+	else:
+		region_size = Vector2(sprite.texture.get_width(), sprite.texture.get_height())
+	var scaled_size := region_size * sprite.scale
+	# Compute the sprite's draw center in this node's local space.
+	# centered=true  → center is at sprite.position + sprite.offset
+	# centered=false → top-left is at sprite.position + sprite.offset; center adds half size
+	var draw_center: Vector2
+	if sprite.centered:
+		draw_center = sprite.position + sprite.offset
+	else:
+		draw_center = sprite.position + sprite.offset + scaled_size / 2.0
+	body.position = Vector2.ZERO
+	shape_node.position = draw_center
+	rect_shape.size = scaled_size
 
 func get_hotspots() -> Array[FurnitureHotspot]:
 	return _hotspots

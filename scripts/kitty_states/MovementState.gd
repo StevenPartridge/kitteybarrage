@@ -36,21 +36,21 @@ func tick(_delta: float) -> State:
 			if entity.nav_agent.is_navigation_finished():
 				entity.clear_target()
 				entity.velocity = Vector2.ZERO
-				return SitState.new()
+				return entity.pop_arrival_state()
 			direction = (entity.nav_agent.get_next_path_position() - entity.global_position).normalized()
 		else:
 			direction = (target_pos - entity.position).normalized()
 			if entity.position.distance_to(target_pos) < 5.0:
 				entity.clear_target()
 				entity.velocity = Vector2.ZERO
-				return SitState.new()
+				return entity.pop_arrival_state()
 		entity.velocity = direction * entity.speed * _speed_fn.call(entity.personality)
 		_tick_rotation()
 		entity.anim.play_loop(_anim_name, entity.facing_direction)
 	else:
 		entity.velocity = Vector2.ZERO
 		entity.anim.pause()
-		return SitState.new()
+		return entity.pop_arrival_state()
 	return null
 
 func _exit_state() -> void:

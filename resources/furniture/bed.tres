@@ -14,7 +14,7 @@ slots = Array[Vector2]([Vector2(0, -16), Vector2(0, 10)])
 
 [resource]
 script = ExtResource("2_def")
-sprite_w = 44
-sprite_h = 60
+sprite_w = 64
+sprite_h = 64
 columns = 2
 hotspot_specs = Array[ExtResource("1_spec")]([SubResource("hs_sit"), SubResource("hs_lay")])

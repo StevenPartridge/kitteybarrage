@@ -46,6 +46,7 @@
     <details class="changelog">
       <summary>Changelog</summary>
       <ul>
+        <li><time>2026-05-26</time> — Phase 5 corrected to In Progress: approach navigation (kitty walks to hotspot before occupying) is not yet implemented. Phase 4 restructured into 4a/4b/4c. Three infrastructure bugs documented with fixes. Physics layer semantics table added. Testing items marked blocked until hotspot approach works.</li>
         <li><time>2026-05-25</time> — Phase 4 updated to In Progress; Bed.tscn complete, data-driven architecture done</li>
         <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
       </ul>
@@ -308,6 +309,45 @@
 
     <h2 id="technical">Technical Context</h2>
 
+    <h3>Sprite cell stride vs. graphic size</h3>
+    <p><code>FurnitureDefinition.sprite_w</code> and <code>sprite_h</code> are the <strong>stride between atlas cells</strong>, not the size of the visible graphic. <code>_apply_variant()</code> computes the region like this:</p>
+    <pre><span class="kw">var</span> col := variant % columns
+<span class="kw">var</span> row := variant / columns
+sprite.region_rect = <span class="tp">Rect2</span>(col * sprite_w, row * sprite_h, sprite_w, sprite_h)</pre>
+    <p>So <code>sprite_w</code> must equal <em>sheet_width / columns</em>, even if the visible graphic is smaller than that and surrounded by transparent padding. Getting this wrong clips the graphic and misaligns every variant after the first.</p>
+    <div class="warn"><strong>bed.tres had this wrong:</strong> <code>sprite_w = 44</code> on a 128px-wide 2-column sheet (cells are 64px each). Correct value: <code>sprite_w = 64, sprite_h = 64</code>. Audit confirmed all other <code>.tres</code> files are correct.</div>
+    <p>A related issue: when a sprite graphic is <em>not</em> centered within its cell (common in bought asset packs), the hotspot slot positions — which are offsets from the Furniture node origin — will visually appear off. You can compensate by setting the <code>Sprite2D</code>'s <code>position</code> property in the scene to shift the graphic, or by adding an <code>origin_offset: Vector2</code> export to <code>FurnitureDefinition</code> so the correction is stored in data rather than baked into the scene. The latter is cleaner for reuse.</p>
+
+    <h3>Furniture StaticBody2D must be on a dedicated physics layer</h3>
+    <p>In <code>Character.gd</code>, <code>_has_line_of_sight()</code> raycasts against <code>WALL_PHYSICS_LAYER = 1</code>. If a furniture scene's <code>StaticBody2D</code> is also on layer 1 (the Godot default), the kitty's ray to a hotspot slot — which is <em>inside</em> the furniture bounds — will hit the furniture's own body and return <code>false</code>. The hotspot is silently skipped every time.</p>
+    <div class="warn"><strong>Spec error in the checklist:</strong> The blocking-furniture node tree was documented with "StaticBody2D collision layer 1". This is wrong — it must be layer 2 (or any layer ≠ 1). The checklist has been corrected. Any scene already built with layer 1 needs this fixed before hotspots will work.</div>
+    <p>Layer semantics for this project:</p>
+    <table class="svc-table">
+      <thead><tr><th>Layer</th><th>What goes on it</th><th>Who scans it</th></tr></thead>
+      <tbody>
+        <tr><td>1 — Wall</td><td>Wall tiles (TileSet physics), nothing else</td><td><code>_has_line_of_sight()</code> raycast; kitty <code>CollisionShape2D</code></td></tr>
+        <tr><td>2 — Furniture</td><td>Furniture <code>StaticBody2D</code> only</td><td>Kitty <code>CollisionShape2D</code> (so kitties still can't walk through furniture)</td></tr>
+        <tr><td>4 — Interest</td><td>Character <code>InterestZone</code> (Area2D)</td><td>Nothing scans this layer directly; it emits <code>area_entered</code> events</td></tr>
+        <tr><td>Default (1)</td><td>Furniture <code>DetectionArea</code> (no explicit layer set)</td><td>Character <code>InterestZone</code> mask = 1 picks it up</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Approach navigation — the missing step</h3>
+    <p>The slot-claiming system works correctly. The LOS raycast filter works. What does <em>not</em> work is the step between claiming and occupying: <strong>the kitty must walk to the hotspot position before sitting or laying there</strong>. Without this, the slot turns red (claimed) but the kitty sits/lays in place.</p>
+    <p>Root cause in <code>Character.apply_decision()</code>: after calling <code>find_nearby_hotspot()</code> and <code>set_target(slot_pos)</code>, it calls <code>begin_activity(SIT/LAY)</code>, which immediately transitions into <code>SitState</code> or tries LAY (which fails from standing — the transition returns null). The navigation target is set but no movement state runs.</p>
+    <p>The correct flow:</p>
+    <pre><span class="cm"># For SIT hotspot — trivial fix:</span>
+<span class="cm"># set_target(slot_pos) already done</span>
+<span class="fn">begin_walk</span>()   <span class="cm"># MovementState drives toward target</span>
+               <span class="cm"># On arrival, MovementState already returns SitState.new() ✓</span>
+
+<span class="cm"># For LAY hotspot — needs configurable arrival state:</span>
+<span class="cm"># MovementState hardcodes return SitState.new() on arrival.</span>
+<span class="cm"># Solution: store the intended arrival state on Character before starting walk.</span></pre>
+    <p>Cleanest design: add <code>var _arrival_state_factory: Callable</code> to <code>Character</code>. Before calling <code>begin_walk()</code> for a LAY hotspot, set this callable to <code>func(): return LayDownState.new(LayState.new())</code>. In <code>MovementState.tick()</code>, replace the three hardcoded <code>return SitState.new()</code> calls with:</p>
+    <pre><span class="kw">return</span> entity.<span class="fn">pop_arrival_state</span>()  <span class="cm"># returns stored factory result, or SitState.new() if none</span></pre>
+    <p>This keeps <code>MovementState</code> general (it doesn't know about SIT vs LAY) and the intent stays in <code>apply_decision</code> where it belongs. SIT hotspots need zero changes to <code>MovementState</code>.</p>
+
     <h3>Two-tier floor type lookup (new insight from survey)</h3>
     <p>The original plan assumed floor type came entirely from TileMap tile data. The survey revealed that rugs/carpets are standalone sprites — they are not tileset tiles. This requires a two-tier lookup:</p>
     <pre><span class="cm"># In Character._update_floor_type():</span>
@@ -430,14 +470,14 @@
       </div>
       <div class="col-card">
         <h3>Phase 4 · Furniture <span class="pill pill-teal">In Progress</span></h3>
-        <p>Data-driven architecture done: <code>Furniture.gd</code>, <code>FurnitureDefinition.gd</code>, <code>HotspotSpec.gd</code>, all 11 <code>.tres</code> definitions. Building .tscn scenes: Bed done, 11 remaining. Tracked in <a href="/projects/kittybarrage/furniture-checklist.html">Furniture Scene Checklist</a>.</p>
+        <p>Data architecture done. Infrastructure bugs found and must be fixed before building more scenes: wrong sprite cell stride in <code>bed.tres</code>, collision layer conflict, scale-aware collision sync. Bed scene is the pilot — prove it end-to-end first, then build the remaining 11. Tracked in <a href="/projects/kittybarrage/furniture-checklist.html">Furniture Scene Checklist</a>.</p>
       </div>
       <div class="col-card">
-        <h3>Phases 5–6 · Behavior <span class="pill pill-green">Done</span></h3>
-        <p>Proximity/raycast hotspot system, slot claiming, EXPLORE activity, two-tier floor query, ActivityBrain bias modifiers — all scripted and working.</p>
+        <h3>Phases 5–6 · Behavior <span class="pill pill-teal">In Progress</span></h3>
+        <p>Slot claiming, LOS raycast, EXPLORE activity, floor type query, ActivityBrain bias — all working. <strong>Gap:</strong> kitty claims a hotspot slot but never walks to it. The approach navigation step (walk first, occupy on arrival) is not yet implemented.</p>
       </div>
       <div class="col-card">
-        <h3>Phase 7 · Layout</h3>
+        <h3>Phase 7 · Layout <span class="pill pill-dim">Pending 4+5</span></h3>
         <p>Four rooms painted and furnished. Kitties can explore autonomously for 5+ minutes with varied behavior per room.</p>
       </div>
     </div>
@@ -496,53 +536,74 @@
 
       <div class="step">
         <div class="step-title">Phase 4 — Furniture Scene Architecture <span class="pill pill-teal">In Progress</span></div>
-        <p>Create the base Furniture scene and all individual furniture variant scenes. Verify navigation avoidance works for at least one piece before building the full catalog.</p>
-        <pre><span class="cm"># Furniture.gd — base class</span>
-<span class="kw">class_name</span> <span class="tp">Furniture</span>
-<span class="kw">extends</span> <span class="tp">Node2D</span>
+        <p>Three sequential sub-phases. Do not skip ahead — building content on broken infrastructure creates rework for every scene.</p>
 
-<span class="kw">@export var</span> variant: <span class="tp">int</span> = <span class="nm">0</span>
+        <h4 style="color:var(--gold);margin-top:1.25rem;margin-bottom:0.5rem;">4a — Fix infrastructure before building more scenes</h4>
+        <p>These bugs affect every furniture scene. Fix them in code and data first, verify with the bed, then build the rest.</p>
+        <table class="svc-table">
+          <thead><tr><th>Bug</th><th>File</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Wrong sprite cell stride</td>
+              <td class="svc">resources/furniture/bed.tres</td>
+              <td>Change <code>sprite_w = 64, sprite_h = 64</code> (was 44×60). Only <code>bed.tres</code> is wrong — all others confirmed correct.</td>
+            </tr>
+            <tr>
+              <td>Collision ignores sprite scale</td>
+              <td class="svc">scripts/Furniture.gd — <code>_sync_collision_to_sprite()</code></td>
+              <td>Multiply <code>size</code> by <code>sprite.scale</code> before assigning to <code>rect_shape.size</code>. As-is, if scale ≠ (1,1), the collision box is smaller than the visible sprite.</td>
+            </tr>
+            <tr>
+              <td>StaticBody2D on wall physics layer</td>
+              <td class="svc">Any furniture .tscn with StaticBody2D</td>
+              <td>Set <code>collision_layer = 2</code>. Layer 1 is the wall layer; furniture on it blocks the hotspot line-of-sight raycast. See layer table in Technical Context above.</td>
+            </tr>
+            <tr>
+              <td>Hotspot positions off-center</td>
+              <td class="svc">resources/furniture/bed.tres hotspot slots</td>
+              <td>Once sprite_w/h is corrected, visually verify slot positions with <code>Furniture.debug_hotspots = true</code> (toggle in debug overlay). Adjust slot Vector2 values in <code>.tres</code> until dots sit on the correct spots on the visual bed.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>Optional but recommended:</strong> Add <code>@export var origin_offset: Vector2 = Vector2.ZERO</code> to <code>FurnitureDefinition</code>. Apply it to the <code>Sprite2D.position</code> in <code>_apply_variant()</code>. This lets you compensate for sprites that aren't centered in their atlas cell without touching the <code>.tscn</code> — keeps the data and the scene cleanly separated. Without it, you compensate by setting <code>Sprite2D.position</code> in the inspector per scene, which is easy to forget and hard to audit.</p>
 
-<span class="kw">func</span> <span class="fn">_ready</span>() -> <span class="tp">void</span>:
-    <span class="fn">_apply_variant</span>()
+        <h4 style="color:var(--gold);margin-top:1.25rem;margin-bottom:0.5rem;">4b — Prove the bed end-to-end before building anything else</h4>
+        <p>The bed is your pilot. All the pieces need to work together for a single piece before you build eleven more. The acceptance test for 4b is the same as Phase 5's test — they converge here.</p>
+        <div class="note"><strong>Definition of "bed done":</strong> A kitty sees the bed from across the room → the interest zone picks it up → the brain decides SIT or LAY → the kitty walks across the room to the hotspot slot → arrives and transitions to SitState or LayState → the slot dot turns green (claimed) → on leaving SitState the slot is released and another kitty can claim it. If any step in that chain fails, the bed is not done.</div>
 
-<span class="kw">func</span> <span class="fn">_apply_variant</span>() -> <span class="tp">void</span>:
-    <span class="kw">pass</span>  <span class="cm"># override per furniture type to set region_rect</span>
-
-<span class="kw">func</span> <span class="fn">get_hotspots</span>() -> <span class="tp">Array</span>[<span class="tp">FurnitureHotspot</span>]:
-    <span class="kw">return</span> []</pre>
-        <p>Build scenes for: Bed, SofaLarge, SofaSmall (armchair), Carpet, TableRound, Desk, Drawers, Bookcase, Plant, Lamp, Window (large, with windowsill hotspot), <strong>Door</strong> (marker — see Phase 5). See <a href="/projects/kittybarrage/furniture-checklist.html">furniture-checklist.html</a> for detailed progress tracking.</p>
+        <h4 style="color:var(--gold);margin-top:1.25rem;margin-bottom:0.5rem;">4c — Remaining scenes</h4>
+        <p>Once the bed passes end-to-end, build the other scenes. The workflow is now proven and each scene is mechanical. For every new scene: set <code>StaticBody2D collision_layer = 2</code>, set <code>sprite_w/sprite_h</code> to the full atlas cell stride (not the graphic size), verify hotspot dots, set <code>y_sort_origin</code> to the bottom center of the sprite. See <a href="/projects/kittybarrage/furniture-checklist.html">furniture-checklist.html</a> for per-scene tracking.</p>
+        <p>Build order suggestion — validate the hotspot system with variety before building pure-decoration pieces:</p>
+        <ol style="font-size:0.85rem;">
+          <li>SofaLarge, SofaSmall — sit/lay hotspots like the bed, confirms the pattern scales</li>
+          <li>Carpet — no StaticBody2D, rug floor-type detection, confirms that path</li>
+          <li>Desk, Drawers, Bookcase, TableRound — sniff/knock hotspots (new action types)</li>
+          <li>Door marker — needed for multi-room EXPLORE behavior</li>
+          <li>Plant, Lamp, Window — decorations, no blocking</li>
+        </ol>
       </div>
 
-      <div class="step done">
-        <div class="step-title">Phase 5 — Hotspot System <span class="pill pill-green">Complete</span></div>
-        <p>No global registry. Each Character carries an interest zone (detects nearby furniture reactively) and a raycast filter (confirms line of sight before claiming). Door markers expose an EXPLORE hotspot that lets kitties deliberately cross into adjacent rooms.</p>
+      <div class="step">
+        <div class="step-title">Phase 5 — Hotspot System <span class="pill pill-teal">In Progress</span></div>
 
-        <pre><span class="cm"># FurnitureHotspot.gd</span>
-<span class="kw">class_name</span> <span class="tp">FurnitureHotspot</span>
-<span class="kw">extends</span> <span class="tp">Resource</span>
+        <h4 style="color:var(--green);margin-top:1rem;margin-bottom:0.4rem;">Done</h4>
+        <ul>
+          <li>Interest zone (Area2D) on each Character detects nearby furniture reactively via signals — no polling, no global registry</li>
+          <li>LOS raycast filter in <code>find_nearby_hotspot()</code> — only claims slots the kitty can actually reach without a wall in the way</li>
+          <li>Slot claiming and release — finite capacity, <code>FurnitureHotspot._claimed</code> dictionary, released on any state exit</li>
+          <li>EXPLORE activity — kitty navigates to a Door marker and crosses into the adjacent room</li>
+          <li>Debug visualization — <code>Furniture.debug_hotspots</code> toggle in the debug overlay draws colored circles per action type</li>
+        </ul>
 
-<span class="kw">enum</span> <span class="tp">ActionType</span> { SIT, LAY, SNIFF, KNOCK, EXPLORE }
-
-<span class="kw">@export var</span> action: <span class="tp">ActionType</span>
-<span class="kw">@export var</span> slots: <span class="tp">Array</span>[<span class="tp">Vector2</span>]  <span class="cm"># world offsets from furniture origin</span>
-<span class="kw">var</span> _claimed: <span class="tp">Dictionary</span> = {}      <span class="cm"># slot_index → character node</span>
-<span class="kw">var</span> knocked := <span class="nm">false</span>               <span class="cm"># one-shot: permanently unavailable after knock</span>
-
-<span class="kw">func</span> <span class="fn">claim</span>(character) -> <span class="tp">int</span>:
-    <span class="kw">if</span> knocked: <span class="kw">return</span> -<span class="nm">1</span>
-    <span class="kw">for</span> i <span class="kw">in</span> slots.size():
-        <span class="kw">if not</span> _claimed.has(i):
-            _claimed[i] = character; <span class="kw">return</span> i
-    <span class="kw">return</span> -<span class="nm">1</span>
-
-<span class="kw">func</span> <span class="fn">release</span>(character) -> <span class="tp">void</span>:
-    <span class="kw">for</span> key <span class="kw">in</span> _claimed.keys():
-        <span class="kw">if</span> _claimed[key] == character:
-            _claimed.erase(key); <span class="kw">return</span></pre>
-
+        <h4 style="color:var(--gold);margin-top:1rem;margin-bottom:0.4rem;">Remaining: approach navigation</h4>
+        <p>A kitty claims a slot correctly (debug dot turns red) but never walks to it — it sits or lays wherever it currently stands. The navigation target is set in <code>Character.apply_decision()</code> but then <code>begin_activity(SIT/LAY)</code> is called immediately, which transitions to the rest state in place, ignoring the target.</p>
+        <p><strong>Fix for SIT:</strong> Replace <code>begin_activity(SIT)</code> with <code>begin_walk()</code> when a hotspot slot was found. <code>MovementState</code> already returns <code>SitState.new()</code> on arrival — no other changes needed.</p>
+        <p><strong>Fix for LAY:</strong> <code>MovementState.tick()</code> hardcodes <code>return SitState.new()</code> at three arrival points. Add a <code>_arrival_state_factory: Callable</code> field to <code>Character</code>. Before calling <code>begin_walk()</code> for a LAY hotspot, set this callable to <code>func(): return LayDownState.new(LayState.new())</code>. Replace the three hardcoded returns in <code>MovementState</code> with:</p>
+        <pre><span class="kw">return</span> entity.<span class="fn">pop_arrival_state</span>()
+<span class="cm"># returns stored factory result if set, else SitState.new()</span></pre>
+        <p>This keeps <code>MovementState</code> generic — it doesn't know about SIT vs LAY. The intent lives entirely in <code>apply_decision</code> where it belongs. SNIFF and KNOCK actions will use the same pattern when they're implemented.</p>
         <div class="note">
-          <strong>EXPLORE slots don't stay claimed.</strong> Once the kitty arrives at the door position, it's crossed into the adjacent room and ActivityBrain fires a new decision cycle. The EXPLORE slot should be released immediately on arrival — no holding. The door is a waypoint, not a seat.
+          <strong>EXPLORE slots don't stay claimed.</strong> Once the kitty arrives at the door position, it's crossed into the adjacent room and ActivityBrain fires a new decision cycle. The EXPLORE slot is released immediately on arrival — the door is a waypoint, not a seat. This path already works correctly via <code>begin_walk()</code>.
         </div>
       </div>
 
@@ -602,26 +663,28 @@
     <hr />
 
     <h2 id="testing">Testing Checklist</h2>
+    <p>Items marked <span class="pill pill-gold">blocked</span> cannot pass until Phase 4+5 work is complete. Use them as acceptance criteria — when all pass, Phases 4+5 are actually done.</p>
     <ul>
       <li>Kitty spawns and navigates within the room without clipping through any wall tile</li>
-      <li>Kitty routes around a placed sofa — does not walk through it</li>
-      <li>Kitty in the living room cannot claim the bedroom bed — raycast hits the wall between them</li>
+      <li>Kitty routes around a placed bed — does not walk through it</li>
+      <li>Kitty in an adjacent room cannot claim the bed — raycast hits the wall between them</li>
       <li>Kitty standing in a doorway gap can claim furniture on both sides — raycast is clear in both directions</li>
       <li>Kitty chooses EXPLORE, navigates to the Door marker, crosses into the adjacent room, then re-decides and finds new furniture</li>
       <li>High-curiosity kitty visibly wanders between rooms more often than a low-curiosity kitty over a 2-minute observation window</li>
       <li>Kitty navigates through a doorway into an adjacent room without getting stuck on door frame corners</li>
       <li>Multiple kitties navigate simultaneously — no deadlock, no stacking</li>
-      <li>Kitty claims a sit hotspot on the bed, navigates to the slot position, and enters SitState</li>
-      <li>Two kitties claim two different slots on the same sofa simultaneously</li>
-      <li>Third kitty denied the sofa (all slots taken) — falls back to floor sitting</li>
-      <li>Kitty leaves SitState — slot becomes available and a waiting kitty claims it</li>
+      <li><span class="pill pill-gold">blocked</span> Kitty brain decides SIT, kitty <em>walks across the room</em> to the claimed slot position, arrives, and enters SitState at the hotspot location</li>
+      <li><span class="pill pill-gold">blocked</span> Kitty brain decides LAY, kitty walks to the claimed LAY slot, arrives, and enters LayDownState → LayState</li>
+      <li><span class="pill pill-gold">blocked</span> Two kitties claim two different SIT slots on the same bed simultaneously — both walk to their respective slot positions</li>
+      <li><span class="pill pill-gold">blocked</span> Third kitty is denied a slot (all taken) — falls back to floor sitting without claiming or walking toward the bed</li>
+      <li><span class="pill pill-gold">blocked</span> Kitty leaves SitState at the hotspot — slot is released; a second kitty can now claim and walk to it</li>
       <li>Kitty standing on rug reads <code>floor_type = RUG</code> (not WOOD even though wood floor is underneath)</li>
       <li>Kitty walking off the rug onto bare wood floor transitions to <code>floor_type = WOOD</code></li>
       <li>Kitty in kitchen (stone floor) stays active significantly longer before sitting vs. kitty on living room rug</li>
       <li>Kitty on wood floor exhibits at least one run burst within 30 seconds of placement</li>
       <li>Kitty on rug sits or lays within 15 seconds of placement</li>
       <li>Debug overlay shows <code>floor_type</code> for focused kitty (add label if not already there)</li>
-      <li>Y-sort correct: kitty behind sofa renders behind it; kitty in front renders in front</li>
+      <li>Y-sort correct: kitty behind bed renders behind it; kitty in front renders in front</li>
       <li>No console errors or null reference panics after 5 minutes of autonomous play</li>
       <li>All four rooms reachable by navigation — no isolated dead zones</li>
     </ul>

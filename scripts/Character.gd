@@ -152,12 +152,17 @@ func apply_decision(decision: ActivityDecision) -> void:
 		var slot := find_nearby_hotspot(FurnitureHotspot.ActionType.SIT)
 		if not slot.is_empty():
 			set_target(PositionTarget.new(slot.world_pos))
+			begin_walk()
+			return
 		elif decision.walk_target != null:
 			set_target(PositionTarget.new(decision.walk_target))
 	elif decision.activity == Global.StateName.LAY:
 		var slot := find_nearby_hotspot(FurnitureHotspot.ActionType.LAY)
 		if not slot.is_empty():
 			set_target(PositionTarget.new(slot.world_pos))
+			_arrival_state_factory = func() -> State: return LayDownState.new(LayState.new())
+			begin_walk()
+			return
 		elif decision.walk_target != null:
 			set_target(PositionTarget.new(decision.walk_target))
 	else:
