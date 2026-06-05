@@ -15,6 +15,8 @@ const HOTSPOT_CLICK_RADIUS := 14.0
 const SURFACE_MOUNT_STATE := preload("res://scripts/kitty_states/SurfaceMountState.gd")
 const SURFACE_DISMOUNT_STATE := preload("res://scripts/kitty_states/SurfaceDismountState.gd")
 const TIMED_SIT_STATE := preload("res://scripts/kitty_states/TimedSitState.gd")
+const MANUAL_MOVEMENT_STATE := preload("res://scripts/kitty_states/ManualMovementState.gd")
+const STANDING_IDLE_STATE := preload("res://scripts/kitty_states/StandingIdleState.gd")
 
 var current_floor_type: Global.FloorType = Global.FloorType.NONE
 var _floor_check_timer: float = 0.0
@@ -34,6 +36,13 @@ var _pending_surface_dismount_position := Vector2.INF
 var _hotspot_claim_reserved_for_arrival := false
 var _surface_dismount_release_pending := false
 var _surface_rng := RandomNumberGenerator.new()
+var _pending_manual_input_handler: InputHandler = null
+var _pending_manual_walk_speed: float = 70.0
+var _pending_manual_run_multiplier: float = 1.55
+var _pending_manual_acceleration: float = 650.0
+var _pending_manual_deceleration: float = 900.0
+var _pending_manual_stand_ready_seconds: float = 60.0
+var _pending_manual_rest_pose_seconds: float = 300.0
 
 func _ready() -> void:
 	state_machine = FiniteStateMachine.new()
@@ -63,6 +72,8 @@ func _build_posture_groups() -> Dictionary:
 		Global.StateName.WALK:    PostureGroup.STANDING,
 		Global.StateName.RUN:     PostureGroup.STANDING,
 		Global.StateName.SPRINT:  PostureGroup.STANDING,
+		Global.StateName.MANUAL_MOVE: PostureGroup.STANDING,
+		Global.StateName.STAND_IDLE: PostureGroup.STANDING,
 		Global.StateName.STANDUP: PostureGroup.TRANSITIONING,
 		Global.StateName.SITUP:   PostureGroup.TRANSITIONING,
 		Global.StateName.SURFACE_MOUNT: PostureGroup.TRANSITIONING,
@@ -75,6 +86,7 @@ func _build_transition_table() -> Dictionary:
 			Global.StateName.WALK:        func(): return _surface_dismount_state(MovementState.walk()),
 			Global.StateName.RUN:         func(): return _surface_dismount_state(MovementState.run()),
 			Global.StateName.SPRINT:      func(): return _surface_dismount_state(MovementState.sprint()),
+			Global.StateName.MANUAL_MOVE: null,
 			Global.StateName.SIT:         func(): return SitState.new(),
 			Global.StateName.LAY:         null,
 			Global.StateName.LOOK_AROUND: null,
@@ -83,6 +95,7 @@ func _build_transition_table() -> Dictionary:
 			Global.StateName.WALK:        null,
 			Global.StateName.RUN:         null,
 			Global.StateName.SPRINT:      null,
+			Global.StateName.MANUAL_MOVE: null,
 			Global.StateName.SIT:         null,
 			Global.StateName.LAY:         null,
 			Global.StateName.LOOK_AROUND: null,
@@ -109,6 +122,91 @@ func begin_run() -> void:
 
 func begin_sprint() -> void:
 	begin_activity(Global.StateName.SPRINT)
+
+func begin_manual_movement(
+	input_handler: InputHandler,
+	walk_speed: float = 70.0,
+	run_multiplier: float = 1.55,
+	acceleration: float = 650.0,
+	deceleration: float = 900.0,
+	stand_ready_seconds: float = 60.0,
+	rest_pose_seconds: float = 300.0
+) -> void:
+	if input_handler == null:
+		return
+	_configure_pending_manual_movement(
+		input_handler,
+		walk_speed,
+		run_multiplier,
+		acceleration,
+		deceleration,
+		stand_ready_seconds,
+		rest_pose_seconds
+	)
+
+	var current := state_machine.current_state_name()
+	if current == Global.StateName.MANUAL_MOVE:
+		var current_state := state_machine.state
+		if current_state != null and current_state.has_method("configure"):
+			current_state.call(
+				"configure",
+				input_handler,
+				walk_speed,
+				run_multiplier,
+				acceleration,
+				deceleration,
+				stand_ready_seconds,
+				rest_pose_seconds
+			)
+		return
+
+	var next := _plan_transition(current, Global.StateName.MANUAL_MOVE)
+	if next:
+		state_machine.change_state(next)
+		return
+
+	if _posture_groups.get(current, PostureGroup.STANDING) == PostureGroup.STANDING:
+		state_machine.change_state(_surface_dismount_state(_manual_movement_state()))
+
+func _configure_pending_manual_movement(
+	input_handler: InputHandler,
+	walk_speed: float,
+	run_multiplier: float,
+	acceleration: float,
+	deceleration: float,
+	stand_ready_seconds: float,
+	rest_pose_seconds: float
+) -> void:
+	_pending_manual_input_handler = input_handler
+	_pending_manual_walk_speed = walk_speed
+	_pending_manual_run_multiplier = run_multiplier
+	_pending_manual_acceleration = acceleration
+	_pending_manual_deceleration = deceleration
+	_pending_manual_stand_ready_seconds = stand_ready_seconds
+	_pending_manual_rest_pose_seconds = rest_pose_seconds
+
+func _manual_movement_state() -> State:
+	return MANUAL_MOVEMENT_STATE.new(
+		_pending_manual_input_handler,
+		_pending_manual_walk_speed,
+		_pending_manual_run_multiplier,
+		_pending_manual_acceleration,
+		_pending_manual_deceleration,
+		_pending_manual_stand_ready_seconds,
+		_pending_manual_rest_pose_seconds
+	)
+
+func build_manual_rest_sit_state(rest_pose_seconds: float, held_pose: bool = false) -> State:
+	var seconds := maxf(0.0, rest_pose_seconds)
+	return SitState.new(held_pose, held_pose, seconds, func() -> State:
+		return LayDownState.new(build_manual_rest_lay_state(seconds))
+	)
+
+func build_manual_rest_lay_state(rest_pose_seconds: float) -> State:
+	var seconds := maxf(0.0, rest_pose_seconds)
+	return LayState.new(seconds, func() -> State:
+		return SitUpState.new(build_manual_rest_sit_state(seconds, true))
+	)
 
 func set_highlight(enable: bool) -> void:
 	anim.set_modulate(Color(1.4, 1.4, 1.0, 1.0) if enable else Color.WHITE)
@@ -513,5 +611,9 @@ func _state_for_activity(activity: Global.StateName) -> State:
 			return MovementState.run()
 		Global.StateName.SPRINT:
 			return MovementState.sprint()
+		Global.StateName.MANUAL_MOVE:
+			return _manual_movement_state()
+		Global.StateName.STAND_IDLE:
+			return STANDING_IDLE_STATE.new()
 		_:
 			return SitState.new(true, true)

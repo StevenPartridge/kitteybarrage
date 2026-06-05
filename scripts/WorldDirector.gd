@@ -13,6 +13,12 @@ class_name WorldDirector
 @export_range(1.0, 20.0, 0.1) var camera_max_zoom: float = 8.0
 @export_range(0.1, 3.0, 0.1) var camera_zoom_step: float = 0.5
 @export_range(1.0, 30.0, 0.5) var camera_zoom_smoothing: float = 12.0
+@export_range(20.0, 300.0, 5.0) var manual_walk_speed: float = 70.0
+@export_range(0.5, 3.0, 0.05) var manual_run_multiplier: float = 1.55
+@export_range(100.0, 1500.0, 25.0) var manual_acceleration: float = 650.0
+@export_range(100.0, 2000.0, 25.0) var manual_deceleration: float = 900.0
+@export_range(0.0, 600.0, 1.0) var manual_stand_ready_seconds: float = 60.0
+@export_range(0.0, 1800.0, 5.0) var manual_rest_pose_seconds: float = 300.0
 
 var input_handler: InputHandler
 var controlled_character: Character = null
@@ -70,11 +76,15 @@ func _physics_process(delta: float) -> void:
 		if character == controlled_character:
 			if input_handler.is_moving():
 				character.release_hotspot_for_floor_movement()
-				character.set_target(PositionTarget.new(character.position + (input_handler.input_vector * 80.0)))
-				if input_handler.is_running():
-					character.begin_run()
-				else:
-					character.begin_walk()
+				character.begin_manual_movement(
+					input_handler,
+					manual_walk_speed,
+					manual_run_multiplier,
+					manual_acceleration,
+					manual_deceleration,
+					manual_stand_ready_seconds,
+					manual_rest_pose_seconds
+				)
 		else:
 			if not brains.has(character):
 				continue

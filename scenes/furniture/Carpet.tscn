@@ -8,9 +8,11 @@
 size = Vector2(332, 147.5)
 
 [node name="Carpet" type="Node2D" unique_id=1164171229]
-y_sort_origin = -64
 script = ExtResource("1_script")
 definition = ExtResource("3_definition")
+
+[node name="YSortOrigin" type="Marker2D" parent="." unique_id=1866947532]
+position = Vector2(0, -16)
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1873921342]
 show_behind_parent = true
@@ -31,6 +33,12 @@ position = Vector2(-21, -7)
 [node name="Slot0" type="Marker2D" parent="Hotspots/SIT" unique_id=2010701479]
 position = Vector2(16, 10)
 
+[node name="Slot1" type="Marker2D" parent="Hotspots/SIT" unique_id=1084782751]
+position = Vector2(28, -1)
+
+[node name="Slot2" type="Marker2D" parent="Hotspots/SIT" unique_id=301650706]
+position = Vector2(-1, 12)
+
 [node name="LAY" type="Node2D" parent="Hotspots" unique_id=47495256]
 position = Vector2(18, -7)
 
@@ -39,3 +47,6 @@ position = Vector2(-48, -5)
 
 [node name="Slot1" type="Marker2D" parent="Hotspots/LAY" unique_id=1062314157]
 position = Vector2(13, -3)
+
+[node name="Slot2" type="Marker2D" parent="Hotspots/LAY" unique_id=419421988]
+position = Vector2(1, 15)

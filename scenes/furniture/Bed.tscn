@@ -5,36 +5,40 @@
 [ext_resource type="Resource" uid="uid://citn5105cetff" path="res://resources/furniture/bed.tres" id="3_mxrya"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7a6cs"]
-size = Vector2(29, 49)
+size = Vector2(4.5, 2.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5eoxe"]
-size = Vector2(29, 49)
+size = Vector2(253.375, 183.125)
 
 [node name="Bed" type="Node2D" unique_id=1200132318]
 script = ExtResource("1_mxrya")
 definition = ExtResource("3_mxrya")
+
+[node name="YSortOrigin" type="Marker2D" parent="." unique_id=832130562]
+position = Vector2(0, -33)
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2120636251]
 show_behind_parent = true
 position = Vector2(0, -10)
 texture = ExtResource("2_mxrya")
 region_enabled = true
-region_rect = Rect2(0, 0, 64, 64)
+region_rect = Rect2(18, 7, 29, 50)
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1642711635]
-collision_layer = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=759136130]
-position = Vector2(0, -10)
+position = Vector2(12.5, 13.75)
 shape = SubResource("RectangleShape2D_7a6cs")
 
-[node name="NavigationObstacle2D" type="NavigationObstacle2D" parent="." unique_id=84747079]
-position = Vector2(0, -10)
-vertices = PackedVector2Array(-22, -28, 22, -28, 22, 28, -22, 28)
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D" unique_id=62960474]
+position = Vector2(-12.25, 14)
+shape = SubResource("RectangleShape2D_7a6cs")
 
 [node name="DetectionArea" type="Area2D" parent="." unique_id=1179950165 groups=["furniture_area"]]
+position = Vector2(203, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=946925208]
+position = Vector2(-203, -11)
 shape = SubResource("RectangleShape2D_5eoxe")
 
 [node name="Hotspots" type="Node2D" parent="." unique_id=435541181]

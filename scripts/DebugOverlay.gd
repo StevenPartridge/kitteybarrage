@@ -7,6 +7,7 @@ const ALLOWED: Dictionary = {
 	"WALK":        ["sit", "run", "sprint"],
 	"RUN":         ["sit", "walk", "sprint"],
 	"SPRINT":      ["sit", "walk", "run"],
+	"STAND_IDLE":  ["sit", "walk", "run", "sprint"],
 	"LAY_DOWN":    ["sit_up", "walk", "run", "sprint"],
 	"LAY":         ["sit_up", "walk", "run", "sprint"],
 	"SITUP":       [],

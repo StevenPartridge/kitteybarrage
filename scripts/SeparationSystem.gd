@@ -46,7 +46,7 @@ func _apply_forces(forces: Dictionary, delta: float) -> void:
 	for character in _characters:
 		var force: Vector2 = forces.get(character, Vector2.ZERO)
 		match character.state_machine.current_state_name():
-			Global.StateName.WALK, Global.StateName.RUN, Global.StateName.SPRINT, \
+			Global.StateName.WALK, Global.StateName.RUN, Global.StateName.SPRINT, Global.StateName.MANUAL_MOVE, \
 			Global.StateName.STANDUP, Global.StateName.SITUP:
 				character.velocity += force.limit_length(character.speed * max_speed_nudge_fraction)
 				character.move_and_slide()
@@ -59,11 +59,11 @@ func _apply_forces(forces: Dictionary, delta: float) -> void:
 
 func _mobility(character: Character) -> float:
 	match character.state_machine.current_state_name():
-		Global.StateName.WALK, Global.StateName.RUN, Global.StateName.SPRINT:
+		Global.StateName.WALK, Global.StateName.RUN, Global.StateName.SPRINT, Global.StateName.MANUAL_MOVE:
 			return 1.0
 		Global.StateName.STANDUP, Global.StateName.SITUP:
 			return 0.8
-		Global.StateName.SIT, Global.StateName.LOOK_AROUND:
+		Global.StateName.SIT, Global.StateName.LOOK_AROUND, Global.StateName.STAND_IDLE:
 			return 0.0
 		Global.StateName.LAY, Global.StateName.LAY_DOWN, \
 		Global.StateName.SURFACE_MOUNT, Global.StateName.SURFACE_DISMOUNT:

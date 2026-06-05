@@ -46,6 +46,7 @@
     <details class="changelog">
       <summary>Changelog</summary>
       <ul>
+        <li><time>2026-06-05</time> — Made <code>YSortOrigin</code> marker authoring functional in Godot 4.6: furniture scenes set their y-sort pivot by moving a visible marker, and <code>Furniture.gd</code> moves the root to that marker while counter-moving children to preserve visual placement.</li>
         <li><time>2026-06-05</time> — Carpet tuning follow-up: removed the unimplemented SNIFF hotspot from Carpet, matched the rug footprint to the editor-selected 78×32 sprite region, and documented the y-sort-origin approach for keeping rugs below characters.</li>
         <li><time>2026-06-05</time> — Hotspots now support multiple action types per slot group; editor marker groups can be named <code>SIT_LAY</code> for interchangeable sit/lay behavior, and resource fallbacks can use <code>HotspotSpec.action_flags</code>.</li>
         <li><time>2026-06-04</time> — Sprite crop ownership moved to the editor: furniture scenes now respect <code>Sprite2D.region_rect</code> by default, with definition-driven <code>variant</code> math available only when <code>apply_definition_sprite_region</code> is enabled.</li>
@@ -652,7 +653,7 @@ _arrival_state_factory = <span class="kw">func</span>(): <span class="kw">return
           <li><strong>Connections:</strong> Doorways on every shared wall. Each doorway wide enough for 2 kitties (≥ 2 tiles). Place one <code>Door.tscn</code> marker at the center of every doorway gap so kitties have an EXPLORE target to navigate toward.</li>
         </ul>
         <div class="note">
-          <strong>Y-sort on furniture:</strong> Set <code>y_sort_origin</code> on each Furniture scene to the bottom-center of the sprite. The existing WorldLayer y-sort will then correctly render kitties behind or in front of furniture based on vertical position.
+          <strong>Y-sort on furniture:</strong> Move the <code>YSortOrigin</code> marker in each Furniture scene to the visual draw-order pivot. For most blocking furniture this is bottom-center/floor contact; for rugs it can be moved well above the sprite so the rug always renders under characters. At runtime <code>Furniture.gd</code> moves the root to that marker and counter-moves children, making the marker position the value WorldLayer y-sort sees.
         </div>
       </div>
 
@@ -688,7 +689,7 @@ _arrival_state_factory = <span class="kw">func</span>(): <span class="kw">return
       <li>Kitty on wood floor exhibits at least one run burst within 30 seconds of placement</li>
       <li>Kitty on rug sits or lays within 15 seconds of placement</li>
       <li>Debug overlay shows <code>floor_type</code> for focused kitty (add label if not already there)</li>
-      <li>Y-sort correct: kitty behind bed renders behind it; kitty in front renders in front</li>
+      <li>Y-sort correct: kitty behind bed renders behind it; kitty in front renders in front; moving <code>YSortOrigin</code> changes that pivot without code edits</li>
       <li>No console errors or null reference panics after 5 minutes of autonomous play</li>
       <li>All four rooms reachable by navigation — no isolated dead zones</li>
     </ul>

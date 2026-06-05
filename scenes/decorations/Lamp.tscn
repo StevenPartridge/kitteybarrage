@@ -8,6 +8,9 @@
 script = ExtResource("1_script")
 definition = ExtResource("3_definition")
 
+[node name="YSortOrigin" type="Marker2D" parent="."]
+position = Vector2(0, 16)
+
 [node name="Sprite2D" type="Sprite2D" parent="."]
 show_behind_parent = true
 texture = ExtResource("2_texture")

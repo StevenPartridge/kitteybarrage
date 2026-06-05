@@ -16,14 +16,18 @@ const _HS_COLORS: Dictionary = {
 @export var definition: FurnitureDefinition
 @export var apply_definition_sprite_region: bool = false
 @export var auto_sync_collision_to_sprite: bool = true
+@export var apply_y_sort_pivot_from_marker: bool = true
+@export var y_sort_pivot_marker_path: NodePath = ^"YSortOrigin"
 @export var surface_mount_enabled: bool = false
 @export var mounted_character_z_index: int = 1
 
 var _hotspots: Array[FurnitureHotspot] = []
+var _y_sort_pivot_offset := Vector2.ZERO
 
 func _ready() -> void:
 	if apply_definition_sprite_region and definition != null:
 		_apply_variant()
+	_apply_y_sort_pivot_from_marker()
 	_init_hotspots()
 	_sync_collision_to_sprite()
 
@@ -34,6 +38,7 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
 	if not debug_hotspots:
 		return
+	_draw_y_sort_pivot_debug()
 	for hs: FurnitureHotspot in _hotspots:
 		var color: Color = _HS_COLORS.get(hs.get_default_action(), Color.WHITE)
 		for i in hs.slots.size():
@@ -66,6 +71,30 @@ func _apply_variant() -> void:
 			definition.sprite_w,
 			definition.sprite_h
 		)
+
+func _apply_y_sort_pivot_from_marker() -> void:
+	if not apply_y_sort_pivot_from_marker:
+		return
+	var marker := get_node_or_null(y_sort_pivot_marker_path) as Node2D
+	if marker == null:
+		return
+	var pivot_offset := to_local(marker.global_position)
+	if pivot_offset.is_zero_approx():
+		return
+	_y_sort_pivot_offset = pivot_offset
+	global_position = marker.global_position
+	for child_raw in get_children():
+		var child := child_raw as Node2D
+		if child != null:
+			child.position -= pivot_offset
+
+func _draw_y_sort_pivot_debug() -> void:
+	var marker := get_node_or_null(y_sort_pivot_marker_path) as Node2D
+	if marker == null:
+		return
+	var y := to_local(marker.global_position).y
+	draw_line(Vector2(-10, y), Vector2(10, y), Color(0.2, 0.75, 1.0, 0.9), 1.0)
+	draw_line(Vector2(0, y - 3), Vector2(0, y + 3), Color(0.2, 0.75, 1.0, 0.9), 1.0)
 
 func _init_hotspots() -> void:
 	_hotspots.clear()
@@ -198,4 +227,5 @@ func get_hotspot_slot_plan(hs: FurnitureHotspot, idx: int) -> Dictionary:
 func get_footprint_rect() -> Rect2:
 	if definition == null or definition.footprint_size == Vector2.ZERO:
 		return Rect2()
-	return Rect2(global_position - definition.footprint_size / 2.0, definition.footprint_size)
+	var footprint_center := global_position - _y_sort_pivot_offset
+	return Rect2(footprint_center - definition.footprint_size / 2.0, definition.footprint_size)

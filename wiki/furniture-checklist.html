@@ -110,7 +110,8 @@
     <details class="changelog">
       <summary>Changelog</summary>
       <ul>
-        <li><time>2026-06-05</time> — Carpet cleaned up for the current SIT/LAY-only interaction set: removed its unimplemented SNIFF hotspot, matched <code>carpet.tres</code> footprint to the selected 78×32 rug, and restored an early <code>y_sort_origin</code> so it stays under characters.</li>
+        <li><time>2026-06-05</time> — Made <code>YSortOrigin</code> markers functional in Godot 4.6: <code>Furniture.gd</code> moves the furniture root to the marker at runtime and counter-moves children so visuals/hotspots stay in place while WorldLayer y-sort uses the marker position.</li>
+        <li><time>2026-06-05</time> — Carpet cleaned up for the current SIT/LAY-only interaction set: removed its unimplemented SNIFF hotspot, matched <code>carpet.tres</code> footprint to the selected 78×32 rug, and gave it an early <code>YSortOrigin</code> marker so it stays under characters.</li>
         <li><time>2026-06-05</time> — Hotspots can now support multiple action types from one editor-visible group; name a marker group like <code>SIT_LAY</code> for interchangeable sit/lay slots, and use <code>HotspotSpec.action_flags</code> for resource fallbacks.</li>
         <li><time>2026-06-04</time> — Sprite crop ownership moved to the editor: <code>Sprite2D.region_rect</code> is respected at runtime by default, and definition-driven variant math is now opt-in via <code>apply_definition_sprite_region</code>.</li>
         <li><time>2026-06-04</time> — Added editor-visible <code>Hotspots</code> marker nodes as the preferred tuning surface; expanded <code>SurfaceFurniture.gd</code> to raised non-carpet pieces; added custom floor-footprint collision for blocking furniture and a rug y-sort fix.</li>
@@ -160,6 +161,7 @@
       <div class="spec-title">Node tree — blocking furniture</div>
       <ul>
         <li class="tree-root">Node2D <span class="tag t-req">script: Furniture.gd or SurfaceFurniture.gd</span> <span class="tag t-key">definition: resources/furniture/[type].tres</span></li>
+        <li class="tree-child">└ YSortOrigin <code>(Marker2D)</code> <span class="tag t-key">editor tuning</span></li>
         <li class="tree-child">└ Sprite2D <span class="tag t-req">texture + region set in editor</span></li>
         <li class="tree-child">└ StaticBody2D <span class="tag t-req">collision layer 2</span></li>
         <li class="tree-grandchild">└ CollisionShape2D</li>
@@ -171,7 +173,7 @@
       </ul>
       <p style="font-size:0.76rem;color:var(--dim);margin-top:0.5rem;margin-bottom:0;">Default flat/decor furniture uses <code>Furniture.gd</code>. Raised surface scenes use <code>SurfaceFurniture.gd</code>. If a scene has a <code>Hotspots</code> node, those <code>Marker2D</code> positions override the hotspot vectors in the <code>.tres</code> definition. Move <code>Slot*</code> markers to tune occupy points; move child <code>Approach</code>/<code>Dismount</code> markers to tune jump-on/jump-off floor points. Compound group names such as <code>SIT_LAY</code>, <code>SIT+LAY</code>, or <code>SIT,LAY</code> make one slot group satisfy multiple action decisions; the first token is the default for bare left-click testing. <code>Sprite2D.region_rect</code> is also editor-owned by default; only enable <code>apply_definition_sprite_region</code> when you intentionally want <code>variant</code> math to rewrite the crop at runtime.</p>
       <p style="font-size:0.76rem;color:var(--gold);margin-top:0.4rem;margin-bottom:0;"><strong>⚠ StaticBody2D must be layer 2, not layer 1.</strong> Layer 1 is the wall physics layer. The hotspot line-of-sight raycast scans layer 1 only — if furniture is also on layer 1, the raycast hits the furniture's own body and wrongly reports "no line of sight", silently blocking every hotspot. Kitties claim slots (dot turns red) but never walk to them.</p>
-      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.4rem;margin-bottom:0;"><strong>Sprite setup gotchas:</strong> Crop the <code>Sprite2D.region_rect</code> visually in the scene. If <code>apply_definition_sprite_region</code> is enabled for a scene or instance, then <code>sprite_w</code>, <code>sprite_h</code>, and <code>columns</code> in the definition must describe the atlas cell stride exactly. Leave it disabled for normal hand-authored furniture scenes. Also set <code>y_sort_origin</code> on the root Node2D to align with the intended draw order.</p>
+      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.4rem;margin-bottom:0;"><strong>Sprite setup gotchas:</strong> Crop the <code>Sprite2D.region_rect</code> visually in the scene. If <code>apply_definition_sprite_region</code> is enabled for a scene or instance, then <code>sprite_w</code>, <code>sprite_h</code>, and <code>columns</code> in the definition must describe the atlas cell stride exactly. Leave it disabled for normal hand-authored furniture scenes. Move the <code>YSortOrigin</code> marker to set the draw-order pivot; at runtime <code>Furniture.gd</code> moves the root to that marker and counter-moves child nodes so the visible scene does not jump.</p>
     </div>
 
     <div class="warn" style="margin-bottom:1rem;">
@@ -179,7 +181,7 @@
       <ol style="margin:0.5rem 0 0;padding-left:1.25rem;font-size:0.82rem;">
         <li>The <code>Sprite2D.region_rect</code> looks correct in the scene editor. Only audit <code>.tres</code> sprite stride fields when <code>apply_definition_sprite_region</code> is enabled.</li>
         <li>The <code>StaticBody2D</code> is on collision layer 2 — not the default layer 1.</li>
-        <li>The <code>y_sort_origin</code> property on the root Node2D is set to the Y distance from the node origin to the bottom of the sprite.</li>
+        <li>The <code>YSortOrigin</code> marker is placed at the draw-order pivot: usually bottom-center for blocking furniture, earlier/above the sprite for rugs that must stay under characters.</li>
       </ol>
       <p style="margin:0.5rem 0 0;font-size:0.82rem;"><strong>Surface pilot complete:</strong> New furniture scenes may resume. Use <code>SurfaceFurniture.gd</code> only for raised surfaces with approach/occupy/dismount slots; keep ordinary blocking furniture on <code>Furniture.gd</code>.</p>
       <p style="margin:0.5rem 0 0;font-size:0.82rem;"><strong>Testing hook:</strong> With debug hotspots visible, left-click a nearby hotspot using the focused kitty. Hotspot clicks take priority over mouse look-tracking; the kitty should claim that exact slot and immediately walk to it. Use this to tune hotspot offsets before marking sprite setup complete.</p>
@@ -329,7 +331,7 @@
     </table>
 
     <div class="note">
-      <strong>Carpet note:</strong> No StaticBody2D — kitties walk over it. Skip the physics + nav step. Rug floor-type detection is handled automatically via <code>definition.footprint_size</code> in <code>carpet.tres</code>. <code>Carpet.tscn</code> also uses an early <code>y_sort_origin</code> so the rug stays under characters while remaining above the room floor.
+      <strong>Carpet note:</strong> No StaticBody2D — kitties walk over it. Skip the physics + nav step. Rug floor-type detection is handled automatically via <code>definition.footprint_size</code> in <code>carpet.tres</code>. <code>Carpet.tscn</code> uses an early <code>YSortOrigin</code> marker so the rug stays under characters while remaining above the room floor.
     </div>
 
     <div class="section-notes">

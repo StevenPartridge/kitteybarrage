@@ -15,6 +15,9 @@ script = ExtResource("1_script")
 definition = ExtResource("3_definition")
 auto_sync_collision_to_sprite = false
 
+[node name="YSortOrigin" type="Marker2D" parent="." unique_id=1008423205]
+position = Vector2(-1, 10)
+
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=798516538]
 show_behind_parent = true
 texture = ExtResource("2_texture")
@@ -22,7 +25,6 @@ region_enabled = true
 region_rect = Rect2(0, 0, 32, 32)
 
 [node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1834029950]
-collision_layer = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1034604462]
 position = Vector2(0, 13)

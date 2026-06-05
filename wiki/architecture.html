@@ -40,6 +40,8 @@
     <details class="changelog">
       <summary>Changelog</summary>
       <ul>
+        <li><time>2026-06-05</time> — Added <code>ManualMovementState</code>: player W/A/S/D now drives direct velocity with manual walk/run/accel/decel tunables instead of a rolling navigation target.</li>
+        <li><time>2026-06-05</time> — Added <code>YSortOrigin</code> to the furniture module map as the editor-authored draw-order pivot applied by moving the furniture root at runtime while preserving child world positions.</li>
         <li><time>2026-06-05</time> — Updated furniture module map for editor-owned sprite regions, marker-authored hotspots, and multi-action hotspot support through compound marker names or <code>HotspotSpec.action_flags</code>.</li>
         <li><time>2026-05-25</time> — Added LOOK_TRACK state; updated AI section (tick signature, floor-type biases, EXPLORE); expanded module map with Animation, Separation, Color &amp; Marking, and Furniture sections; corrected Global.gd enums</li>
         <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
@@ -96,6 +98,7 @@
         <ul>
           <li><code>Kitty.change_state(state)</code> — direct override (buttons, AI SIT/LAY)</li>
           <li><code>Kitty.begin_walk/run/sprint()</code> — smart routing through stand-up / sit-up chains</li>
+          <li><code>Character.begin_manual_movement(input_handler, ...)</code> — player W/A/S/D path; routes through rest/surface departure chains, then drives direct velocity</li>
           <li><code>Character.apply_decision(decision)</code> — entry point for AI brain outputs</li>
         </ul>
       </div>
@@ -198,6 +201,12 @@
           <td>"Sprint" loop</td>
           <td>Like WALK, speed × <code>personality.sprint_speed_multiplier</code> (default 2.4). Target reached → <code>SitState.new()</code>.</td>
         </tr>
+        <tr>
+          <td class="svc">MANUAL_MOVE — StateName.MANUAL_MOVE</td>
+          <td><code>ManualMovementState(input_handler, walk_speed, run_multiplier, acceleration, deceleration)</code></td>
+          <td>"Walk" or "Run" loop</td>
+          <td>Player-controlled W/A/S/D movement. Clears <code>navigation_target</code> and moves from the live input vector with short acceleration/deceleration ramps. Input release → <code>SitState(true,true)</code>.</td>
+        </tr>
       </tbody>
     </table>
 
@@ -218,6 +227,7 @@
         <tr><td class="svc">SIT</td><td>STANDUP → WALK</td><td><code>begin_walk()</code> — AI WALK decision or Walk button</td></tr>
         <tr><td class="svc">SIT</td><td>STANDUP → RUN</td><td><code>begin_run()</code> — AI RUN decision or Run button</td></tr>
         <tr><td class="svc">SIT</td><td>STANDUP → SPRINT</td><td><code>begin_sprint()</code> — AI SPRINT decision or Sprint button</td></tr>
+        <tr><td class="svc">SIT</td><td>STANDUP → MANUAL_MOVE</td><td><code>begin_manual_movement()</code> — player W/A/S/D input</td></tr>
         <tr><td class="svc">SIT</td><td>LAY_DOWN → LAY</td><td>AI LAY decision — <code>LayDownState.new(LayState.new())</code></td></tr>
         <tr><td class="svc">SIT</td><td>LOOK_AROUND</td><td>AI LOOK_AROUND decision — <code>LookAroundState.new()</code></td></tr>
         <tr><td class="svc">LOOK_AROUND</td><td>SIT (held pose)</td><td>Natural end of animation — <code>SitState(true,true)</code></td></tr>
@@ -225,7 +235,9 @@
         <tr><td class="svc">LOOK_AROUND</td><td>STANDUP → WALK/RUN/SPRINT</td><td><code>begin_walk/run/sprint()</code> — routes through StandUp</td></tr>
         <tr><td class="svc">LAY / LAY_DOWN</td><td>SITUP → SIT (held)</td><td>AI SIT decision — <code>SitUpState.new(SitState(true,true))</code></td></tr>
         <tr><td class="svc">LAY / LAY_DOWN</td><td>SITUP → STANDUP → WALK/RUN/SPRINT</td><td><code>begin_walk/run/sprint()</code> — full chain</td></tr>
+        <tr><td class="svc">LAY / LAY_DOWN</td><td>SITUP → STANDUP → MANUAL_MOVE</td><td><code>begin_manual_movement()</code> — player W/A/S/D input</td></tr>
         <tr><td class="svc">WALK/RUN/SPRINT</td><td>SIT</td><td>Target reached (&lt;5px) — <code>SitState.new()</code></td></tr>
+        <tr><td class="svc">MANUAL_MOVE</td><td>SIT (held)</td><td>Input released and deceleration reaches zero — <code>SitState(true,true)</code></td></tr>
         <tr><td class="svc">STANDUP</td><td><em>next_state</em></td><td>Animation completes — whatever was passed to constructor</td></tr>
         <tr><td class="svc">SITUP</td><td><em>next_state</em></td><td>Animation completes — whatever was passed to constructor</td></tr>
         <tr><td class="svc">LAY_DOWN</td><td><em>next_state</em></td><td>Animation completes — whatever was passed to constructor</td></tr>
@@ -366,9 +378,9 @@
       <thead><tr><th>File</th><th>Class</th><th>Role</th></tr></thead>
       <tbody>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">Core — Entity &amp; Orchestration</td></tr>
-        <tr><td class="svc">Character.gd</td><td>Character</td><td>Base class for all characters. Owns FSM, AnimController, personality, navigation target, separation force. Public interface: <code>begin_walk/run/sprint</code>, <code>apply_decision</code>, <code>set_target</code>, <code>set_highlight</code>. Extends <code>CharacterBody2D</code>.</td></tr>
+        <tr><td class="svc">Character.gd</td><td>Character</td><td>Base class for all characters. Owns FSM, AnimController, personality, navigation target, separation force. Public interface: <code>begin_walk/run/sprint</code>, <code>begin_manual_movement</code>, <code>apply_decision</code>, <code>set_target</code>, <code>set_highlight</code>. Extends <code>CharacterBody2D</code>.</td></tr>
         <tr><td class="svc">Kitty.gd</td><td>Kitty</td><td>Extends <code>Character</code>. Named subtype for the kitty character — no additional logic. Exists so scenes and type checks can reference <code>Kitty</code> specifically.</td></tr>
-        <tr><td class="svc">WorldDirector.gd</td><td>WorldDirector</td><td>Orchestrates all characters (<code>Array[Character]</code>). Routes player input → controlled character. Ticks ActivityBrain → autonomous characters. Handles spawning and focus cycling.</td></tr>
+        <tr><td class="svc">WorldDirector.gd</td><td>WorldDirector</td><td>Orchestrates all characters (<code>Array[Character]</code>). Routes player input → controlled character, with manual movement tuning exports for walk speed, run multiplier, acceleration, and deceleration. Ticks ActivityBrain → autonomous characters. Handles spawning and focus cycling.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">State Machine</td></tr>
         <tr><td class="svc">FiniteStateMachine.gd</td><td>FiniteStateMachine</td><td>Owns the current State node. Drives <code>tick()</code> each physics frame. Handles transitions and same-state guard.</td></tr>
         <tr><td class="svc">State.gd</td><td>State</td><td>Base class for all states. <code>var entity</code> is intentionally untyped (duck-typed to <code>Character</code> at runtime) to avoid a parse-time circular dependency. Provides <code>_tick_rotation()</code> for navigation-aware states.</td></tr>
@@ -382,6 +394,7 @@
         <tr><td class="svc">kitty_states/LookAroundState.gd</td><td>LookAroundState</td><td>Configurable look-around animation plan. On finish → next_state (default: held sitting pose).</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">States — Movement</td></tr>
         <tr><td class="svc">kitty_states/MovementState.gd</td><td>MovementState</td><td>Handles WALK, RUN, and SPRINT via static constructors. Moves toward navigation_target. On arrival → <code>SitState.new()</code>.</td></tr>
+        <tr><td class="svc">kitty_states/ManualMovementState.gd</td><td>ManualMovementState</td><td>Handles player W/A/S/D movement. Does not set a navigation target; applies direct velocity from <code>InputHandler.input_vector</code> with walk/run/accel/decel values supplied by <code>WorldDirector</code>.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">AI</td></tr>
         <tr><td class="svc">ActivityBrain.gd</td><td>ActivityBrain</td><td>Autonomous decision engine. <code>tick(delta, bounds)</code> returns an <code>ActivityDecision</code> when the timer fires.</td></tr>
         <tr><td class="svc">ActivityDecision.gd</td><td>ActivityDecision</td><td>Value object: activity (<code>StateName</code>) + optional <code>walk_target</code> (<code>Vector2</code>).</td></tr>
@@ -396,7 +409,7 @@
         <tr><td class="svc">PositionTarget.gd</td><td>PositionTarget</td><td>Fixed <code>Vector2</code> target. Always valid.</td></tr>
         <tr><td class="svc">NodeTarget.gd</td><td>NodeTarget</td><td>Node2D reference target. Valid only while the node is in the scene tree.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">Global &amp; Dev</td></tr>
-        <tr><td class="svc">Global.gd</td><td>Global (autoload)</td><td>Enums: <code>StateName</code> (SIT, WALK, STANDUP, SITUP, LAY, LAY_DOWN, RUN, LOOK_AROUND, SPRINT, LOOK_TRACK, EXPLORE), <code>FloorType</code> (NONE, WOOD, STONE, CHECKER, RUG), <code>Direction</code>, <code>LookDirection</code>. Helpers: <code>direction_from_vector</code>, <code>get_full_animation_name</code>, <code>direction_to_angle</code>.</td></tr>
+        <tr><td class="svc">Global.gd</td><td>Global (autoload)</td><td>Enums: <code>StateName</code> (SIT, WALK, STANDUP, SITUP, LAY, LAY_DOWN, RUN, LOOK_AROUND, SPRINT, LOOK_TRACK, EXPLORE, SURFACE_MOUNT, SURFACE_DISMOUNT, MANUAL_MOVE), <code>FloorType</code> (NONE, WOOD, STONE, CHECKER, RUG), <code>Direction</code>, <code>LookDirection</code>. Helpers: <code>direction_from_vector</code>, <code>get_full_animation_name</code>, <code>direction_to_angle</code>.</td></tr>
         <tr><td class="svc">DebugOverlay.gd</td><td>DebugOverlay</td><td>Dev console. State display, transition log, force-trigger buttons, kitty personality controls, spawn palette (color variants + marking probability).</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">Animation</td></tr>
         <tr><td class="svc">StateAnimator.gd</td><td>StateAnimator</td><td>Abstract base for animation controllers. Defines the interface all states use: <code>play_transition</code>, <code>play_loop</code>, <code>play_once</code>, <code>play_pose</code>, <code>hold_frame</code>, <code>cancel</code>, <code>pause</code>, <code>get_frame_count</code>, <code>get_playback_progress</code>, etc. Emits <code>animation_finished</code>.</td></tr>
@@ -408,7 +421,7 @@
         <tr><td class="svc">ColorVariantPool.gd</td><td>ColorVariantPool</td><td>Manages the catalog of kitty coat color variants (24 families, 52 total sprite sheets). WorldDirector uses it to assign a random atlas region to each spawned kitty via <code>Character.apply_color_variant()</code>.</td></tr>
         <tr><td class="svc">MarkingPool.gd</td><td>MarkingPool</td><td>Manages the catalog of 14 marking overlay textures. WorldDirector applies a random marking at 30% probability via <code>AnimationController.set_marking()</code>. Probability slider in the debug overlay's spawn palette.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">Furniture</td></tr>
-        <tr><td class="svc">Furniture.gd</td><td>Furniture</td><td>Base class for furniture nodes. Prefers editor-authored <code>Sprite2D.region_rect</code> and visible <code>Hotspots</code> marker groups; definition-driven sprite region math is opt-in through <code>apply_definition_sprite_region</code>. Marker group names can be single actions or compound names such as <code>SIT_LAY</code>. Exposes <code>get_hotspots()</code> and <code>get_footprint_rect()</code>. Draws hotspot debug circles when <code>debug_hotspots</code> is true.</td></tr>
+        <tr><td class="svc">Furniture.gd</td><td>Furniture</td><td>Base class for furniture nodes. Prefers editor-authored <code>Sprite2D.region_rect</code>, a visible <code>YSortOrigin</code> marker for draw-order pivot tuning, and visible <code>Hotspots</code> marker groups; definition-driven sprite region math is opt-in through <code>apply_definition_sprite_region</code>. At runtime, <code>YSortOrigin</code> is applied by moving the furniture root to the marker and counter-moving children so WorldLayer y-sort uses the marker without shifting the visible art. Marker group names can be single actions or compound names such as <code>SIT_LAY</code>. Exposes <code>get_hotspots()</code> and <code>get_footprint_rect()</code>. Draws hotspot and y-sort pivot debug marks when <code>debug_hotspots</code> is true.</td></tr>
         <tr><td class="svc">FurnitureDefinition.gd</td><td>FurnitureDefinition</td><td>Resource: <code>sprite_w</code>, <code>sprite_h</code>, <code>columns</code> (0=horizontal strip, N=N-column grid), <code>footprint_size</code>, <code>hotspot_specs: Array[HotspotSpec]</code>. Stored as <code>.tres</code> files in <code>res://resources/furniture/</code> — one per furniture type.</td></tr>
         <tr><td class="svc">FurnitureHotspot.gd</td><td>FurnitureHotspot</td><td>Runtime slot manager created from editor marker groups or <code>HotspotSpec</code> fallbacks. Tracks supported actions, claimed slots keyed by character, and knocked state. <code>supports_action(action)</code> lets SIT/LAY share a slot group. <code>claim(character)</code> → slot index or -1. <code>release(character)</code> frees the slot.</td></tr>
         <tr><td class="svc">HotspotSpec.gd</td><td>HotspotSpec</td><td>Serializable fallback resource: <code>action</code> default, optional <code>action_flags</code> for multi-action support, <code>slots</code>, <code>approach_slots</code>, and <code>dismount_slots</code>. Stored as sub-resources inside <code>FurnitureDefinition.hotspot_specs</code>.</td></tr>
