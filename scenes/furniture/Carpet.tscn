@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://bhkfpittfk6sf"]
+
+[ext_resource type="Script" uid="uid://qhc6r3yjhle3" path="res://scripts/Furniture.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b1203uipnncqo" path="res://assets/rooms/furniture/Carpets.png" id="2_texture"]
+[ext_resource type="Resource" uid="uid://co62p6kkc2sbh" path="res://resources/furniture/carpet.tres" id="3_definition"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_detection"]
+size = Vector2(332, 147.5)
+
+[node name="Carpet" type="Node2D" unique_id=1164171229]
+y_sort_origin = -64
+script = ExtResource("1_script")
+definition = ExtResource("3_definition")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1873921342]
+show_behind_parent = true
+texture = ExtResource("2_texture")
+region_enabled = true
+region_rect = Rect2(25, 7, 78, 32)
+
+[node name="DetectionArea" type="Area2D" parent="." unique_id=783826211 groups=["furniture_area"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=94652690]
+shape = SubResource("RectangleShape2D_detection")
+
+[node name="Hotspots" type="Node2D" parent="." unique_id=959801715]
+
+[node name="SIT" type="Node2D" parent="Hotspots" unique_id=1410272993]
+position = Vector2(-21, -7)
+
+[node name="Slot0" type="Marker2D" parent="Hotspots/SIT" unique_id=2010701479]
+position = Vector2(16, 10)
+
+[node name="LAY" type="Node2D" parent="Hotspots" unique_id=47495256]
+position = Vector2(18, -7)
+
+[node name="Slot0" type="Marker2D" parent="Hotspots/LAY" unique_id=755845533]
+position = Vector2(-48, -5)
+
+[node name="Slot1" type="Marker2D" parent="Hotspots/LAY" unique_id=1062314157]
+position = Vector2(13, -3)

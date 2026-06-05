@@ -9,6 +9,10 @@ class_name WorldDirector
 @export var color_pool: ColorVariantPool
 @export var marking_pool: MarkingPool
 @export var marking_probability: float = 0.3
+@export_range(1.0, 20.0, 0.1) var camera_min_zoom: float = 2.5
+@export_range(1.0, 20.0, 0.1) var camera_max_zoom: float = 8.0
+@export_range(0.1, 3.0, 0.1) var camera_zoom_step: float = 0.5
+@export_range(1.0, 30.0, 0.5) var camera_zoom_smoothing: float = 12.0
 
 var input_handler: InputHandler
 var controlled_character: Character = null
@@ -17,12 +21,16 @@ var _focus_index: int = 0
 var separation_system: SeparationSystem
 var _rng: RandomNumberGenerator
 var _nav_map: RID
+var _target_camera_zoom: float = 5.0
 
 func _ready() -> void:
 	assert(world_layer != null, "WorldDirector: world_layer must be assigned in the editor")
 	_nav_map = _resolve_nav_map()
 	_rng = RandomNumberGenerator.new()
 	_rng.randomize()
+	if camera != null:
+		_target_camera_zoom = clampf(camera.zoom.x, camera_min_zoom, camera_max_zoom)
+		camera.zoom = Vector2.ONE * _target_camera_zoom
 	if color_pool == null:
 		color_pool = ColorVariantPool.build_kitty_pool()
 	if marking_pool == null:
@@ -45,6 +53,15 @@ func _ready() -> void:
 	add_child(separation_system)
 	separation_system.setup(characters)
 
+func _process(delta: float) -> void:
+	if camera == null:
+		return
+	var next_zoom := camera.zoom.lerp(
+		Vector2.ONE * _target_camera_zoom,
+		clampf(camera_zoom_smoothing * delta, 0.0, 1.0)
+	)
+	camera.zoom = next_zoom
+
 func _physics_process(delta: float) -> void:
 	if camera != null and controlled_character != null:
 		camera.global_position = controlled_character.global_position
@@ -52,6 +69,7 @@ func _physics_process(delta: float) -> void:
 	for character in characters:
 		if character == controlled_character:
 			if input_handler.is_moving():
+				character.release_hotspot_for_floor_movement()
 				character.set_target(PositionTarget.new(character.position + (input_handler.input_vector * 80.0)))
 				if input_handler.is_running():
 					character.begin_run()
@@ -122,8 +140,12 @@ func _input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			SpawnKittyAtLocation(_screen_to_world(event.position))
 		elif event.button_index == MOUSE_BUTTON_LEFT and controlled_character != null:
+			var mouse_world := _screen_to_world(event.position)
 			var cur := controlled_character.state_machine.current_state_name()
 			if event.pressed:
+				if controlled_character.occupy_hotspot_at(mouse_world):
+					get_viewport().set_input_as_handled()
+					return
 				if cur == Global.StateName.SIT or cur == Global.StateName.LOOK_TRACK:
 					controlled_character.change_state(LookTrackState.new(
 						func() -> Vector2: return _screen_to_world(get_viewport().get_mouse_position())
@@ -135,6 +157,23 @@ func _input(event: InputEvent) -> void:
 		if characters.is_empty():
 			return
 		_set_controlled(characters[(_focus_index + 1) % characters.size()])
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_zoom_camera_from_wheel(event)
+			get_viewport().set_input_as_handled()
+
+func _zoom_camera_from_wheel(event: InputEventMouseButton) -> void:
+	if camera == null:
+		return
+	var direction := 1.0 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1.0
+	var amount := absf(event.factor) if not is_zero_approx(event.factor) else 1.0
+	_target_camera_zoom = clampf(
+		_target_camera_zoom + (direction * camera_zoom_step * amount),
+		camera_min_zoom,
+		camera_max_zoom
+	)
 
 func _resolve_nav_map() -> RID:
 	var nav_region := get_tree().get_first_node_in_group("walk_region") as NavigationRegion2D

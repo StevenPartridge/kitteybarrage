@@ -11,9 +11,11 @@ enum StateName {
     LAY_DOWN,
     RUN,
     LOOK_AROUND,
-    SPRINT,
+	SPRINT,
     LOOK_TRACK,
 	EXPLORE,
+	SURFACE_MOUNT,
+	SURFACE_DISMOUNT,
 }
 
 enum FloorType { NONE, WOOD, STONE, CHECKER, RUG }
@@ -31,7 +33,7 @@ enum Direction {
 
 enum LookDirection { BOTH, LEFT_ONLY, RIGHT_ONLY }
 
-static func direction_to_string(direction: Direction) -> String:
+func direction_to_string(direction: Direction) -> String:
 	match direction:
 		Direction.NORTH:
 			return "North"
@@ -73,7 +75,7 @@ func get_full_animation_name(state_name: String, direction: Global.Direction) ->
 			direction_suffix = "_Northwest"
 	return state_name + direction_suffix
 
-static func direction_to_angle(direction: Direction) -> float:
+func direction_to_angle(direction: Direction) -> float:
 	var angle := (int(direction) - 2) * PI / 4.0
 	while angle > PI:
 		angle -= TAU

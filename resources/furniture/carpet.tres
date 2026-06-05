@@ -1,27 +1,21 @@
-[gd_resource type="Resource" format=3]
+[gd_resource type="Resource" script_class="FurnitureDefinition" format=3 uid="uid://co62p6kkc2sbh"]
 
-[ext_resource type="Script" path="res://scripts/HotspotSpec.gd" id="1_spec"]
-[ext_resource type="Script" path="res://scripts/FurnitureDefinition.gd" id="2_def"]
+[ext_resource type="Script" uid="uid://dya46mdquy4ji" path="res://scripts/HotspotSpec.gd" id="1_spec"]
+[ext_resource type="Script" uid="uid://glhlhmwplrmx" path="res://scripts/FurnitureDefinition.gd" id="2_def"]
 
 [sub_resource type="Resource" id="hs_sit"]
 script = ExtResource("1_spec")
-action = 0
-slots = [Vector2(0, 0)]
+slots = Array[Vector2]([Vector2(0, 0)])
 
 [sub_resource type="Resource" id="hs_lay"]
 script = ExtResource("1_spec")
 action = 1
-slots = [Vector2(-32, 0), Vector2(32, 0)]
-
-[sub_resource type="Resource" id="hs_sniff"]
-script = ExtResource("1_spec")
-action = 2
-slots = [Vector2(48, 10)]
+slots = Array[Vector2]([Vector2(-32, 0), Vector2(32, 0)])
 
 [resource]
 script = ExtResource("2_def")
 sprite_w = 128
 sprite_h = 42
 columns = 2
-footprint_size = Vector2(128, 42)
-hotspot_specs = [SubResource("hs_sit"), SubResource("hs_lay"), SubResource("hs_sniff")]
+footprint_size = Vector2(78, 32)
+hotspot_specs = Array[ExtResource("1_spec")]([SubResource("hs_sit"), SubResource("hs_lay")])

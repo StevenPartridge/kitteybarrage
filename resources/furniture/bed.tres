@@ -5,12 +5,16 @@
 
 [sub_resource type="Resource" id="hs_sit"]
 script = ExtResource("1_spec")
-slots = Array[Vector2]([Vector2(-8, 0), Vector2(0, 0), Vector2(8, 0)])
+slots = Array[Vector2]([Vector2(-8, -10), Vector2(0, -10), Vector2(8, -10)])
+approach_slots = Array[Vector2]([Vector2(-8, 22), Vector2(0, 22), Vector2(8, 22)])
+dismount_slots = Array[Vector2]([Vector2(-8, 22), Vector2(0, 22), Vector2(8, 22)])
 
 [sub_resource type="Resource" id="hs_lay"]
 script = ExtResource("1_spec")
 action = 1
-slots = Array[Vector2]([Vector2(0, -16), Vector2(0, 10)])
+slots = Array[Vector2]([Vector2(0, -26), Vector2(0, 0)])
+approach_slots = Array[Vector2]([Vector2(0, 22), Vector2(0, 22)])
+dismount_slots = Array[Vector2]([Vector2(0, 22), Vector2(0, 22)])
 
 [resource]
 script = ExtResource("2_def")

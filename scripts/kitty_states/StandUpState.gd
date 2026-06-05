@@ -23,6 +23,8 @@ func tick(_delta: float) -> State:
 	_tick_rotation()
 	if _done:
 		return _next_state
+	if entity.has_method("is_surface_mounted") and entity.call("is_surface_mounted"):
+		return null
 	if entity.navigation_target != null and entity.navigation_target.is_valid():
 		var progress: float = entity.anim.get_playback_progress()
 		var direction: Vector2 = (entity.navigation_target.get_position() - entity.position).normalized()

@@ -30,7 +30,7 @@
       data-fs-path="/Users/steven/dev/kittybarrage/wiki/index.html"
       data-tags="kittybarrage,hub,index"
       data-created="2026-05-16"
-      data-updated="2026-05-25"
+      data-updated="2026-06-04"
       data-state="ongoing">
     </div>
 
@@ -39,6 +39,11 @@
       <table class="svc-table">
         <thead><tr><th>Date</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
+          <tr><td>2026-06-04</td><td><span class="pill pill-green">fix</span></td><td>Furniture sprite crop ownership moved to the editor: runtime now respects <code>Sprite2D.region_rect</code> by default, with definition-driven variant math available only via explicit opt-in.</td></tr>
+          <tr><td>2026-06-04</td><td><span class="pill pill-green">feature</span></td><td>Furniture tuning pass: editable <code>Hotspots</code> marker nodes added, raised non-carpet furniture uses <code>SurfaceFurniture.gd</code>, custom floor-footprint collision replaces full-sprite collision where needed, and carpet draw order was corrected.</td></tr>
+          <tr><td>2026-06-04</td><td><span class="pill pill-green">feature</span></td><td>Furniture catalog scaffolded: remaining furniture, decoration, and door marker scenes now exist with data resources, textures, and appropriate collision/detection/nav node structure. Next step is editor tuning.</td></tr>
+          <tr><td>2026-06-04</td><td><span class="pill pill-green">done</span></td><td>Bed Surface Gameplay pilot completed: <code>SurfaceFurniture.gd</code> extracted for raised surfaces, Bed.tscn uses it, and the furniture scene checklist is unpaused.</td></tr>
+          <tr><td>2026-06-02</td><td><span class="pill pill-teal">new</span></td><td>Bed Surface Gameplay task plan added; remaining furniture scenes paused until the raised-surface render and mount model is proven.</td></tr>
           <tr><td>2026-05-21</td><td><span class="pill pill-purple">refactor</span></td><td>Furniture system consolidated — per-furniture GDScript files (Bed.gd, Bookcase.gd… ×11) replaced by data-driven FurnitureDefinition + HotspotSpec resources (.tres). All 11 furniture definitions in res://resources/furniture/. Furniture.gd updated to load definition at runtime.</td></tr>
           <tr><td>2026-05-21</td><td><span class="pill pill-green">feature</span></td><td>Bed.tscn first furniture scene — Sprite2D + StaticBody2D + CollisionShape2D wired to FurnitureDefinition; sit×3 and lay×2 hotspot slots confirmed working.</td></tr>
           <tr><td>2026-05-21</td><td><span class="pill pill-green">feature</span></td><td>Two-room house tilemap live — House.tscn with Floor + Wall TileMapLayers, NavigationRegion2D, kitties path around walls. EXPLORE activity, floor-type biases (WOOD/STONE/CHECKER/RUG), proximity+raycast hotspot discovery, and slot claiming all scripted.</td></tr>
@@ -95,11 +100,19 @@
           <span class="pill pill-dim">7 phases</span>
         </div>
       </a>
+      <a class="project-card" href="task-plan-bed-surface-gameplay.html">
+        <h3>Bed Surface Gameplay</h3>
+        <p>Completed pilot for the no-cut bed surface model: kitties pass under on the floor, approach, mount, occupy, and dismount believably; raised surfaces now use SurfaceFurniture.</p>
+        <div class="card-footer">
+          <span class="pill pill-green">Pilot Proven</span>
+          <span class="pill pill-dim">surface furniture</span>
+        </div>
+      </a>
       <a class="project-card" href="furniture-checklist.html">
         <h3>Furniture Scene Checklist</h3>
-        <p>Step-by-step editor checklist for building all 12 furniture .tscn files. Per-scene progress tracking with copy-to-clipboard for sharing state.</p>
+        <p>All 12 catalog scenes are structurally scaffolded. Use this checklist to track editor tuning, hotspot offset checks, and gameplay polish.</p>
         <div class="card-footer">
-          <span class="pill pill-gold">Phase 4</span>
+          <span class="pill pill-green">Scaffolded</span>
           <span class="pill pill-dim">12 scenes</span>
         </div>
       </a>

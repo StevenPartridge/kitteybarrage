@@ -585,7 +585,7 @@ func _refresh_furniture_tab(character: Character) -> void:
 			else:
 				lines.append("  [%s]" % f.name)
 				for hs: FurnitureHotspot in hotspots:
-					var action: String = FurnitureHotspot.ActionType.keys()[hs.action]
+					var action := hs.get_action_label()
 					var status: String
 					if hs.knocked:
 						status = "KNOCKED"
@@ -601,7 +601,7 @@ func _refresh_furniture_tab(character: Character) -> void:
 	if claimed == null:
 		lines.append("  (none)")
 	else:
-		var action: String = FurnitureHotspot.ActionType.keys()[claimed.action]
+		var action := claimed.get_action_label()
 		lines.append("  %s  —  slot held" % action)
 	_furniture_text.text = "\n".join(lines)
 

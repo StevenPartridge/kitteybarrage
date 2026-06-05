@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Plan — Bed Surface Gameplay</title>
+  <link rel="stylesheet" href="/shared/wiki.css" />
+  <link rel="stylesheet" media="print" href="/shared/print.css" />
+</head>
+<body>
+<div id="wiki-nav"></div>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div>Bed Surface Gameplay</div>
+    <div class="s-head">Sections</div>
+    <a href="#scope">Scope</a>
+    <a href="#model">Mental Model</a>
+    <a href="#decisions">Key Decisions</a>
+    <a href="#work-split">Work Split</a>
+    <a href="#step-plan">Step Plan</a>
+    <a href="#testing">Testing</a>
+    <div class="s-head">Kitty Barrage</div>
+    <a href="/projects/kittybarrage/">← Hub</a>
+    <a href="/projects/kittybarrage/task-plan-pixel-rooms.html">Pixel Rooms</a>
+    <a href="/projects/kittybarrage/furniture-checklist.html">Furniture Checklist</a>
+  </nav>
+
+  <div class="main">
+    <div class="breadcrumb"><a href="/">Wiki</a> › <a href="/projects/kittybarrage/">Kitty Barrage</a> › Bed Surface Gameplay</div>
+
+    <div id="wiki-meta"
+      data-file-path="/projects/kittybarrage/task-plan-bed-surface-gameplay.html"
+      data-fs-path="/Users/steven/dev/kittybarrage/wiki/task-plan-bed-surface-gameplay.html"
+      data-tags="kittybarrage,task-plan,furniture,bed,y-sort,interaction"
+      data-created="2026-06-02"
+      data-updated="2026-06-04"
+      data-state="ongoing">
+    </div>
+
+    <details class="changelog">
+      <summary>Changelog</summary>
+      <ul>
+        <li><time>2026-06-04</time> — Follow-up tuning pass: <code>Bed.tscn</code> now has editor-visible <code>Hotspots</code> markers matching its SIT/LAY occupy, approach, and dismount points; marker nodes are the preferred tuning surface.</li>
+        <li><time>2026-06-04</time> — Follow-up after Phase 7: remaining furniture, decoration, and door marker scenes were bulk scaffolded; tuning continues from <code>furniture-checklist.html</code></li>
+        <li><time>2026-06-04</time> — Phase 7 implemented: Phase 6 playtest accepted, bed now uses <code>SurfaceFurniture.gd</code>, generic hotspot slot-plan calculation moved onto <code>Furniture.gd</code>, and furniture scene production is unpaused</li>
+        <li><time>2026-06-03</time> — Phase 6 polish: mounted arrivals now sit before advanced look-around/turn behavior, LAY arrivals lay down only after that seated sequence, and bed exits look/turn toward the dismount point before standing</li>
+        <li><time>2026-06-02</time> — Phase 5 implemented: surface hotspot arrival now enters a short mount interpolation from approach to occupy point, bed departures dismount back to the floor point before movement resumes, and hotspot claims are preserved while reserved for arrival</li>
+        <li><time>2026-06-02</time> — Phase 4 implemented: surface hotspots now expose approach, occupy, and dismount points; bed SIT/LAY slots route to floor approach points, snap to the selected occupy point on arrival, and snap back to the dismount point on release</li>
+        <li><time>2026-06-02</time> — Phase 3 implemented: Bed.tscn keeps one Sprite2D and enables surface mount rendering; claimed surface hotspots now remember their furniture, and Sit/Lay temporarily render mounted kitties above the bed before restoring normal z-order on release</li>
+        <li><time>2026-06-02</time> — Phase 2 satisfied: confirmed no comfortable occupied bed hotspot sits behind bed art; sprite cutting deferred, with only tiny front-foot occlusion left as optional later polish after navigation/collision work</li>
+        <li><time>2026-06-02</time> — Captured resolved Q-card answers: no-cut bed pilot, approach/mount/dismount flow, floor-under/mounted-above rendering, bed-specific extraction, and pass-under bed collision; added navigation and furniture-specific collision caveats</li>
+        <li><time>2026-06-02</time> — Updated pilot hypothesis: try a no-cut bed first, let floor kitties pass under the bed sprite, and mount/dismount through an approach point before considering sprite splits</li>
+        <li><time>2026-06-02</time> — Initial creation for the bed-as-surface gameplay pilot</li>
+      </ul>
+    </details>
+
+    <div class="h1-row">
+      <h1>Bed Surface Gameplay</h1>
+      <span class="pill pill-green">Pilot Proven</span>
+      <span class="pill pill-dim">2026-06-02</span>
+    </div>
+    <p class="sub">Plan to make the bed feel like a real raised surface: route kitties through an approach point, mount onto the mattress, dismount back to the floor, and only split bed art if the no-cut render pass fails.</p>
+
+    <hr />
+
+    <h2 id="scope">Scope</h2>
+
+    <table class="svc-table">
+      <thead><tr><th>Area</th><th>Decision</th></tr></thead>
+      <tbody>
+        <tr><td class="svc">Goal</td><td>Make <code>Bed.tscn</code> the proof that surface furniture can look and play correctly before building the rest of the furniture catalog.</td></tr>
+        <tr><td class="svc">Current known-good</td><td>Kitties can sense bed hotspots, left-click a visible hotspot, claim the exact slot, and move to it. Kitty/hotspot alignment is now good.</td></tr>
+        <tr><td class="svc">Current problem</td><td>The current movement can reach bed hotspots, but it does not yet distinguish floor traversal under/behind the bed from mounted occupancy on top of the mattress.</td></tr>
+        <tr><td class="svc">Updated hypothesis</td><td>The bed may not need sprite cuts. If floor kitties render under the bed sprite and mounted kitties render above it, the current art can read as "under bed" versus "on bed" without splitting headboard/surface/footboard.</td></tr>
+        <tr><td class="svc">In scope</td><td>No-cut bed render pilot, approach point to mounted point interaction, mounted-to-approach dismount behavior, bed-specific render ordering, debug visualization, and editor tuning workflow.</td></tr>
+        <tr><td class="svc">Paused</td><td>Remaining furniture scene production. Sofas, carpet, desks, drawers, bookcase, table, plant, lamp, window, and door marker wait until the bed surface model is proven.</td></tr>
+        <tr><td class="svc">Out of scope</td><td>New art animation, blanket deformation, full physics on top of the bed, generalized furniture polish for every object, and final seasonal/Halloween variants.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="warn">
+      <strong>Execution gate:</strong> do not build more furniture scenes until the bed passes the testing checklist on this page. This is the prototype for every raised surface in the room system.
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-scope">Notes — Scope</label>
+      <textarea id="notes-scope" placeholder="Scope changes, risks, or extra exclusions…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="model">Mental Model</h2>
+
+    <p>Y-sort works beautifully for entities that stand on the same floor plane. Kitties interacting with each other look natural because each kitty's node origin behaves like a feet position. Furniture surfaces are different: a bed has height, and the kitty is sometimes on the floor near it and sometimes on top of it.</p>
+
+    <div class="two-col">
+      <div class="col-card">
+        <h3>Floor object</h3>
+        <p>One origin and one visual layer are usually enough. Sort by Y. Lower on screen draws in front.</p>
+      </div>
+      <div class="col-card">
+        <h3>Surface object</h3>
+        <p>The object needs at least two character render states. Floor kitties can read as under/behind the bed; mounted kitties can read as on top of it.</p>
+      </div>
+      <div class="col-card">
+        <h3>Approach point</h3>
+        <p>The character walks to a reachable floor point near the object. This is what navigation and obstacle avoidance understand.</p>
+      </div>
+      <div class="col-card">
+        <h3>Occupy point</h3>
+        <p>The character transitions onto the object and holds a pose at the surface hotspot. Leaving the bed should transition back through the approach point before normal pathing resumes.</p>
+      </div>
+    </div>
+
+    <p>For the current bed art, the visible occupancy spots do not appear to sit behind or under a separate bed part. That suggests the first pilot should keep one bed sprite: floor kitties can pass under/behind it, while hotspot occupants render above the whole bed.</p>
+
+    <div class="note">
+      <strong>Standard 2D pattern:</strong> path to the interactable edge, play a small mount/snap transition, render the character in an object-specific mounted state, then dismount back to the edge before leaving. A single global y-sort should not carry all of that meaning.
+    </div>
+
+    <div class="warn">
+      <strong>Navigation caveat:</strong> the current <code>NavigationRegion2D</code> covers floor space inside the walls, but observed kitty behavior does not yet show reliable doorway/narrowing intelligence; a kitty may walk straight into a wall and stop. Treat this as a separate navigation risk when testing bed approach points so surface behavior is not blamed for a global pathing failure.
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-model">Notes — Mental Model</label>
+      <textarea id="notes-model" placeholder="Projection notes, art observations, or examples…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="decisions">Key Decisions</h2>
+
+    <p>All five pilot decisions were resolved on 2026-06-02. The Q-cards remain below as implementation context and can be reopened if testing proves an assumption wrong.</p>
+
+    <table class="svc-table">
+      <thead><tr><th>Q</th><th>Choice</th><th>Notes / follow-up</th></tr></thead>
+      <tbody>
+        <tr><td class="svc">Q1</td><td><span class="pill pill-green">A</span> Keep one bed sprite for the first pilot</td><td>Confirmed: no comfortable occupied bed slot sits behind the bed art. Only tiny front-foot squares might obscure a behind-bed floor kitty, so sprite cutting is deferred.</td></tr>
+        <tr><td class="svc">Q2</td><td><span class="pill pill-green">A</span> Approach point, mount to occupy point, dismount back to approach</td><td>Known caveat: global navigation may not currently handle doorways and narrowings reliably. Diagnose that separately from bed surface behavior.</td></tr>
+        <tr><td class="svc">Q3</td><td><span class="pill pill-green">A</span> Floor kitties under bed, mounted kitties above bed</td><td>One bed sprite can express both reads if mounted render state overrides normal floor sorting.</td></tr>
+        <tr><td class="svc">Q4</td><td><span class="pill pill-green">A</span> Bed-specific pilot, then extract <code>SurfaceFurniture</code></td><td>Do not generalize pass-under collision from the bed until other furniture types are studied.</td></tr>
+        <tr><td class="svc">Q5</td><td><span class="pill pill-green">A</span> Floor kitties pass under; mounted kitties use slot occupancy</td><td>Bed-specific for now. Couches should block movement; tables may support under-table and on-table hotspots. Tiny floor-contact collision shapes, such as bed legs, are worth testing for immersion.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">1</div>
+        <div class="q-title">Does the bed need sprite cuts for the first pilot?</div>
+      </div>
+      <p>The newer hypothesis is that no occupied bed slot is visually behind or under a separate bed part. If that is true, splitting the art is unnecessary until the no-cut pilot fails.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-split" value="single-sprite-pilot" checked />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Keep one bed sprite for the first pilot</div>
+            <p>Floor kitties pass under/behind the bed sprite. Mounted kitties render above the bed. Lowest art churn and now the best match for the observed perspective.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-split" value="three-layers" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Split into headboard, surface, and footboard</div>
+            <p>Use if the no-cut pilot fails because the footboard/headboard need to overlap mounted kitties differently from the rest of the bed.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-split" value="new-assets" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Create explicit split PNG assets</div>
+            <p>Best art control, but slower. Useful after the prototype proves the layers and we know the exact cuts.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q-split-notes">Notes</label>
+        <input type="text" id="q-split-notes" placeholder="Recommendation: A — no sprite cuts until the no-cut pilot fails" />
+      </div>
+    </div>
+
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">2</div>
+        <div class="q-title">How should a kitty get onto the bed?</div>
+      </div>
+      <p>Normal navigation understands floors and obstacles. A bed surface is not just another walk target; it is a mounted interaction.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-route" value="approach-mount" checked />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Approach point, mount to occupy point, dismount back to approach</div>
+            <p>Kitty walks to a reachable floor edge, transitions onto the surface hotspot, and returns to that edge before normal movement resumes. This keeps floor navigation and surface occupancy separate.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-route" value="direct-occupy" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Walk straight to the on-bed hotspot</div>
+            <p>Current behavior. Simple and already works mechanically, but it looks like the kitty pathfinds through a raised object.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-route" value="pathable-surface" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Make the bed top pathable</div>
+            <p>Most simulation-heavy. Requires navigation, collision, and floor-type semantics for object surfaces. Too much for the first bed pilot.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q-route-notes">Notes</label>
+        <input type="text" id="q-route-notes" value="NavigationRegion2D covers the floor, but doorway/narrowing behavior may still fail; note this as a separate pathing risk." placeholder="Recommendation: A — approach, mount, then dismount through the approach point" />
+      </div>
+    </div>
+
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">3</div>
+        <div class="q-title">How should floor and mounted kitties render?</div>
+      </div>
+      <p>Once a kitty is on the bed, ordinary WorldLayer y-sort should no longer be the only draw-order rule. The bed can use different render treatment for floor traversal versus mounted occupancy.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-render" value="floor-under-mounted-above" checked />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Floor kitties under bed, mounted kitties above bed</div>
+            <p>Keep the bed as one sprite. A kitty on the floor can pass under/behind it; a kitty occupying a bed slot temporarily renders above it.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-render" value="surface-mode" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Surface render mode between split bed layers</div>
+            <p>Use only if Q1 flips to a split bed. The kitty renders above the mattress/surface layer and below any front layer.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-render" value="manual-z" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Manual z-index for all furniture interactions</div>
+            <p>Powerful but easy to make brittle. This risks recreating the older clever-z-index problem in a larger form.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q-render-notes">Notes</label>
+        <input type="text" id="q-render-notes" placeholder="Recommendation: A — under while on floor, above while mounted" />
+      </div>
+    </div>
+
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">4</div>
+        <div class="q-title">When should this become generic furniture architecture?</div>
+      </div>
+      <p>The bed is the first raised surface. Sofas, chairs, windowsills, counters, and tubs may need similar behavior, but generalizing too early could bake in the wrong abstraction.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-generalize" value="bed-first" checked />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Bed-specific pilot, then extract SurfaceFurniture</div>
+            <p>Prove the hard visual and interaction parts on one object. Extract only after the bed feels good. Smallest risk and best fit for the current uncertainty.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-generalize" value="generic-first" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Build SurfaceFurniture first</div>
+            <p>More architectural up front. Good if the pattern is already obvious, but the current bed work is still discovering the right gameplay feel.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-generalize" value="per-scene" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Keep every furniture scene bespoke</div>
+            <p>Great per-object control, but likely duplicates approach/mount/debug logic across sofas, beds, tubs, and windowsills.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q-generalize-notes">Notes</label>
+        <input type="text" id="q-generalize-notes" placeholder="Recommendation: A — bed first, extract after proof" />
+      </div>
+    </div>
+
+    <div class="question">
+      <div class="question-head">
+        <div class="q-badge">5</div>
+        <div class="q-title">What collision model should the bed use?</div>
+      </div>
+      <p>The bed collision being on a different layer may be an accidental win: floor kitties can run under it, while mounted kitties are governed by hotspot occupancy instead of floor collision. This is a bed-specific decision, not the default for all furniture.</p>
+      <div class="q-options">
+        <label class="q-opt-radio">
+          <input type="radio" name="q-collision" value="pass-under-slot-mounted" checked />
+          <div class="q-opt-body">
+            <div class="q-opt-label">A — Floor kitties pass under; mounted kitties use slot occupancy</div>
+            <p>Bed collision does not block normal floor movement. The claimed slot is the truth while mounted, and resting kitties should not be nudged off the mattress. Tiny floor-contact collision shapes can still be tested for legs.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-collision" value="blocking-bed" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">B — Bed blocks normal floor movement</div>
+            <p>Traditional obstacle behavior. This may look worse for this perspective because kitties cannot pass under the bed even when the art suggests they could.</p>
+          </div>
+        </label>
+        <label class="q-opt-radio">
+          <input type="radio" name="q-collision" value="mounted-shape" />
+          <div class="q-opt-body">
+            <div class="q-opt-label">C — Use separate floor and mounted collision shapes</div>
+            <p>Most precise and future-proof, but probably unnecessary until the simpler under-bed plus slot-occupancy model fails.</p>
+          </div>
+        </label>
+      </div>
+      <div class="q-notes">
+        <label for="q-collision-notes">Notes</label>
+        <input type="text" id="q-collision-notes" value="Works for bed, but not all furniture. Couches block; tables may have under-table and on-table hotspots; bed legs may use tiny floor-contact collision." placeholder="Recommendation: A — pass under on floor, slot occupancy while mounted" />
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Furniture collision taxonomy to prove later:</strong> bed-like objects may allow pass-under floor movement, couches and cabinets should block, and tables may expose two different interaction modes: under-table floor hotspots and naughty on-table surface hotspots. If testing layer-1 leg collision, remember that the hotspot line-of-sight raycast currently scans layer 1 for walls, so tiny leg shapes must not accidentally hide valid hotspots.
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-decisions">Notes — Key Decisions</label>
+      <textarea id="notes-decisions" placeholder="Decision outcomes, counterarguments, and follow-up questions…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="work-split">Work Split</h2>
+
+    <table class="svc-table">
+      <thead><tr><th>Owner</th><th>Can do</th><th>Needs</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="svc">Steven</td>
+          <td>Q-card answers chosen and no-cut bed read confirmed. Next: tune final approach/occupy/dismount positions in Godot and playtest whether under-bed traversal feels natural.</td>
+          <td>Debug hotspots visible, a direct click-to-occupy test path, clear distinction between floor, approach, mounted, and dismount states, and a separate navigation diagnosis path if doorways/narrowings fail.</td>
+        </tr>
+        <tr>
+          <td class="svc">Codex</td>
+          <td>Patch scripts/resources/scenes, add data fields and states, update wiki pages, run Godot headless parser checks, and keep the checklist honest.</td>
+          <td>Answered blocking decisions and visual feedback from the editor for things headless Godot cannot see.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>Phase 2 result:</strong> no-cut bed rendering is accepted for the first pilot. Do not split the bed art unless later playtesting shows a real occupied-slot overlap problem.
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-work-split">Notes — Work Split</label>
+      <textarea id="notes-work-split" placeholder="Ownership adjustments, handoff notes, or editor constraints…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="step-plan">Step Plan</h2>
+
+    <div class="steps">
+      <div class="step done">
+        <div class="step-title">Phase 0 — Capture the plan</div>
+        <p>Create this task plan, link it from the hub, and mark remaining furniture production as paused until the bed pilot passes.</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Phase 1 — Resolve blocking decisions <span class="pill pill-gold">Steven</span></div>
+        <p>Resolved 2026-06-02 as A/A/A/A/A: no-cut bed, approach-mount-dismount, floor-under/mounted-above rendering, bed-specific pilot, pass-under floor movement with slot-only mounted occupancy.</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Phase 2 — Validate no-cut bed reading <span class="pill pill-gold">Steven</span></div>
+        <p>Completed 2026-06-02: no comfortable occupied bed hotspot sits behind bed art, so the no-cut sprite plan is visually acceptable for the pilot.</p>
+        <ul>
+          <li>Keep the bed art intact for the first pilot.</li>
+          <li>If a kitty were behind the bed, only the tiny front two foot squares would obscure it.</li>
+          <li>Try fixing navigation and using tiny floor-contact collision for those foot squares before considering any sprite cutout.</li>
+        </ul>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Phase 3 — Build single-sprite surface prototype <span class="pill pill-teal">Codex</span></div>
+        <p>Completed 2026-06-02: the bed keeps one sprite and opts into surface mount rendering. A claimed hotspot now remembers its source furniture; entering <code>SitState</code> or <code>LayState</code> on a surface-enabled furniture temporarily raises the kitty's <code>z_index</code>, and releasing the hotspot restores the previous z-order. Phase 7 moved the bed to <code>SurfaceFurniture.gd</code>.</p>
+        <pre>Bed (Furniture)
+  Sprite2D
+  StaticBody2D
+  NavigationObstacle2D
+  DetectionArea</pre>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Phase 4 — Add approach, occupy, and dismount points <span class="pill pill-teal">Codex</span></div>
+        <p>Completed 2026-06-02: <code>HotspotSpec</code> now supports <code>approach_slots</code> and <code>dismount_slots</code> alongside the existing occupy <code>slots</code>. <code>bed.tres</code> defines floor approach/dismount points along the bed's lower edge. AI and left-click selection still choose the visible occupy slot, but surface-enabled furniture routes the walk target to the approach point first.</p>
+        <p>Phase 5 replaced the old arrival/release snaps with visible mount and dismount states.</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Phase 5 — Add mount and dismount interactions <span class="pill pill-teal">Codex</span></div>
+        <p>Completed 2026-06-02: <code>SurfaceMountState</code> eases the kitty from the floor approach point to the occupied mattress point, activates mounted rendering during the move, and then hands off to Sit/Lay. <code>SurfaceDismountState</code> eases the kitty back to the dismount point before releasing the claimed slot and restoring normal floor rendering.</p>
+        <ul>
+          <li>Reserved hotspot claims now survive the sit/lay exit used to start walking toward the bed.</li>
+          <li>Mounted posture changes, such as Sit to Lay, keep the bed claim instead of releasing it.</li>
+          <li>Standing up while mounted no longer drifts toward the navigation target before the dismount point is reached.</li>
+        </ul>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Phase 6 — Tune and validate in editor <span class="pill pill-gold">Steven</span></div>
+        <p>Completed 2026-06-04 from Steven's editor pass: after kitty size and camera zoom adjustments, the bed surface gameplay reads good enough to proceed. The bed still has room for later polish, but the pilot is proven.</p>
+        <p>Mounted arrivals now add a seated personality pass after landing. A kitty sits, uses advanced look-around to turn toward a new rest-facing direction, and only then stays sitting or lays down. Bed departures from lying now sit up, look/turn toward the dismount point, stand up, then dismount.</p>
+      </div>
+
+      <div class="step done">
+        <div class="step-title">Phase 7 — Extract only if proven <span class="pill pill-teal">Codex</span></div>
+        <p>Completed 2026-06-04: <code>SurfaceFurniture.gd</code> now represents raised-surface furniture, while <code>Furniture.gd</code> owns the generic hotspot slot-plan calculation for approach, occupy, and dismount world points. <code>Bed.tscn</code> uses the surface subclass. Collision remains per furniture scene/type so beds, couches, and tables can keep different floor behavior.</p>
+        <ul>
+          <li>Generic: approach/occupy/dismount point data, mounted render mode, surface mount/dismount states, seated surface settle/departure sequence, and debug drawing.</li>
+          <li>Per furniture type: collision layer/shape policy, pass-under versus block behavior, and whether a scene should use <code>Furniture.gd</code> or <code>SurfaceFurniture.gd</code>.</li>
+          <li>Furniture checklist unpaused; remaining scenes were structurally scaffolded after this phase, with tuning tracked in the checklist. Occupy, approach, and dismount points can now be tuned by moving <code>Marker2D</code> nodes under each scene's <code>Hotspots</code> node.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section-notes">
+      <label for="notes-step-plan">Notes — Step Plan</label>
+      <textarea id="notes-step-plan" placeholder="Phase status, blockers, and implementation notes…"></textarea>
+    </div>
+
+    <hr />
+
+    <h2 id="testing">Testing</h2>
+
+    <ul>
+      <li>With debug hotspots visible, left-click each SIT and LAY bed hotspot; the focused kitty selects the exact clicked slot.</li>
+      <li>Kitty first routes to a floor approach point, then visibly mounts onto the mattress/surface point.</li>
+      <li>After mounting, kitties do not always settle facing north; they sit first, use seated look-around/turn behavior, and LAY arrivals only lay down after that seated sequence.</li>
+      <li>When leaving from a mounted lay, the kitty sits up, uses seated look-around/turn behavior to face the dismount point, stands, and then dismounts.</li>
+      <li>Debug hotspots show both the occupied mattress point and the approach-to-occupy line for each surface slot.</li>
+      <li>Approach routing is tested both nearby and from across the room through doorways or narrowings; if the kitty walks into a wall and stops, log that as a navigation bug separate from the bed surface pilot.</li>
+      <li>While on the floor, a kitty can pass under/behind the bed sprite without looking like it is on top of the mattress.</li>
+      <li>While mounted, the kitty draws above the whole bed sprite and reads as sitting or lying on the mattress.</li>
+      <li>Optional tiny bed-leg collision does not break hotspot line-of-sight checks or cause the kitty to snag while passing under the bed.</li>
+      <li>No occupied bed slot appears hidden behind or under a bed part. If one does, Q1 returns to the split-sprite path.</li>
+      <li>Leaving the bed visibly dismounts to the floor point, releases the claimed slot, and returns the kitty to normal floor behavior before pathing onward.</li>
+      <li>Another kitty cannot claim an occupied bed slot.</li>
+      <li>Normal kitty-vs-kitty y-sort still works away from furniture.</li>
+      <li>Godot output log has no new script errors after five minutes of autonomous play with the bed in the room.</li>
+    </ul>
+
+    <div class="section-notes">
+      <label for="notes-testing">Notes — Testing</label>
+      <textarea id="notes-testing" placeholder="Playtest observations and acceptance notes…"></textarea>
+    </div>
+
+    <div id="wiki-copy-bar"></div>
+  </div>
+</div>
+
+<script src="/shared/wiki.js"></script>
+<script src="/shared/nav.js"></script>
+<script>
+  initWikiPage({
+    qLabels: {
+      'q-split': {
+        'single-sprite-pilot': 'A — Keep one bed sprite for the first pilot',
+        'three-layers': 'B — Split into headboard, surface, and footboard',
+        'new-assets': 'C — Create explicit split PNG assets',
+      },
+      'q-route': {
+        'approach-mount': 'A — Approach point, mount to occupy point, dismount back to approach',
+        'direct-occupy': 'B — Walk straight to the on-bed hotspot',
+        'pathable-surface': 'C — Make the bed top pathable',
+      },
+      'q-render': {
+        'floor-under-mounted-above': 'A — Floor kitties under bed, mounted kitties above bed',
+        'surface-mode': 'B — Surface render mode between split bed layers',
+        'manual-z': 'C — Manual z-index for all furniture interactions',
+      },
+      'q-generalize': {
+        'bed-first': 'A — Bed-specific pilot, then extract SurfaceFurniture',
+        'generic-first': 'B — Build SurfaceFurniture first',
+        'per-scene': 'C — Keep every furniture scene bespoke',
+      },
+      'q-collision': {
+        'pass-under-slot-mounted': 'A — Floor kitties pass under; mounted kitties use slot occupancy',
+        'blocking-bed': 'B — Bed blocks normal floor movement',
+        'mounted-shape': 'C — Use separate floor and mounted collision shapes',
+      },
+    },
+    sectionNotes: [
+      { id: 'notes-scope', label: 'Scope' },
+      { id: 'notes-model', label: 'Mental Model' },
+      { id: 'notes-decisions', label: 'Key Decisions' },
+      { id: 'notes-work-split', label: 'Work Split' },
+      { id: 'notes-step-plan', label: 'Step Plan' },
+      { id: 'notes-testing', label: 'Testing' },
+    ],
+  });
+</script>
+</body>
+</html>

@@ -12,14 +12,17 @@ var _ov_pause_right: float = -1.0
 var _ov_pause_left: float = -1.0
 var _ov_pause_center: float = -1.0
 var _ov_repetitions: int = -1
+var _finish_direction: int = -1
+var _turn_interval: float = 0.07
 
 # Runtime state
 var _plan: Array = []
 var _phase: int = 0
 var _pause_timer: float = 0.0
 var _reps_remaining: int = 1
+var _turn_timer: float = 0.0
 
-func _init(next_state: State = null, loop: bool = false, direction: int = -1, speed: float = -1.0, pause_right: float = -1.0, pause_left: float = -1.0, pause_center: float = -1.0, repetitions: int = -1) -> void:
+func _init(next_state: State = null, loop: bool = false, direction: int = -1, speed: float = -1.0, pause_right: float = -1.0, pause_left: float = -1.0, pause_center: float = -1.0, repetitions: int = -1, finish_direction: int = -1, turn_interval: float = 0.07) -> void:
 	_next_state = next_state if next_state else SitState.new(true, true)
 	_loop = loop
 	_ov_direction = direction
@@ -28,6 +31,8 @@ func _init(next_state: State = null, loop: bool = false, direction: int = -1, sp
 	_ov_pause_left = pause_left
 	_ov_pause_center = pause_center
 	_ov_repetitions = repetitions
+	_finish_direction = finish_direction
+	_turn_interval = turn_interval
 
 func name() -> Global.StateName:
 	return Global.StateName.LOOK_AROUND
@@ -45,6 +50,7 @@ func _enter_state(_from: Global.StateName) -> void:
 	_reps_remaining = max(reps, 1)
 	_phase = 0
 	_pause_timer = 0.0
+	_turn_timer = 0.0
 	entity.velocity = Vector2.ZERO
 	_plan = _build_plan(direction, speed, pause_right, pause_left, pause_center)
 	_execute_phase()
@@ -100,13 +106,29 @@ func _advance() -> void:
 
 func tick(delta: float) -> State:
 	if _phase >= _plan.size():
-		return _next_state
+		if _advance_turn(delta):
+			return _next_state
+		return null
 	var step: Dictionary = _plan[_phase]
 	if step.type == "pause":
 		_pause_timer -= delta
 		if _pause_timer <= 0.0:
 			_advance()
 	return null
+
+func _advance_turn(delta: float) -> bool:
+	if _finish_direction < 0 or int(entity.facing_direction) == _finish_direction:
+		return true
+	_turn_timer -= delta
+	if _turn_timer > 0.0:
+		return false
+	_turn_timer = _turn_interval
+	var current := int(entity.facing_direction)
+	var diff := (_finish_direction - current + 8) % 8
+	var next_direction := (current + 1) % 8 if diff <= 4 else (current + 7) % 8
+	entity.facing_direction = next_direction as Global.Direction
+	entity.anim.play_pose("Sit", entity.facing_direction)
+	return int(entity.facing_direction) == _finish_direction
 
 func _exit_state() -> void:
 	entity.anim.cancel()

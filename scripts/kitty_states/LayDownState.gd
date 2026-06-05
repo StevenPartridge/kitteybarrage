@@ -14,6 +14,8 @@ func _enter_state(_from: Global.StateName) -> void:
 	assert(entity != null, "LayDownState requires a Kitty entity — FSM must be a child of Kitty")
 	_done = false
 	entity.velocity = Vector2.ZERO
+	if entity is Character:
+		(entity as Character).activate_claimed_surface_rendering()
 	entity.anim.play_transition("Lay", entity.facing_direction, _on_done)
 
 func _on_done() -> void:

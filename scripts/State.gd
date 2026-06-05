@@ -35,6 +35,6 @@ func _tick_rotation() -> void:
 	_rotation_frame_count = 0
 	var current: int = int(entity.facing_direction)
 	var diff: int = (target_dir - current + 8) % 8
-	var new_dir: int = (current + 1) % 8 if diff <= 4 else (current + 7) % 8
+	var new_dir := ((current + 1) % 8 if diff <= 4 else (current + 7) % 8) as Global.Direction
 	entity.facing_direction = new_dir
 	entity.anim.change_direction_while_playing(new_dir)

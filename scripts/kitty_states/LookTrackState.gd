@@ -31,8 +31,8 @@ func _update(target_pos: Vector2) -> void:
 	# Step facing direction toward target up to twice per frame
 	# (handles the case where target is nearly directly behind)
 	for _i in 2:
-		var rel := _wrap(target_angle - Global.direction_to_angle(entity.facing_direction))
-		if abs(rel) <= HALF_RANGE:
+		var facing_rel := _wrap(target_angle - Global.direction_to_angle(entity.facing_direction))
+		if abs(facing_rel) <= HALF_RANGE:
 			break
 		var current := int(entity.facing_direction)
 		var target_dir := int(Global.direction_from_vector(to_target))
@@ -40,8 +40,11 @@ func _update(target_pos: Vector2) -> void:
 		entity.facing_direction = ((current + 1) % 8 if diff <= 4 else (current + 7) % 8) as Global.Direction
 		_num_frames = entity.anim.get_frame_count("LookAround", entity.facing_direction)
 
-	var rel := _wrap(target_angle - Global.direction_to_angle(entity.facing_direction))
-	rel = clampf(rel, -HALF_RANGE, HALF_RANGE)
+	var rel := clampf(
+		_wrap(target_angle - Global.direction_to_angle(entity.facing_direction)),
+		-HALF_RANGE,
+		HALF_RANGE
+	)
 
 	var t := (rel + HALF_RANGE) / (HALF_RANGE * 2.0)
 	var frame := clampi(int(round(t * float(_num_frames - 1))), 0, _num_frames - 1)

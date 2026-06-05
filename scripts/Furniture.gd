@@ -4,7 +4,7 @@ extends Node2D
 static var debug_hotspots: bool = false
 
 # Integer keys because GDScript const dicts can't reliably reference external class enums at parse time.
-# Order matches FurnitureHotspot.ActionType: SIT=0, LAY=1, SNIFF=2, KNOCK=3
+# Order matches FurnitureHotspot.ActionType: SIT=0, LAY=1, SNIFF=2, KNOCK=3.
 const _HS_COLORS: Dictionary = {
 	0: Color(1.0, 0.85, 0.1),
 	1: Color(0.9, 0.4,  0.8),
@@ -14,13 +14,17 @@ const _HS_COLORS: Dictionary = {
 
 @export var variant: int = 0
 @export var definition: FurnitureDefinition
+@export var apply_definition_sprite_region: bool = false
+@export var auto_sync_collision_to_sprite: bool = true
+@export var surface_mount_enabled: bool = false
+@export var mounted_character_z_index: int = 1
 
 var _hotspots: Array[FurnitureHotspot] = []
 
 func _ready() -> void:
-	if definition != null:
+	if apply_definition_sprite_region and definition != null:
 		_apply_variant()
-		_init_hotspots()
+	_init_hotspots()
 	_sync_collision_to_sprite()
 
 func _process(_delta: float) -> void:
@@ -31,7 +35,7 @@ func _draw() -> void:
 	if not debug_hotspots:
 		return
 	for hs: FurnitureHotspot in _hotspots:
-		var color: Color = _HS_COLORS.get(int(hs.action), Color.WHITE)
+		var color: Color = _HS_COLORS.get(hs.get_default_action(), Color.WHITE)
 		for i in hs.slots.size():
 			var pos: Vector2 = hs.slots[i]
 			if hs.knocked:
@@ -41,8 +45,14 @@ func _draw() -> void:
 				draw_circle(pos, 4.0, color * Color(0.35, 0.35, 0.35))
 			else:
 				draw_circle(pos, 4.0, color)
+			if uses_surface_mount_rendering() and hs.has_approach_slot(i):
+				var approach_pos := hs.get_approach_slot(i)
+				draw_line(approach_pos, pos, Color(color.r, color.g, color.b, 0.45), 1.0)
+				draw_circle(approach_pos, 2.0, Color(color.r, color.g, color.b, 0.65))
 
 func _apply_variant() -> void:
+	if definition == null:
+		return
 	var sprite := get_node_or_null("Sprite2D") as Sprite2D
 	if sprite == null or sprite.texture == null:
 		return
@@ -52,19 +62,87 @@ func _apply_variant() -> void:
 	else:
 		sprite.region_rect = Rect2(
 			(variant % definition.columns) * definition.sprite_w,
-			(variant / definition.columns) * definition.sprite_h,
+			floori(float(variant) / float(definition.columns)) * definition.sprite_h,
 			definition.sprite_w,
 			definition.sprite_h
 		)
 
 func _init_hotspots() -> void:
+	_hotspots.clear()
+	if _init_hotspots_from_markers():
+		return
+	if definition == null:
+		return
 	for spec: HotspotSpec in definition.hotspot_specs:
 		var hs := FurnitureHotspot.new()
-		hs.action = spec.action
+		hs.action = spec.get_default_action()
+		hs.set_actions(spec.get_actions())
 		hs.slots = spec.slots.duplicate()
+		hs.approach_slots = spec.approach_slots.duplicate()
+		hs.dismount_slots = spec.dismount_slots.duplicate()
+		hs.source_furniture = self
 		_hotspots.append(hs)
 
+func _init_hotspots_from_markers() -> bool:
+	var root := get_node_or_null("Hotspots") as Node2D
+	if root == null:
+		return false
+	var found := false
+	for action_node_raw in root.get_children():
+		var action_node := action_node_raw as Node2D
+		if action_node == null:
+			continue
+		var actions := _actions_from_marker_name(action_node.name)
+		if actions.is_empty():
+			continue
+		var hs := FurnitureHotspot.new()
+		hs.set_actions(actions)
+		for slot_raw in action_node.get_children():
+			var slot_marker := slot_raw as Node2D
+			if slot_marker == null or not String(slot_marker.name).begins_with("Slot"):
+				continue
+			var slot_pos := to_local(slot_marker.global_position)
+			var approach_pos := _named_marker_position(slot_marker, "Approach", slot_pos)
+			hs.slots.append(slot_pos)
+			hs.approach_slots.append(approach_pos)
+			hs.dismount_slots.append(_named_marker_position(slot_marker, "Dismount", approach_pos))
+		if not hs.slots.is_empty():
+			hs.source_furniture = self
+			_hotspots.append(hs)
+			found = true
+	return found
+
+func _actions_from_marker_name(action_name: StringName) -> Array[int]:
+	var normalized := String(action_name).to_upper()
+	for separator in ["+", ",", "|", "/", "-", " "]:
+		normalized = normalized.replace(separator, "_")
+	var actions: Array[int] = []
+	for token in normalized.split("_", false):
+		match String(token).strip_edges():
+			"SIT":
+				_append_unique_action(actions, FurnitureHotspot.ActionType.SIT)
+			"LAY":
+				_append_unique_action(actions, FurnitureHotspot.ActionType.LAY)
+			"SNIFF":
+				_append_unique_action(actions, FurnitureHotspot.ActionType.SNIFF)
+			"KNOCK":
+				_append_unique_action(actions, FurnitureHotspot.ActionType.KNOCK)
+	return actions
+
+func _append_unique_action(actions: Array[int], action_type: int) -> void:
+	if not actions.has(action_type):
+		actions.append(action_type)
+
+func _named_marker_position(parent: Node2D, marker_name: String, fallback: Vector2) -> Vector2:
+	for child_raw in parent.get_children():
+		var child := child_raw as Node2D
+		if child != null and String(child.name).to_lower() == marker_name.to_lower():
+			return to_local(child.global_position)
+	return fallback
+
 func _sync_collision_to_sprite() -> void:
+	if not auto_sync_collision_to_sprite:
+		return
 	var sprite := get_node_or_null("Sprite2D") as Sprite2D
 	if sprite == null or sprite.texture == null:
 		return
@@ -97,6 +175,25 @@ func _sync_collision_to_sprite() -> void:
 
 func get_hotspots() -> Array[FurnitureHotspot]:
 	return _hotspots
+
+func uses_surface_mount_rendering() -> bool:
+	return surface_mount_enabled
+
+func get_hotspot_slot_plan(hs: FurnitureHotspot, idx: int) -> Dictionary:
+	var occupy_world_pos := to_global(hs.slots[idx])
+	var approach_world_pos := to_global(hs.get_approach_slot(idx))
+	var dismount_world_pos := to_global(hs.get_dismount_slot(idx))
+	var uses_surface_points := uses_surface_mount_rendering() and hs.has_approach_slot(idx)
+	return {
+		"hotspot": hs,
+		"index": idx,
+		"uses_surface_points": uses_surface_points,
+		"target_world_pos": approach_world_pos if uses_surface_points else occupy_world_pos,
+		"approach_world_pos": approach_world_pos,
+		"occupy_world_pos": occupy_world_pos,
+		"dismount_world_pos": dismount_world_pos,
+		"default_action": hs.get_default_action(),
+	}
 
 func get_footprint_rect() -> Rect2:
 	if definition == null or definition.footprint_size == Vector2.ZERO:

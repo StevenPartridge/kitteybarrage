@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Furniture.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/rooms/decorations/Plants.png" id="2_texture"]
+[ext_resource type="Resource" path="res://resources/furniture/plant.tres" id="3_definition"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
+radius = 32.0
+
+[node name="Plant" type="Node2D"]
+script = ExtResource("1_script")
+definition = ExtResource("3_definition")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+show_behind_parent = true
+texture = ExtResource("2_texture")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 64)
+
+[node name="DetectionArea" type="Area2D" parent="." groups=["furniture_area"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_detection")
+
+[node name="Hotspots" type="Node2D" parent="."]
+
+[node name="SNIFF" type="Node2D" parent="Hotspots"]
+
+[node name="Slot0" type="Marker2D" parent="Hotspots/SNIFF"]
+position = Vector2(10, 16)

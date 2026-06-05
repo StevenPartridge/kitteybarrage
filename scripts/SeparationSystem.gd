@@ -65,7 +65,8 @@ func _mobility(character: Character) -> float:
 			return 0.8
 		Global.StateName.SIT, Global.StateName.LOOK_AROUND:
 			return 0.0
-		Global.StateName.LAY, Global.StateName.LAY_DOWN:
+		Global.StateName.LAY, Global.StateName.LAY_DOWN, \
+		Global.StateName.SURFACE_MOUNT, Global.StateName.SURFACE_DISMOUNT:
 			return 0.0
 		_:
 			return 0.4

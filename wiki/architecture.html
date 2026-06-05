@@ -33,13 +33,14 @@
       data-fs-path="/Users/steven/dev/kittybarrage/wiki/architecture.html"
       data-tags="kittybarrage,architecture,reference,fsm"
       data-created="2026-05-16"
-      data-updated="2026-05-25"
+      data-updated="2026-06-05"
       data-state="ongoing">
     </div>
 
     <details class="changelog">
       <summary>Changelog</summary>
       <ul>
+        <li><time>2026-06-05</time> — Updated furniture module map for editor-owned sprite regions, marker-authored hotspots, and multi-action hotspot support through compound marker names or <code>HotspotSpec.action_flags</code>.</li>
         <li><time>2026-05-25</time> — Added LOOK_TRACK state; updated AI section (tick signature, floor-type biases, EXPLORE); expanded module map with Animation, Separation, Color &amp; Marking, and Furniture sections; corrected Global.gd enums</li>
         <li><time>2026-05-25</time> — Migrated to shared wiki system</li>
       </ul>
@@ -407,10 +408,10 @@
         <tr><td class="svc">ColorVariantPool.gd</td><td>ColorVariantPool</td><td>Manages the catalog of kitty coat color variants (24 families, 52 total sprite sheets). WorldDirector uses it to assign a random atlas region to each spawned kitty via <code>Character.apply_color_variant()</code>.</td></tr>
         <tr><td class="svc">MarkingPool.gd</td><td>MarkingPool</td><td>Manages the catalog of 14 marking overlay textures. WorldDirector applies a random marking at 30% probability via <code>AnimationController.set_marking()</code>. Probability slider in the debug overlay's spawn palette.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">Furniture</td></tr>
-        <tr><td class="svc">Furniture.gd</td><td>Furniture</td><td>Base class for all furniture nodes. Reads a <code>FurnitureDefinition</code> resource at ready to init hotspot slots and select the correct sprite atlas region for the chosen <code>variant</code>. Syncs <code>CollisionShape2D</code> size to the sprite rect. Exposes <code>get_hotspots()</code> and <code>get_footprint_rect()</code>. Draws hotspot debug circles when <code>debug_hotspots</code> is true.</td></tr>
+        <tr><td class="svc">Furniture.gd</td><td>Furniture</td><td>Base class for furniture nodes. Prefers editor-authored <code>Sprite2D.region_rect</code> and visible <code>Hotspots</code> marker groups; definition-driven sprite region math is opt-in through <code>apply_definition_sprite_region</code>. Marker group names can be single actions or compound names such as <code>SIT_LAY</code>. Exposes <code>get_hotspots()</code> and <code>get_footprint_rect()</code>. Draws hotspot debug circles when <code>debug_hotspots</code> is true.</td></tr>
         <tr><td class="svc">FurnitureDefinition.gd</td><td>FurnitureDefinition</td><td>Resource: <code>sprite_w</code>, <code>sprite_h</code>, <code>columns</code> (0=horizontal strip, N=N-column grid), <code>footprint_size</code>, <code>hotspot_specs: Array[HotspotSpec]</code>. Stored as <code>.tres</code> files in <code>res://resources/furniture/</code> — one per furniture type.</td></tr>
-        <tr><td class="svc">FurnitureHotspot.gd</td><td>FurnitureHotspot</td><td>Runtime slot manager created from a <code>HotspotSpec</code> at <code>Furniture._ready()</code>. Tracks which slots are claimed (keyed by character), knocked state. <code>claim(character)</code> → slot index or -1. <code>release(character)</code> frees the slot. <code>has_available_slot()</code> for pre-check.</td></tr>
-        <tr><td class="svc">HotspotSpec.gd</td><td>HotspotSpec</td><td>Serializable resource: <code>action: FurnitureHotspot.ActionType</code> (SIT/LAY/SNIFF/KNOCK) and <code>slots: Array[Vector2]</code> offsets from the furniture origin. Stored as sub-resources inside <code>FurnitureDefinition.hotspot_specs</code>.</td></tr>
+        <tr><td class="svc">FurnitureHotspot.gd</td><td>FurnitureHotspot</td><td>Runtime slot manager created from editor marker groups or <code>HotspotSpec</code> fallbacks. Tracks supported actions, claimed slots keyed by character, and knocked state. <code>supports_action(action)</code> lets SIT/LAY share a slot group. <code>claim(character)</code> → slot index or -1. <code>release(character)</code> frees the slot.</td></tr>
+        <tr><td class="svc">HotspotSpec.gd</td><td>HotspotSpec</td><td>Serializable fallback resource: <code>action</code> default, optional <code>action_flags</code> for multi-action support, <code>slots</code>, <code>approach_slots</code>, and <code>dismount_slots</code>. Stored as sub-resources inside <code>FurnitureDefinition.hotspot_specs</code>.</td></tr>
       </tbody>
     </table>
 

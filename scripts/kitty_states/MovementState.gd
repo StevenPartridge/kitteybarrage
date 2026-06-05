@@ -5,6 +5,8 @@ var _state_name: Global.StateName
 var _anim_name: String
 var _speed_fn: Callable
 
+const ARRIVAL_DISTANCE := 3.0
+
 func _init(state_name: Global.StateName, anim_name: String, speed_fn: Callable) -> void:
 	_state_name = state_name
 	_anim_name = anim_name
@@ -14,7 +16,7 @@ func name() -> Global.StateName:
 	return _state_name
 
 static func walk() -> MovementState:
-	return MovementState.new(Global.StateName.WALK, "Walk", func(p: CharacterPersonality) -> float: return 1.0)
+	return MovementState.new(Global.StateName.WALK, "Walk", func(_p: CharacterPersonality) -> float: return 1.0)
 
 static func run() -> MovementState:
 	return MovementState.new(Global.StateName.RUN, "Run", func(p: CharacterPersonality) -> float: return p.run_speed_multiplier)
@@ -30,20 +32,17 @@ func _enter_state(_from: Global.StateName) -> void:
 func tick(_delta: float) -> State:
 	if entity.navigation_target != null and entity.navigation_target.is_valid():
 		var target_pos: Vector2 = entity.navigation_target.get_position()
+		if entity.global_position.distance_to(target_pos) <= ARRIVAL_DISTANCE:
+			entity.clear_target()
+			entity.velocity = Vector2.ZERO
+			return entity.pop_arrival_state()
 		var direction: Vector2
 		if entity.nav_agent != null:
 			entity.nav_agent.target_position = target_pos
-			if entity.nav_agent.is_navigation_finished():
-				entity.clear_target()
-				entity.velocity = Vector2.ZERO
-				return entity.pop_arrival_state()
-			direction = (entity.nav_agent.get_next_path_position() - entity.global_position).normalized()
+			var next_pos: Vector2 = target_pos if entity.nav_agent.is_navigation_finished() else entity.nav_agent.get_next_path_position()
+			direction = (next_pos - entity.global_position).normalized()
 		else:
 			direction = (target_pos - entity.position).normalized()
-			if entity.position.distance_to(target_pos) < 5.0:
-				entity.clear_target()
-				entity.velocity = Vector2.ZERO
-				return entity.pop_arrival_state()
 		entity.velocity = direction * entity.speed * _speed_fn.call(entity.personality)
 		_tick_rotation()
 		entity.anim.play_loop(_anim_name, entity.facing_direction)

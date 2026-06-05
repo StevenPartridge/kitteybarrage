@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://dlxkp4xwqnnf2"]
+
+[ext_resource type="Script" uid="uid://bbufwa3q71cpe" path="res://scripts/SurfaceFurniture.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dmj1o4bb5s8ft" path="res://assets/rooms/decorations/Bookcases.png" id="2_texture"]
+[ext_resource type="Resource" uid="uid://djybx7ji5h70f" path="res://resources/furniture/bookcase.tres" id="3_definition"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(24, 7)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
+radius = 78.00641
+
+[node name="Bookcase" type="Node2D" unique_id=1325881693]
+script = ExtResource("1_script")
+definition = ExtResource("3_definition")
+auto_sync_collision_to_sprite = false
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=798516538]
+show_behind_parent = true
+texture = ExtResource("2_texture")
+region_enabled = true
+region_rect = Rect2(0, 0, 32, 32)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1834029950]
+collision_layer = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1034604462]
+position = Vector2(0, 13)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="NavigationObstacle2D" type="NavigationObstacle2D" parent="." unique_id=512916178]
+position = Vector2(0, -12)
+vertices = PackedVector2Array(-14, 19, 14, 19, 14, 31, -14, 31)
+
+[node name="DetectionArea" type="Area2D" parent="." unique_id=446425323 groups=["furniture_area"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=32853776]
+shape = SubResource("CircleShape2D_detection")
+
+[node name="Hotspots" type="Node2D" parent="." unique_id=1337948854]
+
+[node name="SIT_LAY" type="Node2D" parent="Hotspots" unique_id=1461350596]
+
+[node name="Slot0" type="Marker2D" parent="Hotspots/SIT_LAY" unique_id=612015048]
+position = Vector2(-7, -14)
+
+[node name="Approach" type="Marker2D" parent="Hotspots/SIT_LAY/Slot0" unique_id=399604885]
+position = Vector2(-2, 38)
+
+[node name="Dismount" type="Marker2D" parent="Hotspots/SIT_LAY/Slot0" unique_id=2042776759]
+position = Vector2(-8, 35)
+
+[node name="Slot1" type="Marker2D" parent="Hotspots/SIT_LAY" unique_id=25283442]
+position = Vector2(3, -14)
+
+[node name="Approach" type="Marker2D" parent="Hotspots/SIT_LAY/Slot1" unique_id=445308888]
+position = Vector2(0, 38)
+
+[node name="Dismount" type="Marker2D" parent="Hotspots/SIT_LAY/Slot1" unique_id=1387090664]
+position = Vector2(8, 36)

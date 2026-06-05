@@ -6,7 +6,8 @@
 [ext_resource type="Script" uid="uid://bsggvs3xyongt" path="res://scripts/WorldDirector.gd" id="3_ypklt"]
 [ext_resource type="PackedScene" uid="uid://c83tstu67xkpq" path="res://scenes/House.tscn" id="5_c01mt"]
 [ext_resource type="Script" uid="uid://bdssdt4fbq2ro" path="res://scripts/DebugOverlay.gd" id="5_vcsgt"]
-[ext_resource type="PackedScene" uid="uid://dpejbg5vqdwnl" path="res://scenes/furniture/Bed.tscn" id="6_nxtc6"]
+[ext_resource type="PackedScene" uid="uid://dlxkp4xwqnnf2" path="res://scenes/furniture/Bookcase.tscn" id="8_3p2gp"]
+[ext_resource type="PackedScene" uid="uid://bhkfpittfk6sf" path="res://scenes/furniture/Carpet.tscn" id="9_cvmbd"]
 
 [sub_resource type="Resource" id="Resource_c01mt"]
 script = ExtResource("3_vcsgt")
@@ -28,12 +29,15 @@ y_sort_enabled = true
 [node name="Room" parent="WorldLayer" unique_id=94535373 instance=ExtResource("5_c01mt")]
 position = Vector2(214.99998, 78)
 
-[node name="Bed" parent="WorldLayer" unique_id=1200132318 instance=ExtResource("6_nxtc6")]
-position = Vector2(1229, 756)
+[node name="Bookcase" parent="WorldLayer" unique_id=1325881693 instance=ExtResource("8_3p2gp")]
+position = Vector2(1193, 579)
+
+[node name="Carpet" parent="WorldLayer" unique_id=1164171229 instance=ExtResource("9_cvmbd")]
+position = Vector2(1094, 627)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1960909270]
 script = ExtResource("5_vcsgt")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1820248750]
-position = Vector2(944, 511)
-zoom = Vector2(2, 2)
+position = Vector2(1188, 580)
+zoom = Vector2(5, 5)

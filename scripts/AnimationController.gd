@@ -167,8 +167,8 @@ func _cancel_silent() -> void:
 
 # Swap to a new directional variant of the current animation at the same progress.
 # Does NOT call _cancel_silent — preserves the state's animation_finished connection.
-func change_direction_while_playing(new_direction: int) -> void:
-	if _current_state_name.is_empty() or int(_current_direction) == new_direction:
+func change_direction_while_playing(new_direction: Global.Direction) -> void:
+	if _current_state_name.is_empty() or _current_direction == new_direction:
 		return
 	var anim_name := Global.get_full_animation_name(_current_state_name, new_direction)
 	if not _player.sprite_frames.has_animation(anim_name):
