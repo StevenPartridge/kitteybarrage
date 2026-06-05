@@ -40,6 +40,7 @@
     <details class="changelog">
       <summary>Changelog</summary>
       <ul>
+        <li><time>2026-06-05</time> — Updated manual control rest behavior: W/A/S/D release now enters a timed standing-ready state, then a timed sit/lay cycle until player input resumes.</li>
         <li><time>2026-06-05</time> — Added <code>ManualMovementState</code>: player W/A/S/D now drives direct velocity with manual walk/run/accel/decel tunables instead of a rolling navigation target.</li>
         <li><time>2026-06-05</time> — Added <code>YSortOrigin</code> to the furniture module map as the editor-authored draw-order pivot applied by moving the furniture root at runtime while preserving child world positions.</li>
         <li><time>2026-06-05</time> — Updated furniture module map for editor-owned sprite regions, marker-authored hotspots, and multi-action hotspot support through compound marker names or <code>HotspotSpec.action_flags</code>.</li>
@@ -203,9 +204,15 @@
         </tr>
         <tr>
           <td class="svc">MANUAL_MOVE — StateName.MANUAL_MOVE</td>
-          <td><code>ManualMovementState(input_handler, walk_speed, run_multiplier, acceleration, deceleration)</code></td>
+          <td><code>ManualMovementState(input_handler, walk_speed, run_multiplier, acceleration, deceleration, stand_ready_seconds, rest_pose_seconds)</code></td>
           <td>"Walk" or "Run" loop</td>
-          <td>Player-controlled W/A/S/D movement. Clears <code>navigation_target</code> and moves from the live input vector with short acceleration/deceleration ramps. Input release → <code>SitState(true,true)</code>.</td>
+          <td>Player-controlled W/A/S/D movement. Clears <code>navigation_target</code> and moves from the live input vector with short acceleration/deceleration ramps. Input release → <code>StandingIdleState</code>.</td>
+        </tr>
+        <tr>
+          <td class="svc">STAND_IDLE — StateName.STAND_IDLE</td>
+          <td><code>StandingIdleState(stand_ready_seconds=60, rest_pose_seconds=300)</code></td>
+          <td>"Walk" frame 0 held</td>
+          <td>Post-control ready stance. Holds standing for the configured ready window, then starts a timed sit/lay cycle: sit for <code>rest_pose_seconds</code>, lay for <code>rest_pose_seconds</code>, repeat until interrupted.</td>
         </tr>
       </tbody>
     </table>
@@ -237,7 +244,10 @@
         <tr><td class="svc">LAY / LAY_DOWN</td><td>SITUP → STANDUP → WALK/RUN/SPRINT</td><td><code>begin_walk/run/sprint()</code> — full chain</td></tr>
         <tr><td class="svc">LAY / LAY_DOWN</td><td>SITUP → STANDUP → MANUAL_MOVE</td><td><code>begin_manual_movement()</code> — player W/A/S/D input</td></tr>
         <tr><td class="svc">WALK/RUN/SPRINT</td><td>SIT</td><td>Target reached (&lt;5px) — <code>SitState.new()</code></td></tr>
-        <tr><td class="svc">MANUAL_MOVE</td><td>SIT (held)</td><td>Input released and deceleration reaches zero — <code>SitState(true,true)</code></td></tr>
+        <tr><td class="svc">MANUAL_MOVE</td><td>STAND_IDLE</td><td>Input released and deceleration reaches zero — <code>StandingIdleState</code></td></tr>
+        <tr><td class="svc">STAND_IDLE</td><td>SIT</td><td>Ready timer expires — default 60 seconds</td></tr>
+        <tr><td class="svc">SIT</td><td>LAY_DOWN → LAY</td><td>Manual rest cycle timer expires — default 300 seconds</td></tr>
+        <tr><td class="svc">LAY</td><td>SITUP → SIT</td><td>Manual rest cycle timer expires — default 300 seconds</td></tr>
         <tr><td class="svc">STANDUP</td><td><em>next_state</em></td><td>Animation completes — whatever was passed to constructor</td></tr>
         <tr><td class="svc">SITUP</td><td><em>next_state</em></td><td>Animation completes — whatever was passed to constructor</td></tr>
         <tr><td class="svc">LAY_DOWN</td><td><em>next_state</em></td><td>Animation completes — whatever was passed to constructor</td></tr>
@@ -380,13 +390,13 @@
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">Core — Entity &amp; Orchestration</td></tr>
         <tr><td class="svc">Character.gd</td><td>Character</td><td>Base class for all characters. Owns FSM, AnimController, personality, navigation target, separation force. Public interface: <code>begin_walk/run/sprint</code>, <code>begin_manual_movement</code>, <code>apply_decision</code>, <code>set_target</code>, <code>set_highlight</code>. Extends <code>CharacterBody2D</code>.</td></tr>
         <tr><td class="svc">Kitty.gd</td><td>Kitty</td><td>Extends <code>Character</code>. Named subtype for the kitty character — no additional logic. Exists so scenes and type checks can reference <code>Kitty</code> specifically.</td></tr>
-        <tr><td class="svc">WorldDirector.gd</td><td>WorldDirector</td><td>Orchestrates all characters (<code>Array[Character]</code>). Routes player input → controlled character, with manual movement tuning exports for walk speed, run multiplier, acceleration, and deceleration. Ticks ActivityBrain → autonomous characters. Handles spawning and focus cycling.</td></tr>
+        <tr><td class="svc">WorldDirector.gd</td><td>WorldDirector</td><td>Orchestrates all characters (<code>Array[Character]</code>). Routes player input → controlled character, with manual movement tuning exports for walk speed, run multiplier, acceleration, deceleration, standing-ready time, and rest pose time. Ticks ActivityBrain → autonomous characters. Handles spawning and focus cycling.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">State Machine</td></tr>
         <tr><td class="svc">FiniteStateMachine.gd</td><td>FiniteStateMachine</td><td>Owns the current State node. Drives <code>tick()</code> each physics frame. Handles transitions and same-state guard.</td></tr>
         <tr><td class="svc">State.gd</td><td>State</td><td>Base class for all states. <code>var entity</code> is intentionally untyped (duck-typed to <code>Character</code> at runtime) to avoid a parse-time circular dependency. Provides <code>_tick_rotation()</code> for navigation-aware states.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">States — Rest</td></tr>
-        <tr><td class="svc">kitty_states/SitState.gd</td><td>SitState</td><td>Sitting pose or sit-down animation. <code>reverse+paused</code> args control held pose vs playing animation.</td></tr>
-        <tr><td class="svc">kitty_states/LayState.gd</td><td>LayState</td><td>Held lying pose. Lay animation reversed and paused at last frame.</td></tr>
+        <tr><td class="svc">kitty_states/SitState.gd</td><td>SitState</td><td>Sitting pose or sit-down animation. <code>reverse+paused</code> args control held pose vs playing animation. Optional timer/factory args support the post-control rest cycle.</td></tr>
+        <tr><td class="svc">kitty_states/LayState.gd</td><td>LayState</td><td>Held lying pose. Lay animation reversed and paused at last frame. Optional timer/factory args support the post-control rest cycle.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">States — Transitions</td></tr>
         <tr><td class="svc">kitty_states/StandUpState.gd</td><td>StandUpState</td><td>Plays Sit animation backwards. Rotates toward target. On finish → next_state.</td></tr>
         <tr><td class="svc">kitty_states/SitUpState.gd</td><td>SitUpState</td><td>Plays Lay animation backwards (sits up from lying). On finish → next_state.</td></tr>
@@ -395,6 +405,7 @@
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">States — Movement</td></tr>
         <tr><td class="svc">kitty_states/MovementState.gd</td><td>MovementState</td><td>Handles WALK, RUN, and SPRINT via static constructors. Moves toward navigation_target. On arrival → <code>SitState.new()</code>.</td></tr>
         <tr><td class="svc">kitty_states/ManualMovementState.gd</td><td>ManualMovementState</td><td>Handles player W/A/S/D movement. Does not set a navigation target; applies direct velocity from <code>InputHandler.input_vector</code> with walk/run/accel/decel values supplied by <code>WorldDirector</code>.</td></tr>
+        <tr><td class="svc">kitty_states/StandingIdleState.gd</td><td>StandingIdleState</td><td>Post-control ready stance. Holds a standing frame for <code>manual_stand_ready_seconds</code>, then delegates to <code>Character.build_manual_rest_sit_state()</code> for the sit/lay rest cycle.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">AI</td></tr>
         <tr><td class="svc">ActivityBrain.gd</td><td>ActivityBrain</td><td>Autonomous decision engine. <code>tick(delta, bounds)</code> returns an <code>ActivityDecision</code> when the timer fires.</td></tr>
         <tr><td class="svc">ActivityDecision.gd</td><td>ActivityDecision</td><td>Value object: activity (<code>StateName</code>) + optional <code>walk_target</code> (<code>Vector2</code>).</td></tr>
@@ -409,7 +420,7 @@
         <tr><td class="svc">PositionTarget.gd</td><td>PositionTarget</td><td>Fixed <code>Vector2</code> target. Always valid.</td></tr>
         <tr><td class="svc">NodeTarget.gd</td><td>NodeTarget</td><td>Node2D reference target. Valid only while the node is in the scene tree.</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">Global &amp; Dev</td></tr>
-        <tr><td class="svc">Global.gd</td><td>Global (autoload)</td><td>Enums: <code>StateName</code> (SIT, WALK, STANDUP, SITUP, LAY, LAY_DOWN, RUN, LOOK_AROUND, SPRINT, LOOK_TRACK, EXPLORE, SURFACE_MOUNT, SURFACE_DISMOUNT, MANUAL_MOVE), <code>FloorType</code> (NONE, WOOD, STONE, CHECKER, RUG), <code>Direction</code>, <code>LookDirection</code>. Helpers: <code>direction_from_vector</code>, <code>get_full_animation_name</code>, <code>direction_to_angle</code>.</td></tr>
+        <tr><td class="svc">Global.gd</td><td>Global (autoload)</td><td>Enums: <code>StateName</code> (SIT, WALK, STANDUP, SITUP, LAY, LAY_DOWN, RUN, LOOK_AROUND, SPRINT, LOOK_TRACK, EXPLORE, SURFACE_MOUNT, SURFACE_DISMOUNT, MANUAL_MOVE, STAND_IDLE), <code>FloorType</code> (NONE, WOOD, STONE, CHECKER, RUG), <code>Direction</code>, <code>LookDirection</code>. Helpers: <code>direction_from_vector</code>, <code>get_full_animation_name</code>, <code>direction_to_angle</code>.</td></tr>
         <tr><td class="svc">DebugOverlay.gd</td><td>DebugOverlay</td><td>Dev console. State display, transition log, force-trigger buttons, kitty personality controls, spawn palette (color variants + marking probability).</td></tr>
         <tr><td colspan="3" style="background:#141020;color:#50406a;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">Animation</td></tr>
         <tr><td class="svc">StateAnimator.gd</td><td>StateAnimator</td><td>Abstract base for animation controllers. Defines the interface all states use: <code>play_transition</code>, <code>play_loop</code>, <code>play_once</code>, <code>play_pose</code>, <code>hold_frame</code>, <code>cancel</code>, <code>pause</code>, <code>get_frame_count</code>, <code>get_playback_progress</code>, etc. Emits <code>animation_finished</code>.</td></tr>

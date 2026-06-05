@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://dlxkp4xwqnnf2" path="res://scenes/furniture/Bookcase.tscn" id="8_3p2gp"]
 [ext_resource type="PackedScene" uid="uid://dpejbg5vqdwnl" path="res://scenes/furniture/Bed.tscn" id="8_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://bhkfpittfk6sf" path="res://scenes/furniture/Carpet.tscn" id="9_cvmbd"]
+[ext_resource type="PackedScene" uid="uid://b5c5fp45lhw31" path="res://scenes/furniture/Desk.tscn" id="9_lhr70"]
 
 [sub_resource type="Resource" id="Resource_c01mt"]
 script = ExtResource("3_vcsgt")
@@ -37,7 +38,10 @@ position = Vector2(1193, 579)
 position = Vector2(1094, 627)
 
 [node name="Bed" parent="WorldLayer" unique_id=1200132318 instance=ExtResource("8_q8u5g")]
-position = Vector2(1102, 561)
+position = Vector2(1092, 525)
+
+[node name="Desk" parent="WorldLayer" unique_id=1222777973 instance=ExtResource("9_lhr70")]
+position = Vector2(1175, 515)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1960909270]
 script = ExtResource("5_vcsgt")
