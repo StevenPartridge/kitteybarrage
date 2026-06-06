@@ -1,17 +1,16 @@
-[gd_resource type="Resource" format=3]
+[gd_resource type="Resource" script_class="FurnitureDefinition" format=3 uid="uid://cvkvmfc7fd1s4"]
 
-[ext_resource type="Script" path="res://scripts/HotspotSpec.gd" id="1_spec"]
-[ext_resource type="Script" path="res://scripts/FurnitureDefinition.gd" id="2_def"]
+[ext_resource type="Script" uid="uid://dya46mdquy4ji" path="res://scripts/HotspotSpec.gd" id="1_spec"]
+[ext_resource type="Script" uid="uid://glhlhmwplrmx" path="res://scripts/FurnitureDefinition.gd" id="2_def"]
 
 [sub_resource type="Resource" id="hs_sniff"]
 script = ExtResource("1_spec")
 action = 2
-slots = [Vector2(10, 16)]
+slots = Array[Vector2]([Vector2(10, 16)])
 
 [resource]
 script = ExtResource("2_def")
 sprite_w = 16
 sprite_h = 64
 columns = 0
-footprint_size = Vector2(0, 0)
-hotspot_specs = [SubResource("hs_sniff")]
+hotspot_specs = Array[ExtResource("1_spec")]([SubResource("hs_sniff")])

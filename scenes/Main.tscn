@@ -6,10 +6,9 @@
 [ext_resource type="Script" uid="uid://bsggvs3xyongt" path="res://scripts/WorldDirector.gd" id="3_ypklt"]
 [ext_resource type="PackedScene" uid="uid://c83tstu67xkpq" path="res://scenes/House.tscn" id="5_c01mt"]
 [ext_resource type="Script" uid="uid://bdssdt4fbq2ro" path="res://scripts/DebugOverlay.gd" id="5_vcsgt"]
-[ext_resource type="PackedScene" uid="uid://dlxkp4xwqnnf2" path="res://scenes/furniture/Bookcase.tscn" id="8_3p2gp"]
-[ext_resource type="PackedScene" uid="uid://dpejbg5vqdwnl" path="res://scenes/furniture/Bed.tscn" id="8_q8u5g"]
-[ext_resource type="PackedScene" uid="uid://bhkfpittfk6sf" path="res://scenes/furniture/Carpet.tscn" id="9_cvmbd"]
-[ext_resource type="PackedScene" uid="uid://b5c5fp45lhw31" path="res://scenes/furniture/Desk.tscn" id="9_lhr70"]
+[ext_resource type="PackedScene" uid="uid://bsift1tjii58j" path="res://scenes/furniture/TableRound.tscn" id="6_nxtc6"]
+[ext_resource type="PackedScene" uid="uid://bdt5vai36nfap" path="res://scenes/decorations/Lamp.tscn" id="8_jlsqs"]
+[ext_resource type="PackedScene" uid="uid://b1yxm4de7fxp8" path="res://scenes/decorations/Plant.tscn" id="9_q8u5g"]
 
 [sub_resource type="Resource" id="Resource_c01mt"]
 script = ExtResource("3_vcsgt")
@@ -31,17 +30,18 @@ y_sort_enabled = true
 [node name="Room" parent="WorldLayer" unique_id=94535373 instance=ExtResource("5_c01mt")]
 position = Vector2(214.99998, 78)
 
-[node name="Bookcase" parent="WorldLayer" unique_id=1325881693 instance=ExtResource("8_3p2gp")]
-position = Vector2(1193, 579)
+[node name="Lamp" parent="WorldLayer" unique_id=1998845877 instance=ExtResource("8_jlsqs")]
+position = Vector2(1180, 537)
+always_render_on_top = true
 
-[node name="Carpet" parent="WorldLayer" unique_id=1164171229 instance=ExtResource("9_cvmbd")]
-position = Vector2(1094, 627)
+[node name="Lamp2" parent="WorldLayer" unique_id=1286549220 instance=ExtResource("8_jlsqs")]
+position = Vector2(1136, 544)
 
-[node name="Bed" parent="WorldLayer" unique_id=1200132318 instance=ExtResource("8_q8u5g")]
-position = Vector2(1092, 525)
+[node name="Plant" parent="WorldLayer" unique_id=216658351 instance=ExtResource("9_q8u5g")]
+position = Vector2(1228, 541)
 
-[node name="Desk" parent="WorldLayer" unique_id=1222777973 instance=ExtResource("9_lhr70")]
-position = Vector2(1175, 515)
+[node name="TableRound" parent="WorldLayer" unique_id=1655271808 instance=ExtResource("6_nxtc6")]
+position = Vector2(1180, 549)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1960909270]
 script = ExtResource("5_vcsgt")

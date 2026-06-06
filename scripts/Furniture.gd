@@ -18,6 +18,8 @@ const _HS_COLORS: Dictionary = {
 @export var auto_sync_collision_to_sprite: bool = true
 @export var apply_y_sort_pivot_from_marker: bool = true
 @export var y_sort_pivot_marker_path: NodePath = ^"YSortOrigin"
+@export var always_render_on_top: bool = false
+@export var always_render_on_top_z_index: int = 10
 @export var surface_mount_enabled: bool = false
 @export var mounted_character_z_index: int = 1
 
@@ -28,6 +30,7 @@ func _ready() -> void:
 	if apply_definition_sprite_region and definition != null:
 		_apply_variant()
 	_apply_y_sort_pivot_from_marker()
+	_apply_always_render_on_top()
 	_init_hotspots()
 	_sync_collision_to_sprite()
 
@@ -95,6 +98,35 @@ func _draw_y_sort_pivot_debug() -> void:
 	var y := to_local(marker.global_position).y
 	draw_line(Vector2(-10, y), Vector2(10, y), Color(0.2, 0.75, 1.0, 0.9), 1.0)
 	draw_line(Vector2(0, y - 3), Vector2(0, y + 3), Color(0.2, 0.75, 1.0, 0.9), 1.0)
+
+func _apply_always_render_on_top() -> void:
+	if not always_render_on_top:
+		return
+	z_as_relative = false
+	z_index = always_render_on_top_z_index
+	_disable_static_body_collisions(self)
+
+func _disable_static_body_collisions(root: Node) -> void:
+	for child_raw in root.get_children():
+		var child := child_raw as Node
+		if child == null:
+			continue
+		var body := child as StaticBody2D
+		if body != null:
+			body.collision_layer = 0
+			body.collision_mask = 0
+			_disable_collision_shapes(body)
+		_disable_static_body_collisions(child)
+
+func _disable_collision_shapes(root: Node) -> void:
+	for child_raw in root.get_children():
+		var child := child_raw as Node
+		if child == null:
+			continue
+		var shape := child as CollisionShape2D
+		if shape != null:
+			shape.disabled = true
+		_disable_collision_shapes(child)
 
 func _init_hotspots() -> void:
 	_hotspots.clear()
@@ -170,7 +202,7 @@ func _named_marker_position(parent: Node2D, marker_name: String, fallback: Vecto
 	return fallback
 
 func _sync_collision_to_sprite() -> void:
-	if not auto_sync_collision_to_sprite:
+	if always_render_on_top or not auto_sync_collision_to_sprite:
 		return
 	var sprite := get_node_or_null("Sprite2D") as Sprite2D
 	if sprite == null or sprite.texture == null:

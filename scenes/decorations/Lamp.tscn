@@ -1,18 +1,28 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bdt5vai36nfap"]
 
-[ext_resource type="Script" path="res://scripts/Furniture.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/rooms/decorations/Lamp.png" id="2_texture"]
+[ext_resource type="Script" uid="uid://qhc6r3yjhle3" path="res://scripts/Furniture.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cl4xxi7qv61d8" path="res://assets/rooms/decorations/Lamp.png" id="2_texture"]
 [ext_resource type="Resource" path="res://resources/furniture/lamp.tres" id="3_definition"]
 
-[node name="Lamp" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7lpy6"]
+size = Vector2(4, 6)
+
+[node name="Lamp" type="Node2D" unique_id=1998845877]
 script = ExtResource("1_script")
 definition = ExtResource("3_definition")
+auto_sync_collision_to_sprite = false
 
-[node name="YSortOrigin" type="Marker2D" parent="."]
-position = Vector2(0, 16)
+[node name="YSortOrigin" type="Marker2D" parent="." unique_id=39462798]
+position = Vector2(0, 11)
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1929961783]
 show_behind_parent = true
 texture = ExtResource("2_texture")
 region_enabled = true
-region_rect = Rect2(0, 0, 32, 32)
+region_rect = Rect2(8, 6, 16, 22)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1744344206]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1917270757]
+position = Vector2(0, 8)
+shape = SubResource("RectangleShape2D_7lpy6")

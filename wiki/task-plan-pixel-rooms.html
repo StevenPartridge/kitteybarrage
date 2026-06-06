@@ -46,6 +46,8 @@
     <details class="changelog">
       <summary>Changelog</summary>
       <ul>
+        <li><time>2026-06-05</time> — Added the decoration surface-prop rule: a placed prop can enable <code>always_render_on_top</code> when it sits on furniture, which renders it above the world and disables its contact collision.</li>
+        <li><time>2026-06-05</time> — Clarified decoration end state: decorations should not create broad nav blockers, but may use tiny editor-authored contact collision with <code>auto_sync_collision_to_sprite=false</code>; detection areas are interest radii, not physical hitboxes.</li>
         <li><time>2026-06-05</time> — Made <code>YSortOrigin</code> marker authoring functional in Godot 4.6: furniture scenes set their y-sort pivot by moving a visible marker, and <code>Furniture.gd</code> moves the root to that marker while counter-moving children to preserve visual placement.</li>
         <li><time>2026-06-05</time> — Carpet tuning follow-up: removed the unimplemented SNIFF hotspot from Carpet, matched the rug footprint to the editor-selected 78×32 sprite region, and documented the y-sort-origin approach for keeping rugs below characters.</li>
         <li><time>2026-06-05</time> — Hotspots now support multiple action types per slot group; editor marker groups can be named <code>SIT_LAY</code> for interchangeable sit/lay behavior, and resource fallbacks can use <code>HotspotSpec.action_flags</code>.</li>
@@ -235,18 +237,18 @@
     <hr />
 
     <h2 id="decorations">Decorations &amp; Wall Items</h2>
-    <p>These are placed as Sprite2D scenes (no complex logic, no hotspot registry needed). Some get an <code>Area2D</code> for sniff detection; none block navigation.</p>
+    <p>These are placed as lightweight prop scenes. Some get an <code>Area2D</code> for sniff/hotspot detection; some may have a tiny editor-authored <code>StaticBody2D</code> contact shape for bases or feet. They should not create broad navigation blockers, and hand-authored decoration collision must use <code>auto_sync_collision_to_sprite=false</code> so runtime does not expand it to the sprite crop. When one of these props sits on furniture rather than the floor, enable <code>always_render_on_top</code> on the placed instance so it renders above the furniture and disables contact collision.</p>
 
     <table class="svc-table">
       <thead><tr><th>File</th><th>Dims</th><th>Variants</th><th>Role</th></tr></thead>
       <tbody>
         <tr><td class="svc">Decorations/Bookcases.png</td><td>64×64</td><td>2 (brown, dark)</td><td>sit/lay ×2 for the current surface pilot; sniff/knock remain future action types</td></tr>
-        <tr><td class="svc">Decorations/Plants.png</td><td>128×64</td><td>8 potted plant variants</td><td>sniff ×1 — no collision, no knock</td></tr>
+        <tr><td class="svc">Decorations/Plants.png</td><td>128×64</td><td>8 potted plant variants</td><td>sniff ×1 — optional tiny contact collision, surface-prop mode per placed instance, no knock</td></tr>
         <tr><td class="svc">Decorations/Books.png</td><td>128×64</td><td>8 stacked book variants</td><td>knock ×1 — small props on surfaces</td></tr>
         <tr><td class="svc">Decorations/TeddyBears.png</td><td>99×61</td><td>5 (tan, white, gray, black, + 1)</td><td>sniff ×1, knock ×1 — floor prop</td></tr>
         <tr><td class="svc">Decorations/CoffeeCups.png</td><td>64×32</td><td>4</td><td>knock ×1 — surface prop</td></tr>
-        <tr><td class="svc">Decorations/Lamp.png</td><td>32×64</td><td>2</td><td>decor — table lamp, no interaction</td></tr>
-        <tr><td class="svc">Decorations/DecorativeLamps.png</td><td>128×64</td><td>4</td><td>decor — floor lamp, no interaction</td></tr>
+        <tr><td class="svc">Decorations/Lamp.png</td><td>32×64</td><td>2</td><td>decor — lamp prop, no interaction, optional tiny contact collision or surface-prop mode per placed instance</td></tr>
+        <tr><td class="svc">Decorations/DecorativeLamps.png</td><td>128×64</td><td>4</td><td>decor — floor lamp, no interaction, optional tiny contact collision</td></tr>
         <tr><td class="svc">WallDecorations/Windows.png</td><td>128×128</td><td>8 large window variants (2×2 grid)</td><td>sit ×1, lay ×1 — windowsill hotspot; placed on wall layer</td></tr>
         <tr><td class="svc">WallDecorations/WindowsSmall.png</td><td>64×64</td><td>4 small window variants</td><td>decor — no sill, just visual</td></tr>
         <tr><td class="svc">WallDecorations/PaintingsBig.png</td><td>64×64</td><td>4 landscape paintings</td><td>decor — wall art</td></tr>
@@ -378,7 +380,7 @@ _arrival_state_factory = <span class="kw">func</span>(): <span class="kw">return
     <p>For now, variants are designer-picked by cropping <code>Sprite2D.region_rect</code> in each furniture scene or by enabling editable children on a placed instance and adjusting the child sprite. The root <code>variant</code> field remains available for future bulk workflows, but it only rewrites the crop when <code>apply_definition_sprite_region</code> is enabled.</p>
 
     <h3>Navigation: what actually blocks</h3>
-    <p>From the survey: sofas, beds, desks, drawers, bookcases, kitchen counters, oven, fridge, bathtub, toilet, and sink all block navigation. Plants, lamps, and small props do not. Doors in the wall layer must be marked walkable in the TileSet so the navmesh passes through them.</p>
+    <p>From the survey: sofas, beds, desks, drawers, bookcases, kitchen counters, oven, fridge, bathtub, toilet, and sink all block navigation. Decorations such as plants, lamps, and small props should not create broad navigation blockers; if they have collision, it should be a tiny editor-authored contact shape with no <code>NavigationObstacle2D</code>. Surface prop instances use <code>always_render_on_top</code> and disable that contact collision entirely. Doors in the wall layer must be marked walkable in the TileSet so the navmesh passes through them.</p>
 
     <h3>Existing connection points</h3>
     <table class="svc-table">

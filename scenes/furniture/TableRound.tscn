@@ -1,64 +1,58 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bsift1tjii58j"]
 
-[ext_resource type="Script" path="res://scripts/SurfaceFurniture.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/rooms/furniture/Tables.png" id="2_texture"]
-[ext_resource type="Resource" path="res://resources/furniture/table_round.tres" id="3_definition"]
+[ext_resource type="Script" uid="uid://bbufwa3q71cpe" path="res://scripts/SurfaceFurniture.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cohtc08ojdc3x" path="res://assets/rooms/furniture/Tables.png" id="2_texture"]
+[ext_resource type="Resource" uid="uid://dqmw05ss3b7px" path="res://resources/furniture/table_round.tres" id="3_definition"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(14, 10)
+size = Vector2(11, 3.5)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
-radius = 32.0
+radius = 62.0
 
-[node name="TableRound" type="Node2D"]
+[node name="TableRound" type="Node2D" unique_id=1597813330]
 script = ExtResource("1_script")
 definition = ExtResource("3_definition")
 auto_sync_collision_to_sprite = false
 
-[node name="YSortOrigin" type="Marker2D" parent="."]
+[node name="YSortOrigin" type="Marker2D" parent="." unique_id=1389044094]
 position = Vector2(0, 16)
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1900571172]
 show_behind_parent = true
 texture = ExtResource("2_texture")
 region_enabled = true
-region_rect = Rect2(0, 0, 16, 32)
+region_rect = Rect2(2, 3, 19, 17)
 
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
-collision_layer = 2
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1831590513]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
-position = Vector2(0, 9)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1201157348]
+position = Vector2(0, 6.25)
 shape = SubResource("RectangleShape2D_body")
 
-[node name="NavigationObstacle2D" type="NavigationObstacle2D" parent="."]
-vertices = PackedVector2Array(-7, 4, 7, 4, 7, 14, -7, 14)
+[node name="DetectionArea" type="Area2D" parent="." unique_id=1169315349 groups=["furniture_area"]]
 
-[node name="DetectionArea" type="Area2D" parent="." groups=["furniture_area"]]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=803507126]
 shape = SubResource("CircleShape2D_detection")
 
-[node name="Hotspots" type="Node2D" parent="."]
+[node name="Hotspots" type="Node2D" parent="." unique_id=1510597601]
 
-[node name="SNIFF" type="Node2D" parent="Hotspots"]
+[node name="Sit" type="Node2D" parent="Hotspots" unique_id=514071714]
 
-[node name="Slot0" type="Marker2D" parent="Hotspots/SNIFF"]
-position = Vector2(10, 8)
+[node name="Slot0" type="Marker2D" parent="Hotspots/Sit" unique_id=2119547929]
+position = Vector2(-5, -3)
 
-[node name="Approach" type="Marker2D" parent="Hotspots/SNIFF/Slot0"]
-position = Vector2(0, 18)
+[node name="Approach" type="Marker2D" parent="Hotspots/Sit/Slot0" unique_id=783929428]
+position = Vector2(-4, 8)
 
-[node name="Dismount" type="Marker2D" parent="Hotspots/SNIFF/Slot0"]
-position = Vector2(0, 18)
+[node name="Dismount" type="Marker2D" parent="Hotspots/Sit/Slot0" unique_id=30894297]
+position = Vector2(-7, 6)
 
-[node name="KNOCK" type="Node2D" parent="Hotspots"]
+[node name="Slot1" type="Marker2D" parent="Hotspots/Sit" unique_id=1306184127]
+position = Vector2(6, -3)
 
-[node name="Slot0" type="Marker2D" parent="Hotspots/KNOCK"]
-position = Vector2(0, -4)
+[node name="Approach" type="Marker2D" parent="Hotspots/Sit/Slot1" unique_id=1268118128]
+position = Vector2(5, 7)
 
-[node name="Approach" type="Marker2D" parent="Hotspots/KNOCK/Slot0"]
-position = Vector2(0, 28)
-
-[node name="Dismount" type="Marker2D" parent="Hotspots/KNOCK/Slot0"]
-position = Vector2(0, 28)
+[node name="Dismount" type="Marker2D" parent="Hotspots/Sit/Slot1" unique_id=36989994]
+position = Vector2(4, 9)

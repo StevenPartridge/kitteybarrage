@@ -1,53 +1,87 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bpkm1cpin2fmc"]
 
-[ext_resource type="Script" path="res://scripts/SurfaceFurniture.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/rooms/furniture/sofas/SofaSmallType1.png" id="2_texture"]
-[ext_resource type="Resource" path="res://resources/furniture/sofa_small.tres" id="3_definition"]
+[ext_resource type="Script" uid="uid://bbufwa3q71cpe" path="res://scripts/SurfaceFurniture.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c0dxr6hh43mqp" path="res://assets/rooms/furniture/sofas/SofaSmallType1.png" id="2_texture"]
+[ext_resource type="Resource" uid="uid://b17vdwsu3rto8" path="res://resources/furniture/sofa_small.tres" id="3_definition"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(30, 20)
+size = Vector2(3, 4.5)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_detection"]
-radius = 36.0
+radius = 69.0
 
-[node name="SofaSmall" type="Node2D"]
+[node name="SofaSmall" type="Node2D" unique_id=2095168400]
 script = ExtResource("1_script")
 definition = ExtResource("3_definition")
 auto_sync_collision_to_sprite = false
 
-[node name="YSortOrigin" type="Marker2D" parent="."]
-position = Vector2(0, 16)
+[node name="YSortOrigin" type="Marker2D" parent="." unique_id=585524256]
+position = Vector2(0, 9)
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=641224749]
 show_behind_parent = true
 texture = ExtResource("2_texture")
 region_enabled = true
-region_rect = Rect2(0, 0, 32, 32)
+region_rect = Rect2(0, 7, 32, 24)
 
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
+[node name="LeftLegStaticBody2D" type="StaticBody2D" parent="." unique_id=97380163]
 collision_layer = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
-position = Vector2(0, 6)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftLegStaticBody2D" unique_id=517630172]
+position = Vector2(-8.5, 9.75)
 shape = SubResource("RectangleShape2D_body")
 
-[node name="NavigationObstacle2D" type="NavigationObstacle2D" parent="."]
-vertices = PackedVector2Array(-15, -4, 15, -4, 15, 16, -15, 16)
+[node name="RightLegStaticBody2D" type="StaticBody2D" parent="." unique_id=147168802]
+position = Vector2(17, 0)
+collision_layer = 2
 
-[node name="DetectionArea" type="Area2D" parent="." groups=["furniture_area"]]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RightLegStaticBody2D" unique_id=194314627]
+position = Vector2(-8.5, 9.75)
+shape = SubResource("RectangleShape2D_body")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+[node name="DetectionArea" type="Area2D" parent="." unique_id=1783118460 groups=["furniture_area"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1165237925]
 shape = SubResource("CircleShape2D_detection")
 
-[node name="Hotspots" type="Node2D" parent="."]
+[node name="Hotspots" type="Node2D" parent="." unique_id=52048897]
 
-[node name="SIT" type="Node2D" parent="Hotspots"]
+[node name="SIT" type="Node2D" parent="Hotspots" unique_id=1017032874]
 
-[node name="Slot0" type="Marker2D" parent="Hotspots/SIT"]
-position = Vector2(0, 0)
+[node name="Slot0" type="Marker2D" parent="Hotspots/SIT" unique_id=1140444061]
+position = Vector2(-12, -2)
 
-[node name="Approach" type="Marker2D" parent="Hotspots/SIT/Slot0"]
-position = Vector2(0, 22)
+[node name="Approach" type="Marker2D" parent="Hotspots/SIT/Slot0" unique_id=1459814740]
+position = Vector2(0, 12)
 
-[node name="Dismount" type="Marker2D" parent="Hotspots/SIT/Slot0"]
-position = Vector2(0, 22)
+[node name="Dismount" type="Marker2D" parent="Hotspots/SIT/Slot0" unique_id=769249674]
+position = Vector2(-4, 11)
+
+[node name="Slot1" type="Marker2D" parent="Hotspots/SIT" unique_id=473954025]
+position = Vector2(13, -2)
+
+[node name="Approach" type="Marker2D" parent="Hotspots/SIT/Slot1" unique_id=1239980101]
+position = Vector2(4, 10)
+
+[node name="Dismount" type="Marker2D" parent="Hotspots/SIT/Slot1" unique_id=1488095181]
+position = Vector2(-2, 16)
+
+[node name="LAY" type="Node2D" parent="Hotspots" unique_id=1273938450]
+
+[node name="Slot0" type="Marker2D" parent="Hotspots/LAY" unique_id=1332834661]
+position = Vector2(-3, 0)
+
+[node name="Approach" type="Marker2D" parent="Hotspots/LAY/Slot0" unique_id=139219432]
+position = Vector2(0, 12)
+
+[node name="Dismount" type="Marker2D" parent="Hotspots/LAY/Slot0" unique_id=1560631346]
+position = Vector2(-4, 11)
+
+[node name="Slot1" type="Marker2D" parent="Hotspots/LAY" unique_id=1353511771]
+position = Vector2(5, 2)
+
+[node name="Approach" type="Marker2D" parent="Hotspots/LAY/Slot1" unique_id=594100796]
+position = Vector2(4, 10)
+
+[node name="Dismount" type="Marker2D" parent="Hotspots/LAY/Slot1" unique_id=1227009013]
+position = Vector2(-2, 16)

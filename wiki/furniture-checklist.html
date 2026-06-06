@@ -110,6 +110,8 @@
     <details class="changelog">
       <summary>Changelog</summary>
       <ul>
+        <li><time>2026-06-05</time> — Added the surface-prop decoration mode: placed decoration instances can enable <code>always_render_on_top</code> to render above furniture and disable physical contact collision for tabletop props.</li>
+        <li><time>2026-06-05</time> — Captured the chosen end state for tuned furniture/decorations: editor-authored sprite crops, y-sort pivots, hotspots, and optional tiny contact collision are source of truth; decorations must not auto-expand collision to the sprite crop.</li>
         <li><time>2026-06-05</time> — Made <code>YSortOrigin</code> markers functional in Godot 4.6: <code>Furniture.gd</code> moves the furniture root to the marker at runtime and counter-moves children so visuals/hotspots stay in place while WorldLayer y-sort uses the marker position.</li>
         <li><time>2026-06-05</time> — Carpet cleaned up for the current SIT/LAY-only interaction set: removed its unimplemented SNIFF hotspot, matched <code>carpet.tres</code> footprint to the selected 78×32 rug, and gave it an early <code>YSortOrigin</code> marker so it stays under characters.</li>
         <li><time>2026-06-05</time> — Hotspots can now support multiple action types from one editor-visible group; name a marker group like <code>SIT_LAY</code> for interchangeable sit/lay slots, and use <code>HotspotSpec.action_flags</code> for resource fallbacks.</li>
@@ -177,6 +179,7 @@
     </div>
 
     <div class="warn" style="margin-bottom:1rem;">
+      <p style="margin:0 0 0.65rem;font-size:0.86rem;"><strong>Chosen end state:</strong> tuned scene files are the source of truth. Do not rebuild furniture from resource assumptions after Steven has adjusted it in the editor. <code>Sprite2D.region_rect</code>, <code>YSortOrigin</code>, <code>Hotspots</code> markers, <code>DetectionArea</code>, and any hand-authored collision/contact shapes should match the editor view at runtime.</p>
       <strong>Before building any scene, confirm:</strong>
       <ol style="margin:0.5rem 0 0;padding-left:1.25rem;font-size:0.82rem;">
         <li>The <code>Sprite2D.region_rect</code> looks correct in the scene editor. Only audit <code>.tres</code> sprite stride fields when <code>apply_definition_sprite_region</code> is enabled.</li>
@@ -185,7 +188,7 @@
       </ol>
       <p style="margin:0.5rem 0 0;font-size:0.82rem;"><strong>Surface pilot complete:</strong> New furniture scenes may resume. Use <code>SurfaceFurniture.gd</code> only for raised surfaces with approach/occupy/dismount slots; keep ordinary blocking furniture on <code>Furniture.gd</code>.</p>
       <p style="margin:0.5rem 0 0;font-size:0.82rem;"><strong>Testing hook:</strong> With debug hotspots visible, left-click a nearby hotspot using the focused kitty. Hotspot clicks take priority over mouse look-tracking; the kitty should claim that exact slot and immediately walk to it. Use this to tune hotspot offsets before marking sprite setup complete.</p>
-      <p style="margin:0.5rem 0 0;font-size:0.82rem;"><strong>Custom footprints:</strong> Blocking scenes with <code>auto_sync_collision_to_sprite = false</code> keep hand-authored collision/nav shapes instead of expanding to the full sprite rectangle. Use this for tall objects whose visual art is larger than their floor contact area.</p>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;"><strong>Custom footprints/contact:</strong> Scenes with <code>auto_sync_collision_to_sprite = false</code> keep hand-authored collision/nav/contact shapes instead of expanding to the full sprite rectangle. Use this for tall blocking objects, tiny furniture feet, or decoration bases whose visible art is larger than the floor contact area.</p>
       <p style="margin:0.5rem 0 0;font-size:0.82rem;"><strong>Grey checked steps mean intentionally skipped:</strong> carpets, decorations, lamps, and door markers omit physics/nav, sprites, or detection when their scene design does not need those nodes.</p>
     </div>
 
@@ -341,17 +344,21 @@
 
     <!-- ───────────────────── DECORATIONS ───────────────────── -->
     <h2 id="decorations">Decorations</h2>
-    <p>No collision, no nav obstacle. Kitties walk through them visually but can sniff if they're close. Goes in <code>scenes/decorations/</code>.</p>
+    <p>Decorations are lightweight prop scenes in <code>scenes/decorations/</code>. They should not create broad navigation blockers. Some are pure sprites, some have a <code>DetectionArea</code> for interest/hotspots, and some may have a tiny hand-authored <code>StaticBody2D</code> contact shape for bases or feet. Tabletop/surface prop instances can enable <code>always_render_on_top</code> to disable contact collision and render above furniture.</p>
 
     <div class="spec">
-      <div class="spec-title">Node tree — decoration (non-blocking)</div>
+      <div class="spec-title">Node tree — decoration</div>
       <ul>
         <li class="tree-root">Node2D <span class="tag t-req">script: Furniture.gd</span> <span class="tag t-key">definition: resources/furniture/[type].tres</span></li>
+        <li class="tree-child">└ YSortOrigin <code>(Marker2D)</code> <span class="tag t-key">editor tuning</span></li>
         <li class="tree-child">└ Sprite2D <span class="tag t-req">texture + region set in editor</span></li>
-        <li class="tree-child">└ DetectionArea <code>(Area2D)</code> <span class="tag t-key">group: furniture_area</span></li>
-        <li class="tree-grandchild">└ CollisionShape2D <span class="tag t-req">circle ~32px</span></li>
+        <li class="tree-child">└ StaticBody2D <span class="tag t-key">optional tiny contact shape only</span></li>
+        <li class="tree-grandchild">└ CollisionShape2D <span class="tag t-key">hand-authored; set auto_sync_collision_to_sprite=false</span></li>
+        <li class="tree-child">└ DetectionArea <code>(Area2D)</code> <span class="tag t-key">optional group: furniture_area</span></li>
+        <li class="tree-grandchild">└ CollisionShape2D <span class="tag t-key">interest/hotspot radius, not physical blocking</span></li>
+        <li class="tree-child">└ Hotspots <code>(Node2D)</code> <span class="tag t-key">only when the prop has an action</span></li>
       </ul>
-      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.5rem;margin-bottom:0;">No StaticBody2D. No NavigationObstacle2D. Same <code>Furniture.gd</code> script — the missing physics nodes are simply absent.</p>
+      <p style="font-size:0.76rem;color:var(--dim);margin-top:0.5rem;margin-bottom:0;">No <code>NavigationObstacle2D</code> for normal decorations. If a floor prop has a tiny <code>StaticBody2D</code>, it is a contact/immersion shape, not a sprite-sized blocker. Leave <code>apply_definition_sprite_region</code> disabled and set <code>auto_sync_collision_to_sprite=false</code> whenever the collision shape was tuned in the editor. Place decoration instances under the y-sorted <code>WorldLayer</code> so their <code>YSortOrigin</code> marker participates in the same draw-order pass as kitties and furniture. For a prop sitting on top of furniture, enable <code>always_render_on_top</code> on that placed instance; runtime sets its draw z above world objects and disables any <code>StaticBody2D</code> contact collision while keeping detection areas available.</p>
     </div>
 
     <div class="note" style="margin-bottom:0.75rem;">
@@ -373,7 +380,7 @@
           <td>
             <span class="scene-name">Plant.tscn</span>
             <span class="scene-path">scenes/decorations/Plant.tscn</span>
-            <span class="scene-path" style="color:var(--gold);">Non-blocking sniff decoration · editable marker</span>
+            <span class="scene-path" style="color:var(--gold);">Sniff decoration · editable markers · tiny contact; surface mode per instance</span>
           </td>
           <td><span class="hs hs-sniff">sniff ×1</span></td>
           <td class="steps-cell">
@@ -389,7 +396,7 @@
           <td>
             <span class="scene-name">Lamp.tscn</span>
             <span class="scene-path">scenes/decorations/Lamp.tscn</span>
-            <span class="scene-path" style="color:var(--gold);">Bulk scaffolded · sprite-only because lamp.tres has no hotspots</span>
+            <span class="scene-path" style="color:var(--gold);">No hotspot · tiny contact; surface mode per instance</span>
           </td>
           <td><span class="hs hs-none">no hotspot</span></td>
           <td class="steps-cell">
